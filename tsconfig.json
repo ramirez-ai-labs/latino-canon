@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": { "types": [] },
+  "files": [],
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./packages/eval" },
+    { "path": "./apps/api" },
+    { "path": "./apps/ingest" },
+    { "path": "./apps/web" }
+  ]
+}

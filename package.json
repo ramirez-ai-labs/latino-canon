@@ -1,0 +1,26 @@
+{
+  "name": "latino-canon",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.28.2",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "infra:create": "tsx scripts/infra-create.ts",
+    "eval:retrieval": "pnpm --filter @latino-canon/eval run retrieval",
+    "eval:groundedness": "pnpm --filter @latino-canon/eval run groundedness"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260101.0",
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "wrangler": "^4.20.0"
+  }
+}

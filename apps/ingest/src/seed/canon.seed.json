@@ -1,0 +1,20 @@
+{
+  "$comment": "Trusted seed list. seedInclusionTypes is authoritative; the classifier still runs for themes and to measure agreement. Sourced from LOC Latinx filmography, UCLA Chicano/Latino TV guide, and editorial curation.",
+  "titles": [
+    { "ref": "Mi Familia (1995)", "title": "Mi Familia", "year": 1995, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Selena (1997)", "title": "Selena", "year": 1997, "kind": "film", "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
+    { "ref": "Real Women Have Curves (2002)", "title": "Real Women Have Curves", "year": 2002, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Machuca (2004)", "title": "Machuca", "year": 2004, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Coco (2017)", "title": "Coco", "year": 2017, "kind": "film", "seedInclusionTypes": ["about_community", "breakthrough"] },
+    { "ref": "Jane the Virgin (2014)", "title": "Jane the Virgin", "year": 2014, "kind": "series", "seedInclusionTypes": ["about_community", "breakthrough"] },
+    { "ref": "One Day at a Time (2017)", "title": "One Day at a Time", "year": 2017, "kind": "series", "seedInclusionTypes": ["created_by", "about_community"] },
+    { "ref": "El Norte (1983)", "title": "El Norte", "year": 1983, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Stand and Deliver (1988)", "title": "Stand and Deliver", "year": 1988, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Y Tu Mama Tambien (2001)", "title": "Y Tu Mamá También", "year": 2001, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Gentefied (2020)", "title": "Gentefied", "year": 2020, "kind": "series", "seedInclusionTypes": ["created_by", "about_community"] },
+    { "ref": "Vida (2018)", "title": "Vida", "year": 2018, "kind": "series", "seedInclusionTypes": ["created_by", "about_community", "breakthrough"] },
+    { "ref": "In the Heights (2021)", "title": "In the Heights", "year": 2021, "kind": "film", "seedInclusionTypes": ["created_by", "about_community"] },
+    { "ref": "A Better Life (2011)", "title": "A Better Life", "year": 2011, "kind": "film", "seedInclusionTypes": ["about_community"] },
+    { "ref": "Under the Same Moon (2007)", "title": "Under the Same Moon", "year": 2007, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] }
+  ]
+}

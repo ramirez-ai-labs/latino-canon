@@ -1,0 +1,42 @@
+:root {
+  --bg: #0e0e10;
+  --surface: #17171a;
+  --text: #f4f4f5;
+  --muted: #a1a1aa;
+  --accent: #d98a3d;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+a { color: inherit; text-decoration: none; }
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #26262b;
+}
+.brand { font-weight: 700; font-size: 1.15rem; }
+.brand span { color: var(--accent); }
+.site-header nav { display: flex; gap: 1.5rem; color: var(--muted); }
+
+main { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+/* Cards */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.25rem; }
+.card { background: var(--surface); border-radius: 10px; overflow: hidden; }
+.card img { aspect-ratio: 2 / 3; object-fit: cover; width: 100%; display: block; }
+.card-body { padding: 0.75rem; }
+.card h3 { margin: 0 0 0.15rem; font-size: 0.95rem; }
+.card .meta { color: var(--muted); font-size: 0.8rem; }
+.card .blurb { margin: 0.5rem 0 0; font-size: 0.82rem; color: #d4d4d8; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.5rem; }
+.tag { font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 999px; background: #2a2a30; color: var(--muted); }
+.tag.inclusion { background: rgba(217, 138, 61, 0.15); color: var(--accent); }
