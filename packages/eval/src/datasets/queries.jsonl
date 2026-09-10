@@ -1,0 +1,15 @@
+{"id": "q01", "query": "Mexican family stories from the 90s", "relevant": ["mi-familia-1995", "selena-1997"], "note": "NL query; exercises decade + country filter lift"}
+{"id": "q02", "query": "Selena", "relevant": ["selena-1997"], "note": "exact title, lexical should nail it"}
+{"id": "q03", "query": "coming of age at the border", "relevant": ["el-norte-1983", "under-the-same-moon-2007", "machuca-2004"], "note": "semantic; no shared keywords with titles"}
+{"id": "q04", "query": "teacher inspires students math", "relevant": ["stand-and-deliver-1988"], "note": "plot description, no title words"}
+{"id": "q05", "query": "Latina showrunner sitcom about a Cuban-American family", "relevant": ["one-day-at-a-time-2017"], "note": "inclusion_type=created_by + plot"}
+{"id": "q06", "query": "immigration mother son separated", "relevant": ["under-the-same-moon-2007", "a-better-life-2011", "el-norte-1983"], "note": "theme=immigration semantic cluster"}
+{"id": "q07", "query": "telenovela parody series", "relevant": ["jane-the-virgin-2014"], "note": "genre description"}
+{"id": "q08", "query": "gentrification Boyle Heights", "relevant": ["vida-2018", "gentefied-2020"], "note": "place + theme, recent series"}
+{"id": "q09", "query": "Day of the Dead animated", "relevant": ["coco-2017"], "note": "should rank Coco #1 despite non-Latino director"}
+{"id": "q10", "query": "body image quinceanera East LA", "relevant": ["real-women-have-curves-2002"], "note": "multi-signal plot"}
+{"id": "q11", "query": "road trip two teenage boys Mexico", "relevant": ["y-tu-mama-tambien-2001"], "note": "plot, semantic"}
+{"id": "q12", "query": "Lin-Manuel Miranda musical Washington Heights", "relevant": ["in-the-heights-2021"], "note": "person + place"}
+{"id": "q13", "query": "Pinochet coup childhood friendship", "relevant": ["machuca-2004"], "note": "historical context, Chilean"}
+{"id": "q14", "query": "breakthrough first Latina lead network drama", "relevant": ["jane-the-virgin-2014", "vida-2018"], "note": "inclusion_type=breakthrough filter"}
+{"id": "q15", "query": "undocumented gardener Los Angeles father", "relevant": ["a-better-life-2011"], "note": "plot description"}

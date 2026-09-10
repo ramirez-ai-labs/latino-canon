@@ -1,0 +1,23 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "latino-canon-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-01-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+
+  // Call the api worker directly — no public round-trip, no CORS.
+  "services": [
+    { "binding": "API", "service": "latino-canon-api" }
+  ],
+
+  "vars": {
+    // Used only for client-side fetches / absolute URLs in metadata.
+    "PUBLIC_API_URL": "https://latino-canon-api.example.workers.dev"
+  }
+}

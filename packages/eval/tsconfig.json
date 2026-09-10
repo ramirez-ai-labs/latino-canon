@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "paths": {
+      "@latino-canon/core": ["../core/src/index.ts"],
+      "@latino-canon/core/*": ["../core/src/*"]
+    }
+  },
+  "include": ["src/**/*"]
+}

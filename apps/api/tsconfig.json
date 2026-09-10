@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["@cloudflare/workers-types"],
+    "paths": {
+      "@latino-canon/core": ["../../packages/core/src/index.ts"],
+      "@latino-canon/core/*": ["../../packages/core/src/*"]
+    }
+  },
+  "include": ["src/**/*", "worker-configuration.d.ts"]
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "latino-canon-ingest",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  "ai": { "binding": "AI" },
+
+  "vectorize": [
+    { "binding": "VECTORIZE", "index_name": "latino-canon-titles" }
+  ],
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "latino-canon",
+      "database_id": "REPLACE_WITH_D1_ID"
+    }
+  ],
+
+  "r2_buckets": [
+    { "binding": "POSTERS", "bucket_name": "latino-canon-posters" }
+  ],
+
+  "workflows": [
+    {
+      "binding": "INGEST_WORKFLOW",
+      "name": "latino-canon-ingest",
+      "class_name": "IngestWorkflow"
+    }
+  ],
+
+  "triggers": {
+    // nightly: retry errored jobs + refresh popularity/ratings
+    "crons": ["0 8 * * *"]
+  },
+
+  "vars": {
+    "LLM_PROVIDER": "workers-ai",
+    "AI_GATEWAY_ID": "latino-canon"
+  }
+
+  // Secrets: TMDB_API_KEY, OMDB_API_KEY, CF_ACCOUNT_ID, ANTHROPIC_API_KEY, INGEST_ADMIN_TOKEN
+}
