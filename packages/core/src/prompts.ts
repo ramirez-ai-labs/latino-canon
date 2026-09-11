@@ -43,7 +43,9 @@ ${inclusionBlock}
 themes (assign up to 6 that are clearly present, with a 0-1 confidence): ${themeList}
 
 Base your answer ONLY on the provided metadata. If nothing supports any inclusion_type,
-return an empty inclusionTypes array and explain in "note".
+return an empty inclusionTypes array and explain briefly in "note" - at most one short
+sentence, under 200 characters. Omit "note" entirely otherwise; don't restate your
+reasoning for a non-empty inclusionTypes array.
 Respond ONLY with JSON matching:
 {"inclusionTypes":[{"type":string,"confidence":number}],"themes":[{"theme":string,"confidence":number}],"note":string?}`;
 
