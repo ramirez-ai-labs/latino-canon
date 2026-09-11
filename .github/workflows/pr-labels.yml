@@ -1,0 +1,59 @@
+name: PR Labels
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize, ready_for_review, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label by changed path
+        uses: actions/labeler@v5
+        with:
+          sync-labels: false
+          configuration-path: .github/labeler.yml
+
+      - name: Label by title
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = (context.payload.pull_request.title || "").toLowerCase().trim();
+            const rules = [
+              [/^(fix|bug|hotfix|revert)\b/, "bug"],
+              [/^(feat|feature)\b/, "enhancement"],
+              [/^docs?\b/, "documentation"],
+              [/^(ci|build)\b/, "github_actions"],
+              [/^security\b/, "security"],
+              [/^(chore|refactor|test|style|perf)\b/, "chore"],
+            ];
+            const labels = rules.filter(([pattern]) => pattern.test(title)).map(([, label]) => label);
+            if (labels.length) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                labels,
+              });
+            }
+
+  require-label:
+    needs: label
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require at least one label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pullRequest } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+            if (pullRequest.labels.length === 0) {
+              core.setFailed("This PR has no label. Add one or use a conventional-commit title.");
+            }
