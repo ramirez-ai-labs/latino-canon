@@ -184,6 +184,13 @@ prefix. Releases are created manually from **Actions -> Release** using a
 semantic version such as `0.1.0`; the workflow creates a tag like
 `latino-canon-v0.1.0`, generates release notes, and supports prereleases.
 
+Adding a title to the canon is a normal PR: edit
+`apps/ingest/src/seed/canon.seed.json`, open a PR, get it reviewed. Once merged,
+`.github/workflows/ingest-new-titles.yml` diffs the seed file and `POST`s just the
+newly added entries to the deployed ingest worker automatically — no manual
+`curl`/CLI step. See [infra/README.md](infra/README.md#8-github-actions-auto-ingest-new-canon-titles)
+for the one-time GitHub Actions config it needs.
+
 ---
 
 ## Free-tier budget (rough, verify against current docs)

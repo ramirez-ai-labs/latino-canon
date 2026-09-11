@@ -1,0 +1,74 @@
+name: Ingest new canon titles
+
+# Editors add titles by opening a PR that edits canon.seed.json - the actual point of
+# the taxonomy/review-queue design is that a human decides what belongs in the canon.
+# This workflow is what turns "the PR merged" into "the title is queued for ingestion,"
+# so that step isn't a manual curl/CLI call against the deployed worker.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/ingest/src/seed/canon.seed.json"
+  workflow_dispatch:
+    inputs:
+      base_ref:
+        description: "Git ref/SHA to diff canon.seed.json against (defaults to the previous commit on main)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ingest-new-titles
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      INGEST_URL: ${{ vars.INGEST_URL }}
+      INGEST_ADMIN_TOKEN: ${{ secrets.INGEST_ADMIN_TOKEN }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Resolve base ref to diff against
+        id: base
+        run: |
+          if [ -n "${{ inputs.base_ref }}" ]; then
+            echo "sha=${{ inputs.base_ref }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            echo "sha=${{ github.event.before }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=HEAD~1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract the pre-merge seed snapshot
+        run: |
+          git show "${{ steps.base.outputs.sha }}:apps/ingest/src/seed/canon.seed.json" \
+            > /tmp/base.seed.json || echo '{"titles":[]}' > /tmp/base.seed.json
+
+      - name: Queue newly added titles for ingestion
+        working-directory: apps/ingest
+        run: pnpm exec tsx scripts/ingest-new.ts /tmp/base.seed.json src/seed/canon.seed.json
