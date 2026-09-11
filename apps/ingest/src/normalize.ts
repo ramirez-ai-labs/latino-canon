@@ -1,6 +1,6 @@
-import type { Title } from "@latino-canon/core";
+import type { Credit, CreditRole, Title } from "@latino-canon/core";
 import type { IngestParams } from "./bindings.js";
-import type { TmdbDetails } from "./sources/tmdb.js";
+import type { TmdbDetails, TmdbPerson } from "./sources/tmdb.js";
 import type { OmdbRatings } from "./sources/omdb.js";
 
 /** Deterministic slug id, e.g. "real-women-have-curves-2002". Stable across re-ingests. */
@@ -17,7 +17,8 @@ export function normalizeTitle(
   details: TmdbDetails,
   ratings: OmdbRatings | null,
 ): Title {
-  // TODO: real mapping. This is the shape the rest of the pipeline expects.
+  void ratings; // not yet folded into the Title shape — see apps/ingest/src/ai.ts blurbForIngest TODO
+
   return {
     id: slugId(details.title, details.releaseYear),
     tmdbId: details.tmdbId,
@@ -33,8 +34,35 @@ export function normalizeTitle(
     posterKey: null, // set by cachePoster step
     popularity: details.popularity,
     runtime: details.runtime,
-    credits: [], // TODO: map details.credits → Credit[]
+    credits: toCredits(details.credits),
     tags: [],
     blurb: null,
   };
+}
+
+function toCredits(credits: TmdbDetails["credits"]): Credit[] {
+  // Same person can show up under more than one crew role (e.g. writer + director) — that's
+  // legitimate and kept; a person listed twice *within* one role (co-writing credits, TMDB
+  // data quirks) is deduped below since it would otherwise violate the credits PK.
+  const seen = new Set<string>();
+  const out: Credit[] = [];
+
+  const push = (person: TmdbPerson, role: CreditRole, order: number, character: string | null) => {
+    const key = `${role}:${person.id}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({
+      person: { id: `p${person.id}`, tmdbId: person.id, name: person.name, knownForDepartment: null },
+      role,
+      character,
+      order,
+    });
+  };
+
+  credits.directors.forEach((p, i) => push(p, "director", i, null));
+  credits.writers.forEach((p, i) => push(p, "writer", i, null));
+  credits.creators.forEach((p, i) => push(p, "creator", i, null));
+  credits.cast.forEach((p) => push(p, "cast", p.order, p.character || null));
+
+  return out;
 }

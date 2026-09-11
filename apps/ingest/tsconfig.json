@@ -1,8 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": ".",
-    "types": ["@cloudflare/workers-types"],
+    "types": ["@cloudflare/workers-types", "node"],
     "paths": {
       "@latino-canon/core": ["../../packages/core/src/index.ts"],
       "@latino-canon/core/*": ["../../packages/core/src/*"]
