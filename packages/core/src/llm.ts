@@ -52,6 +52,19 @@ export const MODELS: Record<LlmProvider, Record<LlmCallOptions["task"], string>>
 export const EMBEDDING_MODEL = "@cf/baai/bge-m3"; // 1024-dim, multilingual (EN + ES)
 export const EMBEDDING_DIMENSIONS = 1024;
 
+/**
+ * Workers AI's `response` field is typed as a string, but has been observed returning an
+ * already-parsed value for some completions (seen live: classify calls got a string back,
+ * a blurb call on the same model didn't). Normalize either shape before it reaches
+ * `extractJson`, which requires a string and throws an opaque `text.match is not a
+ * function` otherwise.
+ */
+export function coerceLlmText(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value == null) return "";
+  return JSON.stringify(value);
+}
+
 /** Best-effort extraction of a JSON object from an LLM response. */
 export function extractJson(text: string): unknown {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
