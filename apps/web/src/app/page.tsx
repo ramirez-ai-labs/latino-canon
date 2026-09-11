@@ -4,6 +4,8 @@ import { SearchBar } from "@/components/SearchBar";
 import { TitleCard } from "@/components/TitleCard";
 import { listCollections, search } from "@/lib/api";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   // Landing feed = popularity browse (empty query).
   const [featured, collections] = await Promise.all([

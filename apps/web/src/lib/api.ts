@@ -10,7 +10,7 @@ async function apiFetch<T>(path: string): Promise<T> {
   if (process.env.LOCAL_DEV === "1") return localFetch<T>(path);
 
   const { getCloudflareContext } = await import("@opennextjs/cloudflare");
-  const { env } = getCloudflareContext();
+  const { env } = await getCloudflareContext({ async: true });
   const api = (env as { API?: { fetch: typeof fetch } }).API;
   const url = `https://api${path}`;
 

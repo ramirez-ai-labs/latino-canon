@@ -142,6 +142,22 @@ pnpm --filter ingest deploy
 pnpm --filter web deploy
 ```
 
+All changes should go through a branch and pull request targeting `main`.
+`.github/workflows/validate-pr.yml` runs the web build, typechecks, and API tests
+on every pull request. Protect `main` in GitHub and require this workflow to pass
+before merging.
+
+After a pull request is merged, `.github/workflows/deploy-web.yml` deploys the
+web Worker from Ubuntu. It can also be started manually. Add these repository
+secrets in GitHub:
+
+```text
+CLOUDFLARE_API_TOKEN
+CLOUDFLARE_ACCOUNT_ID
+```
+
+Then merge a passing pull request, or run **Deploy web Worker** manually.
+
 ---
 
 ## Free-tier budget (rough, verify against current docs)

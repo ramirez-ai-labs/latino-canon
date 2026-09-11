@@ -18,6 +18,6 @@
 
   "vars": {
     // Used only for client-side fetches / absolute URLs in metadata.
-    "PUBLIC_API_URL": "https://latino-canon-api.example.workers.dev"
+    "PUBLIC_API_URL": "https://latino-canon-api.ai-builders-studio-latinx.workers.dev"
   }
 }

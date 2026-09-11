@@ -4,6 +4,7 @@ import { TitleCard } from "@/components/TitleCard";
 import { search } from "@/lib/api";
 
 export const metadata = { title: "Explore" };
+export const dynamic = "force-dynamic";
 
 export default async function SearchPage({
   searchParams,
