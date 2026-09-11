@@ -23,65 +23,82 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
     const jobId = `job_${p.ref.replace(/\W+/g, "_").toLowerCase()}`;
     await step.do("register job", () => setJob(this.env, jobId, p.ref, "resolve", "running"));
 
-    const tmdbId = await step.do("resolve tmdb id", { retries: { limit: 3, delay: "5 seconds" } }, () =>
-      resolveTmdbId(this.env, p.title, p.year, p.kind),
-    );
+    // Tracks which stage we're in so a caught failure can record *where* it happened -
+    // ingest_jobs.status otherwise stays stuck at "running" forever (set once here, never
+    // updated again unless the run reaches "finalize job"), and GET /jobs - the review
+    // queue this exists for - only surfaces status IN ('needs_review','error'). A stuck
+    // "running" row is invisible to it.
+    let stage = "resolve";
+    try {
+      const tmdbId = await step.do("resolve tmdb id", { retries: { limit: 3, delay: "5 seconds" } }, () =>
+        resolveTmdbId(this.env, p.title, p.year, p.kind),
+      );
 
-    const raw = await step.do("fetch metadata", { retries: { limit: 3, delay: "10 seconds" } }, async () => {
-      const details = await fetchTmdbDetails(this.env, tmdbId, p.kind);
-      const ratings = await fetchOmdbRatings(this.env, details.imdbId).catch(() => null);
-      return { details, ratings };
-    });
+      stage = "fetch";
+      const raw = await step.do("fetch metadata", { retries: { limit: 3, delay: "10 seconds" } }, async () => {
+        const details = await fetchTmdbDetails(this.env, tmdbId, p.kind);
+        const ratings = await fetchOmdbRatings(this.env, details.imdbId).catch(() => null);
+        return { details, ratings };
+      });
 
-    const title = await step.do("normalize", async () => normalizeTitle(p, raw.details, raw.ratings));
+      const title = await step.do("normalize", async () => normalizeTitle(p, raw.details, raw.ratings));
 
-    const exists = await step.do("check exists", async () => {
-      const row = await this.env.DB.prepare("SELECT id FROM titles WHERE id = ?").bind(title.id).first();
-      return Boolean(row);
-    });
-    if (exists && !p.force) {
-      await step.do("skip", () => setJob(this.env, jobId, p.ref, "persist", "done"));
-      return;
+      const exists = await step.do("check exists", async () => {
+        const row = await this.env.DB.prepare("SELECT id FROM titles WHERE id = ?").bind(title.id).first();
+        return Boolean(row);
+      });
+      if (exists && !p.force) {
+        await step.do("skip", () => setJob(this.env, jobId, p.ref, "persist", "done"));
+        return;
+      }
+
+      stage = "persist";
+      await step.do("persist title", () => persistTitle(this.env, title));
+
+      await step.do("cache poster", () =>
+        raw.details.posterPath ? cachePoster(this.env, title.id, raw.details.posterPath) : Promise.resolve(),
+      );
+
+      // --- AI steps -----------------------------------------------------------
+      stage = "classify";
+      const classification = await step.do(
+        "classify inclusion + themes",
+        { retries: { limit: 2, delay: "30 seconds" } },
+        () => classifyForIngest(this.env, title),
+      );
+
+      await step.do("write tags", () =>
+        writeTags(this.env, title.id, {
+          classification,
+          seedInclusionTypes: p.seedInclusionTypes ?? [],
+        }),
+      );
+
+      stage = "embed";
+      await step.do("embed + upsert vector", { retries: { limit: 3, delay: "10 seconds" } }, () =>
+        upsertVector(this.env, title, classification.themes.map((t) => t.theme)),
+      );
+
+      stage = "blurb";
+      const blurb = await step.do(
+        "generate blurb",
+        { retries: { limit: 2, delay: "30 seconds" } },
+        () => blurbForIngest(this.env, title, classification),
+      );
+      await step.do("write blurb (unapproved)", () => writeBlurb(this.env, title.id, blurb));
+
+      // --- Route to human review when the model isn't confident ---------------
+      const lowConfidence =
+        classification.inclusionTypes.length === 0 ||
+        classification.inclusionTypes.every((t) => t.confidence < MODEL_TAG_DISPLAY_THRESHOLD);
+
+      await step.do("finalize job", () =>
+        setJob(this.env, jobId, p.ref, "review", lowConfidence ? "needs_review" : "done"),
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await step.do("record failure", () => setJob(this.env, jobId, p.ref, stage, "error", message));
+      throw err; // still let the Workflow itself terminate in an errored state
     }
-
-    await step.do("persist title", () => persistTitle(this.env, title));
-
-    await step.do("cache poster", () =>
-      raw.details.posterPath ? cachePoster(this.env, title.id, raw.details.posterPath) : Promise.resolve(),
-    );
-
-    // --- AI steps -----------------------------------------------------------
-    const classification = await step.do(
-      "classify inclusion + themes",
-      { retries: { limit: 2, delay: "30 seconds" } },
-      () => classifyForIngest(this.env, title),
-    );
-
-    await step.do("write tags", () =>
-      writeTags(this.env, title.id, {
-        classification,
-        seedInclusionTypes: p.seedInclusionTypes ?? [],
-      }),
-    );
-
-    await step.do("embed + upsert vector", { retries: { limit: 3, delay: "10 seconds" } }, () =>
-      upsertVector(this.env, title, classification.themes.map((t) => t.theme)),
-    );
-
-    const blurb = await step.do(
-      "generate blurb",
-      { retries: { limit: 2, delay: "30 seconds" } },
-      () => blurbForIngest(this.env, title, classification),
-    );
-    await step.do("write blurb (unapproved)", () => writeBlurb(this.env, title.id, blurb));
-
-    // --- Route to human review when the model isn't confident ---------------
-    const lowConfidence =
-      classification.inclusionTypes.length === 0 ||
-      classification.inclusionTypes.every((t) => t.confidence < MODEL_TAG_DISPLAY_THRESHOLD);
-
-    await step.do("finalize job", () =>
-      setJob(this.env, jobId, p.ref, "review", lowConfidence ? "needs_review" : "done"),
-    );
   }
 }

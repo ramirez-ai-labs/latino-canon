@@ -40,9 +40,16 @@ wrangler r2 bucket create latino-canon-posters
 
 ## 5. AI Gateway
 
-```bash
-wrangler ai-gateway create latino-canon
-```
+**Dashboard only** — `wrangler ai-gateway create` doesn't exist in the current CLI
+(checked against wrangler 4.130.0; AI Gateway management isn't exposed via `wrangler`
+at all right now). Create it at **dashboard → AI → AI Gateway → Create Gateway**,
+named exactly `latino-canon` — it must match `AI_GATEWAY_ID` in both
+`apps/api/wrangler.jsonc` and `apps/ingest/wrangler.jsonc`.
+
+This step is easy to skip by accident since nothing else in `infra:create` depends on
+it, but every `env.AI.run(...)` call in this codebase passes a `gateway: { id: ... }`
+option and **fails outright** (`AiGatewayError: 2001`) if that gateway doesn't exist -
+so `classify`/`blurb`/query-rewrite all break, not just AI Gateway's caching/logging.
 
 Enable caching + analytics in the dashboard. When using Claude, add the Anthropic
 API key as a gateway BYOK secret or pass it per-request (current setup passes per-request).
