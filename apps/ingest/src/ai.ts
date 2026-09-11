@@ -14,7 +14,24 @@ import {
   type ClassificationResult,
   type Title,
 } from "@latino-canon/core";
+import { ZodError } from "zod";
 import type { Env } from "./bindings.js";
+
+/**
+ * Cloudflare Workflows loses ZodError's real message (a computed getter) when a step
+ * exhausts its retries and the error crosses the durable-storage boundary - both the
+ * instance history and our own ingest_jobs.error end up with just the bare class name
+ * ("Error: ZodError"), no detail. Force the detailed message into a plain Error's
+ * message *before* it can cross that boundary.
+ */
+function parseLlm<T>(schema: { parse: (v: unknown) => T }, value: unknown, context: string): T {
+  try {
+    return schema.parse(value);
+  } catch (err) {
+    if (err instanceof ZodError) throw new Error(`${context}: ${err.message}`);
+    throw err;
+  }
+}
 
 /**
  * The ingest worker calls Workers AI directly (it doesn't import the api's LlmClient
@@ -43,7 +60,7 @@ export async function classifyForIngest(env: Env, t: Title): Promise<Classificat
     countries: t.country,
   });
   const out = await runLlm(env, "classify", CLASSIFY_SYSTEM, user);
-  return classificationSchema.parse(extractJson(out));
+  return parseLlm(classificationSchema, extractJson(out), "classify");
 }
 
 export interface BlurbGroundingResult {
@@ -75,7 +92,7 @@ export async function blurbForIngest(
     BLURB_SYSTEM,
     blurbUser(sources.map((s) => ({ id: s.id, kind: s.kind, text: s.text }))),
   );
-  const result = blurbSchema.parse(extractJson(out));
+  const result = parseLlm(blurbSchema, extractJson(out), "blurb");
   void classification;
   return {
     result,
