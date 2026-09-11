@@ -20,6 +20,7 @@ apps/web/.vercel/
 .wrangler/
 .dev.vars
 .dev.vars.*
+!.dev.vars.example
 wrangler.toml.bak
 
 # Environment / secrets
