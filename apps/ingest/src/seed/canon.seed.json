@@ -15,6 +15,7 @@
     { "ref": "Vida (2018)", "title": "Vida", "year": 2018, "kind": "series", "seedInclusionTypes": ["created_by", "about_community", "breakthrough"] },
     { "ref": "In the Heights (2021)", "title": "In the Heights", "year": 2021, "kind": "film", "seedInclusionTypes": ["created_by", "about_community"] },
     { "ref": "A Better Life (2011)", "title": "A Better Life", "year": 2011, "kind": "film", "seedInclusionTypes": ["about_community"] },
-    { "ref": "Under the Same Moon (2007)", "title": "Under the Same Moon", "year": 2007, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] }
+    { "ref": "Under the Same Moon (2007)", "title": "Under the Same Moon", "year": 2007, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Blue Beetle (2023)", "title": "Blue Beetle", "year": 2023, "kind": "film", "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] }
   ]
 }
