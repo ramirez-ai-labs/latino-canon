@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { INCLUSION_TYPE_LABELS, THEME_LABELS } from "@latino-canon/core";
 import { getTitle, posterUrl } from "@/lib/api";
 
+export const dynamic = "force-dynamic";
+
 export default async function TitlePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const title = await getTitle(id).catch(() => null);
