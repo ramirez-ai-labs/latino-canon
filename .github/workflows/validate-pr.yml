@@ -41,7 +41,19 @@ jobs:
       - name: Typecheck API
         run: pnpm --filter @latino-canon/api run typecheck
 
-      - name: Test API
+      - name: Typecheck core
+        run: pnpm --filter @latino-canon/core run typecheck
+
+      - name: Typecheck eval
+        run: pnpm --filter @latino-canon/eval run typecheck
+
+      - name: Test core (RRF ranking)
+        run: pnpm --filter @latino-canon/core run test
+
+      - name: Test eval (retrieval metrics)
+        run: pnpm --filter @latino-canon/eval run test
+
+      - name: Test API (includes fixture-backed lexical retrieval regression)
         run: pnpm --filter @latino-canon/api run test
 
       - name: Validate web OpenNext build

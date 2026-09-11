@@ -131,8 +131,17 @@ Evaluate:
 
 ```bash
 pnpm eval:retrieval      # Recall@k / MRR / nDCG@10 vs packages/eval/src/datasets/queries.jsonl
-pnpm eval:groundedness   # LLM-as-judge over generated blurbs
+                         # (needs a running api with real seeded data — hybrid/semantic
+                         # modes are only as good as the ingest pipeline behind them)
+pnpm eval:groundedness   # LLM-as-judge over generated blurbs (needs ANTHROPIC_API_KEY)
 ```
+
+A narrower, CI-enforced version of the retrieval eval runs on every PR with zero setup:
+`apps/api/src/search/lexical.eval.test.ts` seeds a small hand-authored fixture into a
+local D1 instance and asserts recall@5 / MRR against it using the same
+`packages/eval` metrics functions. It only proves the BM25 path (tokenizer, FTS query,
+ranking) hasn't regressed — not retrieval quality against the real corpus, which needs
+`pnpm eval:retrieval` against a deployed worker with real data.
 
 Deploy:
 
@@ -143,9 +152,13 @@ pnpm --filter web deploy
 ```
 
 All changes should go through a branch and pull request targeting `main`.
-`.github/workflows/validate-pr.yml` runs the web build, typechecks, and API tests
-on every pull request. Protect `main` in GitHub and require this workflow to pass
-before merging.
+`.github/workflows/validate-pr.yml` runs the web build, typechecks every workspace
+package, and runs their test suites on every pull request — including a
+fixture-backed BM25 retrieval regression test (`apps/api/src/search/lexical.eval.test.ts`)
+that exercises the real `lexicalSearch` → `titles_fts` path and the same
+`packages/eval` metrics (recall@k, MRR) used by `pnpm eval:retrieval`, entirely locally
+via `@cloudflare/vitest-pool-workers` — no Cloudflare account or deployed data needed.
+Protect `main` in GitHub and require this workflow to pass before merging.
 
 After a pull request is merged, `.github/workflows/deploy-web.yml` deploys the
 web Worker from Ubuntu. It can also be started manually. Add these repository

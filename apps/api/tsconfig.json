@@ -1,10 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["@cloudflare/workers-types"],
+    "types": ["@cloudflare/workers-types", "@cloudflare/vitest-pool-workers"],
     "paths": {
       "@latino-canon/core": ["../../packages/core/src/index.ts"],
-      "@latino-canon/core/*": ["../../packages/core/src/*"]
+      "@latino-canon/core/*": ["../../packages/core/src/*"],
+      "@latino-canon/eval": ["../../packages/eval/src/index.ts"],
+      "@latino-canon/eval/*": ["../../packages/eval/src/*"]
     }
   },
   "include": ["src/**/*", "worker-configuration.d.ts"]
