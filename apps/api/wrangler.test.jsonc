@@ -14,5 +14,11 @@
 			"database_name": "latino-canon-test",
 			"database_id": "test-fixture-db"
 		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "POSTERS",
+			"bucket_name": "latino-canon-posters-test"
+		}
 	]
 }
