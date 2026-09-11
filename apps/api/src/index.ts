@@ -6,6 +6,7 @@ import { searchRoute } from "./routes/search.js";
 import { titlesRoute } from "./routes/titles.js";
 import { collectionsRoute } from "./routes/collections.js";
 import { feedbackRoute } from "./routes/feedback.js";
+import { postersRoute } from "./routes/posters.js";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -18,6 +19,7 @@ app.route("/search", searchRoute);
 app.route("/titles", titlesRoute);
 app.route("/collections", collectionsRoute);
 app.route("/feedback", feedbackRoute);
+app.route("/posters", postersRoute);
 
 app.onError((err, c) => {
   console.error(err);
