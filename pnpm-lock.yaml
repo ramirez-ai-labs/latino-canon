@@ -48,6 +48,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20260101.0
         version: 4.20260702.1
+      '@latino-canon/eval':
+        specifier: workspace:*
+        version: link:../../packages/eval
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
