@@ -1,0 +1,35 @@
+# Path-based labels for pull requests.
+web:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "apps/web/**"
+api:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "apps/api/**"
+ingest:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "apps/ingest/**"
+core:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "packages/core/**"
+evaluation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "packages/eval/**"
+infrastructure:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "infra/**"
+          - "scripts/infra-create.ts"
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"
+          - "docs/**"
+github_actions:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"

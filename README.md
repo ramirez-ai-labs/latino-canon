@@ -158,6 +158,11 @@ CLOUDFLARE_ACCOUNT_ID
 
 Then merge a passing pull request, or run **Deploy web Worker** manually.
 
+Pull requests are labeled automatically by changed area and conventional title
+prefix. Releases are created manually from **Actions -> Release** using a
+semantic version such as `0.1.0`; the workflow creates a tag like
+`latino-canon-v0.1.0`, generates release notes, and supports prereleases.
+
 ---
 
 ## Free-tier budget (rough, verify against current docs)
