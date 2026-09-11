@@ -1,19 +1,121 @@
 import { Hono } from "hono";
+import type { CreditRole, InclusionType, TagSource, Theme, Title, TitleKind } from "@latino-canon/core";
 import type { Env } from "../bindings.js";
 
 export const titlesRoute = new Hono<{ Bindings: Env }>();
 
+interface TitleRow {
+  id: string;
+  tmdb_id: number | null;
+  imdb_id: string | null;
+  kind: TitleKind;
+  title: string;
+  original_title: string | null;
+  year_start: number;
+  year_end: number | null;
+  countries: string;
+  languages: string;
+  synopsis: string | null;
+  poster_key: string | null;
+  popularity: number;
+  runtime: number | null;
+}
+interface CreditRow {
+  person_id: string;
+  tmdb_id: number | null;
+  name: string;
+  known_for_department: string | null;
+  role: CreditRole;
+  character: string | null;
+  ord: number;
+}
+interface TagRow {
+  kind: "inclusion_type" | "theme";
+  slug: string;
+  label: string;
+  confidence: number;
+  source: TagSource;
+}
+interface BlurbRow {
+  text: string;
+  sources: string;
+  model: string;
+  approved: number;
+}
+
 /**
  * GET /titles/:id — full Title (metadata + credits + tags + approved blurb with sources).
  *
- * TODO: single batched read (titles + credits + title_tags + blurbs), map to core `Title`,
- * 404 when missing, cache in KV for SEARCH_CACHE_TTL_SECONDS.
+ * Four small parallel queries rather than one join: title/credits/tags/blurb are each a
+ * different fan-out shape (1:1, 1:many, 1:many, 0:1) - one mega-query would need
+ * app-side de-duplication across the joins anyway, so separate queries are simpler and
+ * no slower for a single-title read.
  */
 titlesRoute.get("/:id", async (c) => {
   const id = c.req.param("id");
-  const row = await c.env.DB.prepare("SELECT * FROM titles WHERE id = ?").bind(id).first();
-  if (!row) return c.json({ error: "not found" }, 404);
-  return c.json({ todo: "hydrate full Title", title: row });
+
+  const [title, credits, tags, blurb] = await Promise.all([
+    c.env.DB.prepare("SELECT * FROM titles WHERE id = ?").bind(id).first<TitleRow>(),
+    c.env.DB.prepare(
+      `SELECT p.id AS person_id, p.tmdb_id, p.name, p.known_for_department, c.role, c.character, c.ord
+       FROM credits c JOIN people p ON p.id = c.person_id
+       WHERE c.title_id = ?1 ORDER BY c.role, c.ord`,
+    )
+      .bind(id)
+      .all<CreditRow>(),
+    c.env.DB.prepare(
+      `SELECT g.kind, g.slug, g.label, tt.confidence, tt.source
+       FROM title_tags tt JOIN tags g ON g.id = tt.tag_id
+       WHERE tt.title_id = ?1`,
+    )
+      .bind(id)
+      .all<TagRow>(),
+    c.env.DB.prepare("SELECT text, sources, model, approved FROM blurbs WHERE title_id = ?1 AND approved = 1")
+      .bind(id)
+      .first<BlurbRow>(),
+  ]);
+
+  if (!title) return c.json({ error: "not found" }, 404);
+
+  const body: Title = {
+    id: title.id,
+    tmdbId: title.tmdb_id,
+    imdbId: title.imdb_id,
+    kind: title.kind,
+    title: title.title,
+    originalTitle: title.original_title,
+    yearStart: title.year_start,
+    yearEnd: title.year_end,
+    country: JSON.parse(title.countries) as string[],
+    language: JSON.parse(title.languages) as string[],
+    synopsis: title.synopsis,
+    posterKey: title.poster_key,
+    popularity: title.popularity,
+    runtime: title.runtime,
+    credits: credits.results.map((r) => ({
+      person: { id: r.person_id, tmdbId: r.tmdb_id, name: r.name, knownForDepartment: r.known_for_department },
+      role: r.role,
+      character: r.character,
+      order: r.ord,
+    })),
+    tags: tags.results.map((t) => ({
+      kind: t.kind,
+      slug: t.slug as InclusionType | Theme,
+      label: t.label,
+      confidence: t.confidence,
+      source: t.source,
+    })),
+    blurb: blurb
+      ? {
+          text: blurb.text,
+          sources: JSON.parse(blurb.sources),
+          model: blurb.model,
+          approved: Boolean(blurb.approved),
+        }
+      : null,
+  };
+
+  return c.json(body);
 });
 
 /** GET /titles/:id/similar — content-based neighbors from Vectorize (V1). */
