@@ -134,12 +134,14 @@ export async function setJob(
   ref: string,
   stage: string,
   status: "pending" | "running" | "needs_review" | "done" | "error",
+  errorMessage: string | null = null,
 ): Promise<void> {
   await env.DB.prepare(
-    `INSERT INTO ingest_jobs (id, title_ref, stage, status, updated_at)
-     VALUES (?1,?2,?3,?4, datetime('now'))
-     ON CONFLICT(id) DO UPDATE SET stage=excluded.stage, status=excluded.status, updated_at=datetime('now')`,
+    `INSERT INTO ingest_jobs (id, title_ref, stage, status, error, updated_at)
+     VALUES (?1,?2,?3,?4,?5, datetime('now'))
+     ON CONFLICT(id) DO UPDATE SET
+       stage=excluded.stage, status=excluded.status, error=excluded.error, updated_at=datetime('now')`,
   )
-    .bind(id, ref, stage, status)
+    .bind(id, ref, stage, status, errorMessage)
     .run();
 }
