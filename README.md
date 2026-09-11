@@ -110,8 +110,16 @@ infra/
 
 ```bash
 pnpm install
-cp .dev.vars.example apps/api/.dev.vars      # fill TMDB_API_KEY, OMDB_API_KEY, optional ANTHROPIC_API_KEY
+cp apps/ingest/.dev.vars.example apps/ingest/.dev.vars   # fill TMDB_API_KEY, OMDB_API_KEY
+cp apps/api/.dev.vars.example apps/api/.dev.vars         # optional: ANTHROPIC_API_KEY
 ```
+
+`TMDB_API_KEY` (free, [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api)) and
+`OMDB_API_KEY` (free tier, [omdbapi.com/apikey.aspx](https://www.omdbapi.com/apikey.aspx)) are
+only used by `apps/ingest` — the resolve/fetch step of the Workflow. `wrangler dev` loads
+`.dev.vars` automatically; for a deployed worker, set the same keys with
+`wrangler secret put TMDB_API_KEY` (see [infra/README.md](infra/README.md)) instead —
+`.dev.vars` is gitignored and never used in production.
 
 Create the Cloudflare resources (see [infra/README.md](infra/README.md)):
 

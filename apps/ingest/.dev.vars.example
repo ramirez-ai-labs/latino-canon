@@ -1,0 +1,14 @@
+# Copy to apps/ingest/.dev.vars (gitignored) and fill in real values.
+# wrangler dev loads this file automatically; never commit the filled-in version.
+
+TMDB_API_KEY=
+OMDB_API_KEY=
+CF_ACCOUNT_ID=
+
+# Optional: routes classify/blurb to Claude instead of Workers AI. Requires
+# LLM_PROVIDER=anthropic (set in wrangler.jsonc vars, or override here for local dev).
+ANTHROPIC_API_KEY=
+
+# Any string works locally; must match what you send in the Authorization header
+# when calling this worker's /ingest and /jobs endpoints.
+INGEST_ADMIN_TOKEN=dev-only-change-me
