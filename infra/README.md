@@ -72,6 +72,22 @@ pnpm --filter @latino-canon/ingest deploy
 pnpm --filter @latino-canon/web deploy
 ```
 
+## 8. GitHub Actions: auto-ingest new canon titles
+
+`.github/workflows/ingest-new-titles.yml` triggers a title's ingestion automatically
+once a PR that adds it to `apps/ingest/src/seed/canon.seed.json` merges to `main` —
+so adding a title to the canon doesn't need a manual `curl`/CLI call against the
+deployed worker. It needs the *deployed* ingest worker's URL and admin token as
+repo-level GitHub config (Settings → Secrets and variables → Actions):
+
+```text
+INGEST_URL            (Variable) — e.g. https://latino-canon-ingest.<acct>.workers.dev
+INGEST_ADMIN_TOKEN     (Secret)   — same value as the wrangler secret set in step 6
+```
+
+`INGEST_URL` is a Variable, not a Secret, since it's just the worker's public URL —
+nothing sensitive about it.
+
 ## Free-tier ceilings to watch
 
 | Resource | Free limit | Mitigation |
