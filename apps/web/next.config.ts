@@ -18,6 +18,7 @@ export default nextConfig;
 
 // OpenNext dev shim so `next dev` can see Cloudflare bindings locally.
 if (process.env.LOCAL_DEV !== "1") {
-  const load = Function("moduleName", "return require(moduleName)") as (moduleName: string) => typeof import("@opennextjs/cloudflare");
-  void load("@opennextjs/cloudflare").initOpenNextCloudflareForDev();
+  void import("@opennextjs/cloudflare").then(({ initOpenNextCloudflareForDev }) => {
+    initOpenNextCloudflareForDev();
+  });
 }

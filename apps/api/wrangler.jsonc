@@ -1,39 +1,48 @@
 {
-  "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "latino-canon-api",
-  "main": "src/index.ts",
-  "compatibility_date": "2026-01-15",
-  "compatibility_flags": ["nodejs_compat"],
-  "observability": { "enabled": true },
-
-  "ai": { "binding": "AI" },
-
-  "vectorize": [
-    { "binding": "VECTORIZE", "index_name": "latino-canon-titles" }
-  ],
-
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "latino-canon",
-      "database_id": "REPLACE_WITH_D1_ID",
-      "migrations_dir": "migrations"
-    }
-  ],
-
-  "kv_namespaces": [
-    { "binding": "CACHE", "id": "REPLACE_WITH_KV_ID" }
-  ],
-
-  "r2_buckets": [
-    { "binding": "POSTERS", "bucket_name": "latino-canon-posters" }
-  ],
-
-  "vars": {
-    "LLM_PROVIDER": "workers-ai",
-    "AI_GATEWAY_ID": "latino-canon",
-    "SEARCH_CACHE_TTL_SECONDS": "300"
-  }
-
-  // Secrets (wrangler secret put): CF_ACCOUNT_ID, ANTHROPIC_API_KEY
+	"$schema": "../../node_modules/wrangler/config-schema.json",
+	"name": "latino-canon-api",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-01-15",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"observability": {
+		"enabled": true
+	},
+	"ai": {
+		"binding": "AI"
+	},
+	"vectorize": [
+		{
+			"binding": "VECTORIZE",
+			"index_name": "latino-canon-titles",
+			"remote": true
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "latino-canon",
+			"database_id": "d6e2a10c-d436-4512-991e-cbc66918a777",
+			"migrations_dir": "migrations"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "CACHE",
+			"id": "3cbc7e31b2de454db393f22775cc17ce"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "POSTERS",
+			"bucket_name": "latino-canon-posters"
+		}
+	],
+	"vars": {
+		"LLM_PROVIDER": "workers-ai",
+		"AI_GATEWAY_ID": "latino-canon",
+		"SEARCH_CACHE_TTL_SECONDS": "300"
+	}
+	// Secrets (wrangler secret put): CF_ACCOUNT_ID, ANTHROPIC_API_KEY
 }
