@@ -196,5 +196,17 @@ for the whole seed catalog.
 
 ## Status
 
-Scaffold. Modules have real signatures and TODOs, not full implementations. Start with
-`apps/api/src/search/hybrid.ts` and `apps/ingest/src/workflow.ts`.
+The ingest resolve → fetch → normalize → persist path is implemented: TMDB search/detail
+mapping and OMDb ratings mapping (`apps/ingest/src/sources`), credit normalization
+(`normalize.ts`), and people/credits/tag upserts (`persist.ts`) are real code, covered by
+unit tests against realistic fixture payloads (`pnpm --filter @latino-canon/ingest run
+test`). What hasn't happened yet: running it against the *live* TMDB/OMDb APIs or a
+deployed Workflow (`pnpm --filter ingest seed`) — that needs real `TMDB_API_KEY` /
+`OMDB_API_KEY` and a Cloudflare account, so the classify/embed/blurb steps remain
+implemented-but-unexercised against real data.
+
+Other open scaffold items: RRF weights are still fixed at `[1, 1]`
+(`apps/api/src/search/hybrid.ts`, pending real relevance judgments to tune against);
+the `/titles/:id` read path still returns a stub instead of hydrating the full `Title`
+(`apps/api/src/routes/titles.ts`); and the nightly cron's retry/refresh logic is
+unimplemented (`apps/ingest/src/maintenance.ts`).

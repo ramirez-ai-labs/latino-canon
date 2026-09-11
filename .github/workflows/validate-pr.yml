@@ -47,11 +47,17 @@ jobs:
       - name: Typecheck eval
         run: pnpm --filter @latino-canon/eval run typecheck
 
+      - name: Typecheck ingest
+        run: pnpm --filter @latino-canon/ingest run typecheck
+
       - name: Test core (RRF ranking)
         run: pnpm --filter @latino-canon/core run test
 
       - name: Test eval (retrieval metrics)
         run: pnpm --filter @latino-canon/eval run test
+
+      - name: Test ingest (TMDB/OMDb mapping, normalization)
+        run: pnpm --filter @latino-canon/ingest run test
 
       - name: Test API (includes fixture-backed lexical retrieval regression)
         run: pnpm --filter @latino-canon/api run test

@@ -33,7 +33,7 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
       return { details, ratings };
     });
 
-    const title = await step.do("normalize", () => normalizeTitle(p, raw.details, raw.ratings));
+    const title = await step.do("normalize", async () => normalizeTitle(p, raw.details, raw.ratings));
 
     const exists = await step.do("check exists", async () => {
       const row = await this.env.DB.prepare("SELECT id FROM titles WHERE id = ?").bind(title.id).first();
