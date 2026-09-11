@@ -6,6 +6,7 @@ import {
   BLURB_SYSTEM,
   blurbUser,
   blurbSchema,
+  coerceLlmText,
   extractJson,
   MODELS,
   type BlurbResult,
@@ -125,8 +126,8 @@ async function runLlm(env: Env, task: "classify" | "blurb", system: string, user
       temperature: task === "blurb" ? 0.3 : 0,
     } as Parameters<Ai["run"]>[1],
     { gateway: { id: env.AI_GATEWAY_ID, metadata: { task, pipeline: "ingest" } } },
-  )) as { response?: string };
-  return res.response ?? "";
+  )) as { response?: unknown };
+  return coerceLlmText(res.response);
 }
 
 function creditNames(t: Title, role: "director" | "writer" | "creator" | "cast"): string[] {

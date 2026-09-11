@@ -1,4 +1,4 @@
-import { MODELS, type LlmCallOptions, type LlmClient, type LlmResult } from "@latino-canon/core";
+import { coerceLlmText, MODELS, type LlmCallOptions, type LlmClient, type LlmResult } from "@latino-canon/core";
 
 /**
  * Workers AI via the native binding, routed through AI Gateway for logging + caching.
@@ -32,10 +32,10 @@ export class WorkersAiClient implements LlmClient {
           metadata: { task: opts.task },
         },
       },
-    )) as { response?: string };
+    )) as { response?: unknown };
 
     return {
-      text: res.response ?? "",
+      text: coerceLlmText(res.response),
       model,
       provider: this.provider,
       cached: false, // gateway cache status is available via response headers on REST, not the binding
