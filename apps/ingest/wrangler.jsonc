@@ -38,9 +38,8 @@
   },
 
   "vars": {
-    "LLM_PROVIDER": "workers-ai",
     "AI_GATEWAY_ID": "latino-canon"
   }
 
-  // Secrets: TMDB_API_KEY, OMDB_API_KEY, CF_ACCOUNT_ID, ANTHROPIC_API_KEY, INGEST_ADMIN_TOKEN
+  // Secrets: TMDB_API_KEY, OMDB_API_KEY, INGEST_ADMIN_TOKEN
 }

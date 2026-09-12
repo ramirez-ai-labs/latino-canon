@@ -53,23 +53,19 @@ it, but every `env.AI.run(...)` call in this codebase passes a `gateway: { id: .
 option and **fails outright** (`AiGatewayError: 2001`) if that gateway doesn't exist -
 so `classify`/`blurb`/query-rewrite all break, not just AI Gateway's caching/logging.
 
-Enable caching + analytics in the dashboard. When using Claude, add the Anthropic
-API key as a gateway BYOK secret or pass it per-request (current setup passes per-request).
+Enable caching + analytics in the dashboard.
 
 ## 6. Secrets
 
 ```bash
 # api
-cd apps/api
-wrangler secret put CF_ACCOUNT_ID
-wrangler secret put ANTHROPIC_API_KEY   # optional
+# (no secrets today - AI Gateway id is a plain var, and Workers AI via the native
+# binding doesn't need an account id the way a REST call would)
 
 # ingest
-cd ../ingest
+cd apps/ingest
 wrangler secret put TMDB_API_KEY
 wrangler secret put OMDB_API_KEY
-wrangler secret put CF_ACCOUNT_ID
-wrangler secret put ANTHROPIC_API_KEY   # optional
 wrangler secret put INGEST_ADMIN_TOKEN
 ```
 

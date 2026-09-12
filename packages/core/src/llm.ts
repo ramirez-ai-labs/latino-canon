@@ -1,11 +1,10 @@
 /**
- * Provider abstraction so the runtime path can stay on free Workers AI while the
- * offline path (blurb generation) can opt into Claude for quality. Both routes go
- * through AI Gateway for caching + observability.
+ * Thin LLM call abstraction over Workers AI, routed through AI Gateway for caching +
+ * observability. Workers AI only, by design - no closed-model provider in this project.
  */
 import { INCLUSION_TYPES, THEMES } from "./taxonomy.js";
 
-export type LlmProvider = "workers-ai" | "anthropic";
+export type LlmProvider = "workers-ai";
 
 export interface LlmMessage {
   role: "system" | "user" | "assistant";
@@ -34,20 +33,12 @@ export interface LlmClient {
   call(opts: LlmCallOptions): Promise<LlmResult>;
 }
 
-/** Model choice per task per provider. Keep runtime tasks small/cheap. */
-export const MODELS: Record<LlmProvider, Record<LlmCallOptions["task"], string>> = {
-  "workers-ai": {
-    "query-rewrite": "@cf/meta/llama-3.1-8b-instruct",
-    classify: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-    blurb: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-    judge: "@cf/meta/llama-3.1-8b-instruct",
-  },
-  anthropic: {
-    "query-rewrite": "claude-haiku-4-5",
-    classify: "claude-haiku-4-5",
-    blurb: "claude-sonnet-5",
-    judge: "claude-haiku-4-5",
-  },
+/** Model choice per task. Keep runtime tasks small/cheap. */
+export const MODELS: Record<LlmCallOptions["task"], string> = {
+  "query-rewrite": "@cf/meta/llama-3.1-8b-instruct",
+  classify: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  blurb: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  judge: "@cf/meta/llama-3.1-8b-instruct",
 };
 
 export const EMBEDDING_MODEL = "@cf/baai/bge-m3"; // 1024-dim, multilingual (EN + ES)

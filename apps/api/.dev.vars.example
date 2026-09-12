@@ -1,8 +1,0 @@
-# Copy to apps/api/.dev.vars (gitignored) and fill in real values.
-# wrangler dev loads this file automatically; never commit the filled-in version.
-
-CF_ACCOUNT_ID=
-
-# Optional: only needed if you set LLM_PROVIDER=anthropic (default is workers-ai,
-# which costs $0 and needs no key).
-ANTHROPIC_API_KEY=
