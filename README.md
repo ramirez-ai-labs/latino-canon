@@ -220,8 +220,14 @@ deployed Workflow (`pnpm --filter ingest seed`) — that needs real `TMDB_API_KE
 `OMDB_API_KEY` and a Cloudflare account, so the classify/embed/blurb steps remain
 implemented-but-unexercised against real data.
 
+`GET /titles/:id` hydrates the full `Title` (metadata + credits + tags + approved
+blurb) from D1 rather than returning a raw row, and poster images are served from R2
+via a dedicated `/posters` route (`apps/api/src/routes/titles.ts`,
+`apps/api/src/routes/posters.ts`).
+
 Other open scaffold items: RRF weights are still fixed at `[1, 1]`
 (`apps/api/src/search/hybrid.ts`, pending real relevance judgments to tune against);
-the `/titles/:id` read path still returns a stub instead of hydrating the full `Title`
-(`apps/api/src/routes/titles.ts`); and the nightly cron's retry/refresh logic is
-unimplemented (`apps/ingest/src/maintenance.ts`).
+`/titles/:id/similar` still returns a stub instead of Vectorize nearest-neighbors; and
+the nightly cron's retry/refresh logic is unimplemented (`apps/ingest/src/maintenance.ts`)
+— `retryErroredJobs` bumps the attempt counter but doesn't reconstruct params and
+requeue the Workflow, and `refreshPopularity` is a no-op.
