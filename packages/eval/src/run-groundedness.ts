@@ -2,16 +2,19 @@
  * Blurb groundedness eval: for each stored blurb, ask an LLM judge whether every
  * claim is supported by the blurb's sources. Reports mean score + the worst offenders.
  *
- *   API_URL=... ANTHROPIC_API_KEY=... pnpm eval:groundedness
+ *   API_URL=... CF_ACCOUNT_ID=... CLOUDFLARE_API_TOKEN=... pnpm eval:groundedness <titleId> [titleId ...]
  *
- * Uses the api's /titles endpoint to pull blurb + sources. The judge call goes direct
- * to Anthropic (or set JUDGE=workers-ai to hit the api's own gateway route — TODO).
+ * Uses the api's /titles endpoint to pull blurb + sources. The judge call goes to
+ * Workers AI's REST API directly (this script runs standalone via tsx, outside a
+ * Worker, so there's no `env.AI` binding to use) - Workers AI only, by design, no
+ * closed-model provider in this project.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
-import { GROUNDEDNESS_JUDGE_SYSTEM } from "@latino-canon/core";
+import { extractJson, GROUNDEDNESS_JUDGE_SYSTEM, MODELS } from "@latino-canon/core";
 
 const API_URL = process.env.API_URL ?? "http://localhost:8787";
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
+const CLOUDFLARE_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
 
 interface JudgeResult {
   titleId: string;
@@ -20,26 +23,28 @@ interface JudgeResult {
 }
 
 async function judge(blurb: string, sources: { id: string; text: string }[]): Promise<Omit<JudgeResult, "titleId">> {
-  if (!ANTHROPIC_API_KEY) throw new Error("set ANTHROPIC_API_KEY for the judge");
+  if (!CF_ACCOUNT_ID || !CLOUDFLARE_API_TOKEN) {
+    throw new Error("set CF_ACCOUNT_ID and CLOUDFLARE_API_TOKEN for the judge (Workers AI REST API)");
+  }
   const user = `BLURB:\n${blurb}\n\nSOURCES:\n${sources.map((s) => `[${s.id}] ${s.text}`).join("\n")}`;
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
+  const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/${MODELS.judge}`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
+      authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
     },
     body: JSON.stringify({
-      model: "claude-haiku-4-5",
-      system: GROUNDEDNESS_JUDGE_SYSTEM,
-      messages: [{ role: "user", content: user }],
-      max_tokens: 300,
+      messages: [
+        { role: "system", content: GROUNDEDNESS_JUDGE_SYSTEM },
+        { role: "user", content: user },
+      ],
     }),
   });
-  const d = (await r.json()) as { content: { type: string; text: string }[] };
-  const text = d.content.find((b) => b.type === "text")?.text ?? "{}";
-  const parsed = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
-  return { score: Number(parsed.score) || 0, unsupported: parsed.unsupported ?? [] };
+  if (!r.ok) throw new Error(`workers-ai judge ${r.status}: ${await r.text()}`);
+  const d = (await r.json()) as { result?: { response?: string }; success: boolean; errors?: unknown[] };
+  if (!d.success) throw new Error(`workers-ai judge failed: ${JSON.stringify(d.errors)}`);
+  const parsed = extractJson(d.result?.response ?? "{}") as { score?: unknown; unsupported?: unknown };
+  return { score: Number(parsed.score) || 0, unsupported: Array.isArray(parsed.unsupported) ? parsed.unsupported : [] };
 }
 
 async function main() {

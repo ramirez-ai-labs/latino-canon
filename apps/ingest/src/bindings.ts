@@ -1,5 +1,3 @@
-import type { LlmProvider } from "@latino-canon/core";
-
 export interface Env {
   AI: Ai;
   VECTORIZE: Vectorize;
@@ -7,14 +5,11 @@ export interface Env {
   POSTERS: R2Bucket;
   INGEST_WORKFLOW: Workflow<IngestParams>;
 
-  LLM_PROVIDER: LlmProvider;
   AI_GATEWAY_ID: string;
 
   // secrets
   TMDB_API_KEY: string;
   OMDB_API_KEY: string;
-  CF_ACCOUNT_ID: string;
-  ANTHROPIC_API_KEY?: string;
   INGEST_ADMIN_TOKEN: string;
 }
 

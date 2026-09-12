@@ -40,9 +40,8 @@
 		}
 	],
 	"vars": {
-		"LLM_PROVIDER": "workers-ai",
 		"AI_GATEWAY_ID": "latino-canon",
 		"SEARCH_CACHE_TTL_SECONDS": "300"
 	}
-	// Secrets (wrangler secret put): CF_ACCOUNT_ID, ANTHROPIC_API_KEY
+	// No secrets - Workers AI via the native binding needs no account id or API key.
 }

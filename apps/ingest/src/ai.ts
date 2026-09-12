@@ -37,8 +37,8 @@ function parseLlm<T>(schema: { parse: (v: unknown) => T }, value: unknown, conte
 
 /**
  * The ingest worker calls Workers AI directly (it doesn't import the api's LlmClient
- * to avoid a cross-worker dependency). Same models, same prompts from core.
- * Set LLM_PROVIDER=anthropic + ANTHROPIC_API_KEY to route blurb generation to Claude.
+ * to avoid a cross-worker dependency). Same models, same prompts from core. Workers AI
+ * only, by design - no closed-model provider in this project.
  */
 
 export async function embedText(env: Env, text: string): Promise<number[]> {
@@ -99,43 +99,15 @@ export async function blurbForIngest(
   return {
     result,
     sources: sources.map(({ id, kind, ref, quote }) => ({ kind, ref, quote })),
-    model: modelFor(env, "blurb"),
+    model: MODELS.blurb,
   };
 }
 
 // --- provider plumbing ------------------------------------------------------
 
-function modelFor(env: Env, task: "classify" | "blurb"): string {
-  return MODELS[env.LLM_PROVIDER][task];
-}
-
 async function runLlm(env: Env, task: "classify" | "blurb", system: string, user: string): Promise<string> {
-  if (env.LLM_PROVIDER === "anthropic") {
-    if (!env.ANTHROPIC_API_KEY) throw new Error("LLM_PROVIDER=anthropic but ANTHROPIC_API_KEY unset");
-    const url = `https://gateway.ai.cloudflare.com/v1/${env.CF_ACCOUNT_ID}/${env.AI_GATEWAY_ID}/anthropic/v1/messages`;
-    const r = await fetch(url, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "cf-aig-metadata": JSON.stringify({ task, pipeline: "ingest" }),
-      },
-      body: JSON.stringify({
-        model: modelFor(env, task),
-        system,
-        messages: [{ role: "user", content: user }],
-        max_tokens: 400,
-        temperature: task === "blurb" ? 0.3 : 0,
-      }),
-    });
-    if (!r.ok) throw new Error(`anthropic ${r.status}: ${await r.text()}`);
-    const d = (await r.json()) as { content: { type: string; text: string }[] };
-    return d.content.filter((b) => b.type === "text").map((b) => b.text).join("");
-  }
-
   const res = (await env.AI.run(
-    modelFor(env, task) as Parameters<Ai["run"]>[0],
+    MODELS[task] as Parameters<Ai["run"]>[0],
     {
       messages: [
         { role: "system", content: system },

@@ -21,15 +21,14 @@ roles.
 | Lexical search | **D1 FTS5** | BM25 full-text ranking built into D1 — no separate Meilisearch/Elastic host to pay for. |
 | Semantic search | **Vectorize** | Managed vector DB, free tier covers this corpus size. `bge-m3` embeddings (1024-dim, **multilingual** — EN + ES synopses). |
 | Hybrid ranking | **Reciprocal Rank Fusion in the Worker** | Combine BM25 + cosine lists deterministically. No reranker service. |
-| LLM inference | **Workers AI** (default) → **Claude via AI Gateway** (opt-in) | Runtime path (query rewriting, classification) uses Workers AI (10k neurons/day free) so the deployed app costs $0. Offline path (blurb generation) can switch to `claude-haiku-4-5` / `claude-sonnet-5` by env var. |
-| LLM observability | **AI Gateway** | Free. Caching, logging, per-request metadata, and provider fallback in front of *both* Workers AI and Anthropic. |
+| LLM inference | **Workers AI** | Runtime path (query rewriting) and offline path (classification, blurb generation) both run on Workers AI (10k neurons/day free) — no closed-model provider, deployed app costs $0. |
+| LLM observability | **AI Gateway** | Free. Caching, logging, and per-request metadata in front of Workers AI. |
 | Async pipelines | **Workflows + Cron Triggers** | Queues require Workers Paid — Workflows are free-tier eligible and give durable, retriable multi-step ingestion. |
 | Object storage | **R2** (optional) | 10 GB free, zero egress. Caches posters so we don't hot-link TMDB. |
 | Cache | **KV** | Search-result and popular-query cache. |
 | Eval | **`packages/eval`** | Recall@k / MRR / nDCG@10 for retrieval; LLM-as-judge groundedness for blurbs. Runs in CI. |
 
-**Everything above is Cloudflare free tier.** The only paid dependency is optional: an
-Anthropic API key for higher-quality blurb generation, run offline from a laptop.
+**Everything above is Cloudflare free tier, with no paid or closed-model dependency.**
 
 ---
 
@@ -47,16 +46,16 @@ Anthropic API key for higher-quality blurb generation, run offline from a laptop
                         │  GET /titles/:id   GET /collections/:slug    │
                         │  POST /feedback                              │
                         │                                             │
-                        │  ai/     rewrite-query · classify · blurb    │
+                        │  ai/     rewrite-query                       │
                         │  search/ lexical(D1 FTS5) · semantic(Vec) ·  │
                         │          hybrid(RRF)                         │
                         └──┬─────────┬──────────┬─────────┬────────────┘
                            │         │          │         │
                      ┌─────▼──┐ ┌────▼────┐ ┌───▼───┐ ┌───▼────────┐
                      │  D1    │ │Vectorize│ │  KV   │ │ Workers AI │
-                     │ +FTS5  │ │ bge-m3  │ │ cache │ │ / AI GW →  │
-                     └────────┘ └─────────┘ └───────┘ │  Claude    │
-                           ▲                          └────────────┘
+                     │ +FTS5  │ │ bge-m3  │ │ cache │ │  / AI GW   │
+                     └────────┘ └─────────┘ └───────┘ └────────────┘
+                           ▲
                            │ writes
                 ┌──────────┴───────────────────────────────────────┐
                 │  apps/ingest   Workflow + Cron (Workers)          │
@@ -111,7 +110,7 @@ infra/
 ```bash
 pnpm install
 cp apps/ingest/.dev.vars.example apps/ingest/.dev.vars   # fill TMDB_API_KEY, OMDB_API_KEY
-cp apps/api/.dev.vars.example apps/api/.dev.vars         # optional: ANTHROPIC_API_KEY
+cp apps/api/.dev.vars.example apps/api/.dev.vars
 ```
 
 `TMDB_API_KEY` (free, [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api)) and
@@ -141,7 +140,7 @@ Evaluate:
 pnpm eval:retrieval      # Recall@k / MRR / nDCG@10 vs packages/eval/src/datasets/queries.jsonl
                          # (needs a running api with real seeded data — hybrid/semantic
                          # modes are only as good as the ingest pipeline behind them)
-pnpm eval:groundedness   # LLM-as-judge over generated blurbs (needs ANTHROPIC_API_KEY)
+pnpm eval:groundedness   # LLM-as-judge over generated blurbs (needs CF_ACCOUNT_ID, CLOUDFLARE_API_TOKEN)
 ```
 
 A narrower, CI-enforced version of the retrieval eval runs on every PR with zero setup:
@@ -210,8 +209,8 @@ already live, it never redeploys the Worker's own code.
 | Vectorize queried dims | 30M/mo | 1024 dims × topK 20 × queries |
 | KV reads | 100,000 | cache hits |
 
-Runtime cost target: **$0**. Anthropic (optional, offline blurbs): a few dollars one-time
-for the whole seed catalog.
+Runtime cost target: **$0**, including ingestion — no paid or closed-model dependency
+anywhere in the stack.
 
 ---
 

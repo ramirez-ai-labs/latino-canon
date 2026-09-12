@@ -9,12 +9,11 @@ export class WorkersAiClient implements LlmClient {
 
   constructor(
     private ai: Ai,
-    private accountId: string,
     private gatewayId: string,
   ) {}
 
   async call(opts: LlmCallOptions): Promise<LlmResult> {
-    const model = MODELS["workers-ai"][opts.task];
+    const model = MODELS[opts.task];
     const res = (await this.ai.run(
       model as Parameters<Ai["run"]>[0],
       {
