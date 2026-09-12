@@ -10,6 +10,11 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "apps/ingest/**"
+      - "packages/core/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/deploy-ingest.yml"
 
 permissions:
   contents: read

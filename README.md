@@ -170,9 +170,10 @@ Protect `main` in GitHub and require this workflow to pass before merging.
 
 After a pull request is merged, `.github/workflows/deploy-web.yml`,
 `deploy-api.yml`, and `deploy-ingest.yml` each deploy their Worker from Ubuntu —
-every push to `main` redeploys all three, regardless of which app's files actually
-changed. Each can also be started manually from **Actions**. Add these repository
-secrets in GitHub:
+each is scoped by `paths:` to its own `apps/<name>/**`, so only the Worker(s) whose
+code actually changed redeploy; a change under `packages/core/**` (shared by all
+three) redeploys all of them. Each can also be started manually from **Actions**.
+Add these repository secrets in GitHub:
 
 ```text
 CLOUDFLARE_API_TOKEN
