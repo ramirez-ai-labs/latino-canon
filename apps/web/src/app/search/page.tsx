@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { SearchBar } from "@/components/SearchBar";
+import { SearchFilters } from "@/components/SearchFilters";
 import { TitleCard } from "@/components/TitleCard";
 import { search } from "@/lib/api";
 
@@ -26,6 +27,7 @@ export default async function SearchPage({
     <>
       <Suspense>
         <SearchBar autoFocus />
+        <SearchFilters />
       </Suspense>
 
       {res.interpretation && (

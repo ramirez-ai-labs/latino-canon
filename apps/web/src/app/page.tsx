@@ -31,7 +31,7 @@ export default async function HomePage() {
           {collections.map((c) => (
             <Link
               key={c.slug}
-              href={`/search?collection=${c.slug}`}
+              href={`/collections/${c.slug}`}
               style={{ padding: "1rem 1.25rem", background: "var(--surface)", borderRadius: 8, minWidth: 180 }}
             >
               <strong>{c.title}</strong>

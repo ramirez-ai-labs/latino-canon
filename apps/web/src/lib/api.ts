@@ -1,6 +1,6 @@
 import "server-only";
 import type { Collection, SearchResponse, Title } from "@latino-canon/core";
-import { localCollections, localSearch, localTitle } from "./local-data";
+import { localCollection, localCollections, localSearch, localTitle } from "./local-data";
 
 /**
  * Server-side API client. Prefers the `API` service binding (no network hop); falls
@@ -25,6 +25,7 @@ async function apiFetch<T>(path: string): Promise<T> {
 function localFetch<T>(path: string): T {
   const url = new URL(path, "http://localhost");
   if (url.pathname === "/collections") return localCollections() as T;
+  if (url.pathname.startsWith("/collections/")) return localCollection(url.pathname.slice("/collections/".length)) as T;
   if (url.pathname.startsWith("/titles/")) return localTitle(url.pathname.slice("/titles/".length)) as T;
   return localSearch({
     q: url.searchParams.get("q") ?? undefined,
