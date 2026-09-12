@@ -26,11 +26,13 @@ function main() {
 
   console.log("Creating Vectorize…");
   run(["vectorize", "create", "latino-canon-titles", "--dimensions=1024", "--metric=cosine"]);
+  // Only kind/decade: Vectorize metadata values must be scalar, and themes/inclusionTypes
+  // are stored as arrays (a title can have more than one) - a metadata index on them
+  // wouldn't make `$eq` filtering work, it'd just spend two of the 10-index free-tier
+  // budget on fields apps/api/src/search/filters.ts no longer pushes down at all.
   for (const [prop, type] of [
     ["kind", "string"],
     ["decade", "number"],
-    ["themes", "string"],
-    ["inclusionTypes", "string"],
   ]) {
     run(["vectorize", "create-metadata-index", "latino-canon-titles", `--property-name=${prop}`, `--type=${type}`]);
   }

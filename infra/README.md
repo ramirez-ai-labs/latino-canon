@@ -18,11 +18,13 @@ Must match the embedding model: **bge-m3 → 1024 dims, cosine.**
 ```bash
 wrangler vectorize create latino-canon-titles --dimensions=1024 --metric=cosine
 
-# metadata indexes for filter push-down (create BEFORE inserting vectors)
+# metadata indexes for filter push-down (create BEFORE inserting vectors).
+# Only kind/decade: Vectorize metadata values must be scalar (string/number/boolean/null),
+# and countries/themes/inclusionTypes are stored as arrays (a title can have more than
+# one) - there's no "array contains" filter operator, so `$eq` against them never
+# matches. apps/api/src/search/semantic.ts re-checks those three against D1 instead.
 wrangler vectorize create-metadata-index latino-canon-titles --property-name=kind   --type=string
 wrangler vectorize create-metadata-index latino-canon-titles --property-name=decade --type=number
-wrangler vectorize create-metadata-index latino-canon-titles --property-name=themes --type=string
-wrangler vectorize create-metadata-index latino-canon-titles --property-name=inclusionTypes --type=string
 ```
 
 ## 3. KV (search cache)
