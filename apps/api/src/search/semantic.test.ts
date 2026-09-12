@@ -1,6 +1,7 @@
 import { env } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
-import { keepMatchingD1 } from "./semantic.js";
+import type { Env } from "../bindings.js";
+import { keepMatchingD1, semanticSearch } from "./semantic.js";
 
 /**
  * Regression for a live bug: semantic search pushed country/theme/inclusionType down to
@@ -54,5 +55,33 @@ describe("keepMatchingD1", () => {
     const hits = [{ titleId: "my-family-1995", score: 0.8 }];
     const kept = await keepMatchingD1(env, hits, { country: "MX" });
     expect(kept).toEqual([]);
+  });
+});
+
+describe("semanticSearch (score floor)", () => {
+  // The actual bug this guards: with no minimum score, an off-topic query like "DC
+  // comics" returned 14 of 16 titles - Vectorize always returns its topK nearest
+  // neighbors by cosine distance, however weak the match, so a small catalog has no
+  // natural "nothing matched" case without a floor.
+  function fakeEnv(scores: number[]): Env {
+    return {
+      ...env,
+      AI: { run: async () => ({ data: [[0, 0, 0]] }) },
+      VECTORIZE: {
+        query: async () => ({
+          matches: scores.map((score, i) => ({ id: `title-${i}`, score })),
+        }),
+      },
+    } as unknown as Env;
+  }
+
+  it("drops matches below the minimum score", async () => {
+    const hits = await semanticSearch(fakeEnv([0.6, 0.4, 0.2, 0.1]), "some query", {}, 10);
+    expect(hits.map((h) => h.score)).toEqual([0.6, 0.4]);
+  });
+
+  it("returns nothing when every candidate is below the floor", async () => {
+    const hits = await semanticSearch(fakeEnv([0.3, 0.2]), "off-topic query", {}, 10);
+    expect(hits).toEqual([]);
   });
 });
