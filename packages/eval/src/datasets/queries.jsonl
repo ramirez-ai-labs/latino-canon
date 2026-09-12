@@ -1,4 +1,4 @@
-{"id": "q01", "query": "Mexican family stories from the 90s", "relevant": ["mi-familia-1995", "selena-1997"], "note": "NL query; exercises decade + country filter lift"}
+{"id": "q01", "query": "Mexican family stories from the 90s", "relevant": ["my-family-1995", "selena-1997"], "note": "NL query; exercises decade filter lift. Ingested id is my-family-1995 (TMDB's English release title for Mi Familia), not the seed ref's own slug"}
 {"id": "q02", "query": "Selena", "relevant": ["selena-1997"], "note": "exact title, lexical should nail it"}
 {"id": "q03", "query": "coming of age at the border", "relevant": ["el-norte-1983", "under-the-same-moon-2007", "machuca-2004"], "note": "semantic; no shared keywords with titles"}
 {"id": "q04", "query": "teacher inspires students math", "relevant": ["stand-and-deliver-1988"], "note": "plot description, no title words"}

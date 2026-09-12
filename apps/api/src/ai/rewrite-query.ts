@@ -48,11 +48,18 @@ export async function rewriteQuery(
 
 const DECADE_RE = /\b((?:19|20)\d0|\d0)s?\b/;
 const DECADE_WORDS: Record<string, number> = { nineties: 1990, eighties: 1980, seventies: 1970 };
-const COUNTRY_WORDS: Record<string, string> = {
-  mexican: "MX", mexico: "MX", chilean: "CL", chile: "CL",
-  cuban: "CU", cuba: "CU", "puerto rican": "PR", colombian: "CO", argentine: "AR",
-};
 
+/**
+ * No nationality/heritage-word -> country filter here (there was one; it's gone).
+ * `country` on a Title is where the work was *produced* (ISO 3166-1), but this catalog
+ * is overwhelmingly US-produced stories about other-country heritage — "Mexican family",
+ * "Cuban-American" describe the characters/community, not the production's origin.
+ * Confirmed live via packages/eval: that heuristic broke 2 of 15 golden queries (My
+ * Family and One Day at a Time, both US-produced, both got window-shopped out by an
+ * inferred country=MX/CU filter) and never once helped the other 13. Leave nationality
+ * words in the free-text query for lexical/semantic matching instead of turning them
+ * into a structured filter the rules layer can't get right.
+ */
 function rulesRewrite(phrase: string): {
   cleaned: string;
   filters: SearchFilters;
@@ -74,13 +81,6 @@ function rulesRewrite(phrase: string): {
   for (const [word, year] of Object.entries(DECADE_WORDS)) {
     if (cleaned.toLowerCase().includes(word)) {
       filters.decade = year;
-      cleaned = cleaned.replace(new RegExp(word, "i"), "").trim();
-      hits++;
-    }
-  }
-  for (const [word, iso] of Object.entries(COUNTRY_WORDS)) {
-    if (cleaned.toLowerCase().includes(word)) {
-      filters.country = iso;
       cleaned = cleaned.replace(new RegExp(word, "i"), "").trim();
       hits++;
     }
