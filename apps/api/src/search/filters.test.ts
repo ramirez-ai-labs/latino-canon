@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterToSql } from "./filters.js";
+import { filterToSql, filterToVectorize, needsD1PostFilter } from "./filters.js";
 
 describe("filterToSql", () => {
   // The actual bug this guards: lexicalSearch embeds this WHERE fragment after its own
@@ -36,5 +36,34 @@ describe("filterToSql", () => {
     expect(where).toContain("BETWEEN ?3 AND ?4"); // decade
     expect(where).toContain("?5"); // country
     expect(params).toEqual(["film", 1990, 1999, "MX"]);
+  });
+});
+
+describe("filterToVectorize", () => {
+  // The actual bug this guards: countries/themes/inclusionTypes are stored as arrays in
+  // Vectorize metadata (a title can have more than one of each), but Vectorize metadata
+  // values must be a scalar - there's no "array contains" filter operator. `{ $eq: "MX" }"`
+  // against an array-valued field never matches, so semantic search + any of these three
+  // filters always returned zero results, confirmed live against the deployed API.
+  it("only pushes down kind and decade, the two scalar-valued filters", () => {
+    const f = filterToVectorize({ kind: "film", decade: 1990, country: "MX", theme: "family", inclusionType: "led_by" });
+    expect(f).toEqual({ kind: "film", decade: 1990 });
+  });
+
+  it("omits keys entirely for unset filters", () => {
+    expect(filterToVectorize({})).toEqual({});
+  });
+});
+
+describe("needsD1PostFilter", () => {
+  it("is true when country, theme, or inclusionType is set", () => {
+    expect(needsD1PostFilter({ country: "MX" })).toBe(true);
+    expect(needsD1PostFilter({ theme: "family" })).toBe(true);
+    expect(needsD1PostFilter({ inclusionType: "led_by" })).toBe(true);
+  });
+
+  it("is false when only kind/decade (or nothing) is set", () => {
+    expect(needsD1PostFilter({})).toBe(false);
+    expect(needsD1PostFilter({ kind: "film", decade: 1990 })).toBe(false);
   });
 });
