@@ -9,6 +9,7 @@ import {
   coerceLlmText,
   extractJson,
   normalizeClassificationJson,
+  normalizeBlurbJson,
   MODELS,
   type BlurbResult,
   type BlurbSource,
@@ -93,7 +94,7 @@ export async function blurbForIngest(
     BLURB_SYSTEM,
     blurbUser(sources.map((s) => ({ id: s.id, kind: s.kind, text: s.text }))),
   );
-  const result = parseLlm(blurbSchema, extractJson(out), "blurb");
+  const result = parseLlm(blurbSchema, normalizeBlurbJson(extractJson(out)), "blurb");
   void classification;
   return {
     result,

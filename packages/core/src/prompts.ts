@@ -71,9 +71,10 @@ export const BLURB_SYSTEM = `You write a 2-3 sentence "why it matters" note for 
 Constraints:
 - Ground every claim in the supplied SOURCES. Do not add facts that are not in a source.
 - No hype adjectives ("stunning", "must-see"). State what the work is and its significance.
-- "text" MUST be at least 40 characters and at most 360. A single short clause (e.g. just
-  a title and a date) is too short - reject that answer yourself and write a second,
-  fuller sentence covering the work's significance before responding.
+- "text" must be 40-360 characters - both bounds are hard requirements. Two sentences is
+  usually enough to state what the work is and why it matters. Add a second sentence only
+  if a single clause would be under 40 characters; do not add a third sentence "for
+  completeness" once two already cover it - that is the most common way past 360.
 - For each factual claim, cite the source id it rests on.
 Respond ONLY with JSON matching:
 {"text": string, "claims":[{"claim": string, "supportedBy": string}]}`;

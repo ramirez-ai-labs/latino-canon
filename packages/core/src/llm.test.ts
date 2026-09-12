@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { coerceLlmText, normalizeClassificationJson } from "./llm.js";
+import { coerceLlmText, normalizeBlurbJson, normalizeClassificationJson } from "./llm.js";
 
 describe("coerceLlmText", () => {
   it("passes a string through unchanged", () => {
@@ -52,5 +52,38 @@ describe("normalizeClassificationJson", () => {
       note: unknown;
     };
     expect(out.note).toBeUndefined();
+  });
+});
+
+describe("normalizeBlurbJson", () => {
+  // The actual bug this guards: tightening the blurb prompt to fix a too-short "text"
+  // (a prior fix) made Workers AI consistently overshoot the *other* end instead - live,
+  // 6 titles in a row all failed with "text" over the 360-character max after that
+  // change. Truncating deterministically holds regardless of which way the model's
+  // wording drifts next.
+  it("leaves text under the max unchanged", () => {
+    const out = normalizeBlurbJson({ text: "Short and grounded.", claims: [] }) as { text: string };
+    expect(out.text).toBe("Short and grounded.");
+  });
+
+  it("truncates overlong text at the last complete sentence within the limit", () => {
+    const first = "A".repeat(300) + ".";
+    const second = " " + "B".repeat(100) + ".";
+    const out = normalizeBlurbJson({ text: first + second, claims: [] }) as { text: string };
+    expect(out.text).toBe(first);
+    expect(out.text.length).toBeLessThanOrEqual(360);
+  });
+
+  it("falls back to an ellipsis cut when there's no sentence boundary within the limit", () => {
+    const noPunctuation = "A".repeat(400);
+    const out = normalizeBlurbJson({ text: noPunctuation, claims: [] }) as { text: string };
+    expect(out.text.length).toBeLessThanOrEqual(360);
+    expect(out.text.endsWith("…")).toBe(true);
+  });
+
+  it("passes through fields other than text untouched", () => {
+    const claims = [{ claim: "x", supportedBy: "s1" }];
+    const out = normalizeBlurbJson({ text: "A".repeat(400) + ".", claims }) as { claims: unknown };
+    expect(out.claims).toBe(claims);
   });
 });
