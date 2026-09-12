@@ -60,13 +60,26 @@ export function filterToSql(
   }
 }
 
-/** Vectorize metadata filter equivalent — applied at query time on the vector index. */
+/**
+ * Vectorize metadata filter equivalent — applied at query time on the vector index.
+ *
+ * Only `kind` and `decade` are pushed down here: Vectorize metadata values must be a
+ * scalar (string/number/boolean/null; see Cloudflare's Vectorize filtering docs), but
+ * `countries`/`themes`/`inclusionTypes` are stored as arrays (a title can have more than
+ * one of each) since Vectorize has no "array contains" filter operator. `{ $eq: "MX" }`
+ * against an array-valued field never matches, so a text query combined with a
+ * country/theme/inclusionType filter silently returned zero rows in semantic mode.
+ * `semanticSearch` re-checks those three against D1 instead (see `filterToSql` above,
+ * the source of truth `lexicalSearch` already filters against correctly).
+ */
 export function filterToVectorize(filters: SearchFilters): VectorizeVectorMetadataFilter {
   const f: VectorizeVectorMetadataFilter = {};
   if (filters.kind) f.kind = filters.kind;
   if (filters.decade) f.decade = filters.decade;
-  if (filters.country) f.countries = { $eq: filters.country };
-  if (filters.theme) f.themes = { $eq: filters.theme };
-  if (filters.inclusionType) f.inclusionTypes = { $eq: filters.inclusionType };
   return f;
+}
+
+/** True when `filters` has a constraint `filterToVectorize` can't push down to Vectorize. */
+export function needsD1PostFilter(filters: SearchFilters): boolean {
+  return Boolean(filters.country || filters.theme || filters.inclusionType);
 }
