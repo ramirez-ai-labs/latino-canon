@@ -1,43 +1,61 @@
 import type { SearchFilters } from "@latino-canon/core";
 import type { VectorizeVectorMetadataFilter } from "@cloudflare/workers-types";
 
-/** Build a SQL WHERE fragment + positional params for the structured filters. */
+/**
+ * Build a SQL WHERE fragment + positional params for the structured filters.
+ *
+ * `paramOffset` is how many `?N` placeholders the caller already bound ahead of these
+ * (e.g. lexical.ts's `MATCH ?1`) - without it, this function's own placeholders start
+ * back at `?1` and collide with the caller's, so a filter combined with a text query
+ * silently compares against the wrong bound value instead of erroring. Every placeholder
+ * here is also computed and pushed to `params` in the same step, never precomputed twice
+ * on one line - two `p()` calls before either push (the old BETWEEN clause) return the
+ * same number since neither has incremented `params` yet.
+ */
 export function filterToSql(
   filters: SearchFilters,
   titleAlias = "t",
+  paramOffset = 0,
 ): { where: string; params: (string | number)[] } {
   const clauses: string[] = [];
   const params: (string | number)[] = [];
-  const p = () => `?${params.length + 1}`;
+  const p = () => `?${paramOffset + params.length + 1}`;
 
   if (filters.kind) {
-    clauses.push(`${titleAlias}.kind = ${p()}`);
+    const ph = p();
     params.push(filters.kind);
+    clauses.push(`${titleAlias}.kind = ${ph}`);
   }
   if (filters.decade) {
-    clauses.push(`${titleAlias}.year_start BETWEEN ${p()} AND ${p()}`);
-    params.push(filters.decade, filters.decade + 9);
+    const lo = p();
+    params.push(filters.decade);
+    const hi = p();
+    params.push(filters.decade + 9);
+    clauses.push(`${titleAlias}.year_start BETWEEN ${lo} AND ${hi}`);
   }
   if (filters.country) {
-    clauses.push(`EXISTS (SELECT 1 FROM json_each(${titleAlias}.countries) WHERE value = ${p()})`);
+    const ph = p();
     params.push(filters.country);
+    clauses.push(`EXISTS (SELECT 1 FROM json_each(${titleAlias}.countries) WHERE value = ${ph})`);
   }
   if (filters.theme) {
-    clauses.push(tagExists("theme"));
+    const ph = p();
     params.push(filters.theme);
+    clauses.push(tagExists("theme", ph));
   }
   if (filters.inclusionType) {
-    clauses.push(tagExists("inclusion_type"));
+    const ph = p();
     params.push(filters.inclusionType);
+    clauses.push(tagExists("inclusion_type", ph));
   }
 
   return { where: clauses.join(" AND "), params };
 
-  function tagExists(kind: string): string {
+  function tagExists(kind: string, placeholder: string): string {
     return `EXISTS (
       SELECT 1 FROM title_tags tt
       JOIN tags g ON g.id = tt.tag_id
-      WHERE tt.title_id = ${titleAlias}.id AND g.kind = '${kind}' AND g.slug = ?${params.length + 1}
+      WHERE tt.title_id = ${titleAlias}.id AND g.kind = '${kind}' AND g.slug = ${placeholder}
     )`;
   }
 }

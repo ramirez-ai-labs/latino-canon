@@ -15,7 +15,7 @@ export async function lexicalSearch(
   const match = toFtsMatch(query);
   if (!match) return [];
 
-  const { where, params } = filterToSql(filters, "t");
+  const { where, params } = filterToSql(filters, "t", 1); // ?1 is already MATCH below
 
   const sql = `
     SELECT t.id AS titleId, -bm25(titles_fts, 4.0, 2.0, 1.0, 2.0, 1.5) AS score

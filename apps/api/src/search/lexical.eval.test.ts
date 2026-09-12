@@ -92,6 +92,14 @@ describe("lexicalSearch (fixture regression)", () => {
     });
   }
 
+  // Regression for a live bug: lexicalSearch's own `MATCH ?1` and filterToSql's
+  // placeholders collided (both started numbering at ?1), so a text query combined
+  // with a structured filter always returned zero rows even when each alone matched.
+  it("still finds a match when a structured filter is combined with the text query", async () => {
+    const hits = await lexicalSearch(env, "Selena", { decade: 1980 }, 5);
+    expect(hits.map((h) => h.titleId)).toContain("selena-1997");
+  });
+
   it("meets the recall@5 / MRR floor across the fixture set", async () => {
     const perQuery = await Promise.all(
       GOLD.map(async (g) => ({
