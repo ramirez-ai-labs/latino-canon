@@ -237,6 +237,9 @@ canon hasn't been run yet.
 
 ## Status
 
+See [ROADMAP.md](ROADMAP.md) for the design philosophy behind what's built vs. what's
+next, and a prioritized backlog.
+
 The ingest resolve → fetch → normalize → persist → classify → embed → blurb path
 is implemented and has been run end-to-end against live TMDB/OMDb and a deployed
 Workflow (`pnpm --filter ingest seed`) — all 16 seed titles are ingested, classified,
