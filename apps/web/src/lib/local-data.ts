@@ -48,6 +48,11 @@ export function localCollections(): { collections: Collection[] } {
   return { collections: collections.map((item) => ({ ...item, items: titles.slice(0, 3).map(toCard) })) };
 }
 
+export function localCollection(slug: string): Collection | null {
+  const found = collections.find((item) => item.slug === slug);
+  return found ? { ...found, items: titles.slice(0, 3).map(toCard) } : null;
+}
+
 function title(id: string, name: string, year: number, kind: Title["kind"], director: string, themes: string[], blurb: string): Title {
   return {
     id, title: name, tmdbId: null, imdbId: null, kind, originalTitle: null, yearStart: year, yearEnd: null,

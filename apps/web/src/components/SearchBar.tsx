@@ -12,7 +12,12 @@ export function SearchBar({ autoFocus = false }: { autoFocus?: boolean }) {
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        router.push(`/search?q=${encodeURIComponent(q)}`);
+        // Preserve any filters already in the URL (SearchFilters) instead of
+        // replacing the whole query string.
+        const next = new URLSearchParams(params.toString());
+        if (q) next.set("q", q);
+        else next.delete("q");
+        router.push(`/search?${next.toString()}`);
       }}
       style={{ display: "flex", gap: "0.5rem", margin: "2rem 0" }}
     >
