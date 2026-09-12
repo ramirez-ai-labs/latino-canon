@@ -111,3 +111,30 @@ function normalizeTagList(list: unknown, key: string, valid: readonly string[]):
       return typeof v === "string" && valid.includes(v);
     });
 }
+
+const BLURB_MAX_CHARS = 360;
+
+/**
+ * blurbSchema's 40-360 character window has now missed from prompt wording alone in
+ * both directions: first blurbs came back too short (fixed by tightening the prompt),
+ * then that same tightened wording ("write a second, fuller sentence") pushed several
+ * live blurbs over 360 instead. Rather than tune the prompt a third time, deterministically
+ * truncate an overlong `text` at the last complete sentence within the limit - a repair
+ * that holds regardless of how the model's wording drifts, the same reasoning as
+ * normalizeClassificationJson dropping bad tags instead of re-wording the classify prompt
+ * again. Falls back to a hard, ellipsis-terminated cut only if no sentence boundary
+ * exists within the window at all.
+ */
+export function normalizeBlurbJson(raw: unknown): unknown {
+  if (typeof raw !== "object" || raw === null) return raw;
+  const obj = raw as Record<string, unknown>;
+  if (typeof obj.text !== "string" || obj.text.length <= BLURB_MAX_CHARS) return raw;
+  return { ...obj, text: truncateAtSentence(obj.text, BLURB_MAX_CHARS) };
+}
+
+function truncateAtSentence(text: string, max: number): string {
+  const window = text.slice(0, max);
+  const match = /^[\s\S]*[.!?]/.exec(window);
+  if (match) return match[0].trim();
+  return `${text.slice(0, max - 1).trimEnd()}…`;
+}
