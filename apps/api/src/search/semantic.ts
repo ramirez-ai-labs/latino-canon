@@ -4,6 +4,19 @@ import { embed } from "../ai/embed.js";
 import { filterToSql, filterToVectorize, needsD1PostFilter } from "./filters.js";
 
 /**
+ * Below this cosine score, Vectorize's nearest neighbors aren't actually relevant -
+ * they're just whatever's least-far in a small catalog. Observed live: an off-topic
+ * query ("quantum physics research lab") scored 0.19-0.33 across the whole 16-title
+ * corpus, while on-topic queries ("familia", "teacher inspires students") scored
+ * 0.32-0.50 - "DC comics"/"superhero" landed in between (0.30-0.43) and returned 14 of
+ * 16 titles with no real cutoff. This is a heuristic picked from those three data
+ * points, not a tuned value - `pnpm eval:retrieval` against real relevance judgments
+ * (packages/eval) should replace it once there's a golden query set large enough to
+ * tune against, the same TODO already tracked for hybrid.ts's RRF weights.
+ */
+const MIN_SEMANTIC_SCORE = 0.35;
+
+/**
  * Dense retrieval over Vectorize. Embeds the query with bge-m3 and does a cosine
  * top-k, pushing structured filters down as a metadata filter so we don't waste the
  * k budget on titles that can't match.
@@ -33,7 +46,9 @@ export async function semanticSearch(
     ...(Object.keys(filter).length ? { filter } : {}),
   });
 
-  const hits = res.matches.map((m) => ({ titleId: m.id, score: m.score }));
+  const hits = res.matches
+    .filter((m) => m.score >= MIN_SEMANTIC_SCORE)
+    .map((m) => ({ titleId: m.id, score: m.score }));
   if (!postFilter || hits.length === 0) return hits.slice(0, limit);
   return (await keepMatchingD1(env, hits, filters)).slice(0, limit);
 }
