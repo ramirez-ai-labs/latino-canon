@@ -215,16 +215,33 @@ for the whole seed catalog.
 
 ---
 
+## Evaluation results
+
+`pnpm eval:retrieval` run for real against the deployed `api` worker, all 16 seed
+titles ingested through the live Workflow (real TMDB/OMDb data, real `bge-m3`
+embeddings, real classify/blurb output) — not a fixture:
+
+| mode | recall@5 | recall@10 | P@5 | MRR | nDCG@10 |
+|---|---|---|---|---|---|
+| lexical | 0.856 | 0.878 | 0.227 | 0.706 | 0.737 |
+| semantic | 0.889 | 0.944 | 0.240 | 0.897 | 0.885 |
+| **hybrid** | **0.889** | **0.967** | 0.240 | 0.839 | 0.864 |
+
+All 15 golden queries (`packages/eval/src/datasets/queries.jsonl`) hit in hybrid's
+top 5. Honest caveats: it's a 16-title catalog and a 15-query golden set — real
+signal, not yet enough to responsibly tune `hybrid.ts`'s fixed `[1, 1]` RRF weights
+or `semantic.ts`'s `MIN_SEMANTIC_SCORE` floor against; both are still hand-picked
+heuristics pending a larger golden set. `pnpm eval:groundedness` (LLM-as-judge over
+generated blurbs) is implemented but still takes title ids as manual CLI args rather
+than enumerating the catalog itself — a real groundedness number for the whole
+canon hasn't been run yet.
+
 ## Status
 
-The ingest resolve → fetch → normalize → persist path is implemented: TMDB search/detail
-mapping and OMDb ratings mapping (`apps/ingest/src/sources`), credit normalization
-(`normalize.ts`), and people/credits/tag upserts (`persist.ts`) are real code, covered by
-unit tests against realistic fixture payloads (`pnpm --filter @latino-canon/ingest run
-test`). What hasn't happened yet: running it against the *live* TMDB/OMDb APIs or a
-deployed Workflow (`pnpm --filter ingest seed`) — that needs real `TMDB_API_KEY` /
-`OMDB_API_KEY` and a Cloudflare account, so the classify/embed/blurb steps remain
-implemented-but-unexercised against real data.
+The ingest resolve → fetch → normalize → persist → classify → embed → blurb path
+is implemented and has been run end-to-end against live TMDB/OMDb and a deployed
+Workflow (`pnpm --filter ingest seed`) — all 16 seed titles are ingested, classified,
+embedded, and blurbed in production D1/Vectorize, not just covered by fixture tests.
 
 `GET /titles/:id` hydrates the full `Title` (metadata + credits + tags + approved
 blurb) from D1 rather than returning a raw row, and poster images are served from R2
@@ -232,8 +249,13 @@ via a dedicated `/posters` route (`apps/api/src/routes/titles.ts`,
 `apps/api/src/routes/posters.ts`).
 
 Other open scaffold items: RRF weights are still fixed at `[1, 1]`
-(`apps/api/src/search/hybrid.ts`, pending real relevance judgments to tune against);
-`/titles/:id/similar` still returns a stub instead of Vectorize nearest-neighbors; and
-the nightly cron's retry/refresh logic is unimplemented (`apps/ingest/src/maintenance.ts`)
+(`apps/api/src/search/hybrid.ts`) and `semantic.ts`'s minimum score floor is a
+hand-picked heuristic — both pending a larger golden query set to tune against;
+`/titles/:id/similar` still returns a stub instead of Vectorize nearest-neighbors; the
+nightly cron's retry/refresh logic is unimplemented (`apps/ingest/src/maintenance.ts`)
 — `retryErroredJobs` bumps the attempt counter but doesn't reconstruct params and
-requeue the Workflow, and `refreshPopularity` is a no-op.
+requeue the Workflow (a `force: true` re-`POST /ingest` is the current manual
+workaround), and `refreshPopularity` is a no-op. `apps/api/src/ai/classify.ts` and
+`blurb.ts` (plus the `LlmClient` provider abstraction under them) are unused
+dead code — the real classify/blurb calls live in `apps/ingest/src/ai.ts` instead,
+calling Workers AI directly.
