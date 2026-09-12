@@ -3,6 +3,7 @@
  * offline path (blurb generation) can opt into Claude for quality. Both routes go
  * through AI Gateway for caching + observability.
  */
+import { INCLUSION_TYPES, THEMES } from "./taxonomy.js";
 
 export type LlmProvider = "workers-ai" | "anthropic";
 
@@ -73,4 +74,40 @@ export function extractJson(text: string): unknown {
   const end = candidate.lastIndexOf("}");
   if (start === -1 || end === -1) throw new Error(`no JSON object in LLM output: ${text.slice(0, 200)}`);
   return JSON.parse(candidate.slice(start, end + 1));
+}
+
+/**
+ * Workers AI classify calls have been observed returning `inclusionTypes`/`themes`
+ * slugs that don't match the taxonomy exactly - wrong case ("Family" instead of
+ * "family"), or a synonym that isn't in the taxonomy at all ("education" for the
+ * closest real theme, "identity"). Lowercase/trim before validating, and drop entries
+ * that still don't match a known slug rather than fail the whole classify step over
+ * one bad tag - a partial classification beats none. Also seen live: `note` sent as
+ * `null` instead of omitted, which `z.string().optional()` rejects.
+ */
+export function normalizeClassificationJson(raw: unknown): unknown {
+  if (typeof raw !== "object" || raw === null) return raw;
+  const obj = raw as Record<string, unknown>;
+  return {
+    ...obj,
+    inclusionTypes: normalizeTagList(obj.inclusionTypes, "type", INCLUSION_TYPES),
+    themes: normalizeTagList(obj.themes, "theme", THEMES),
+    note: obj.note === null ? undefined : obj.note,
+  };
+}
+
+function normalizeTagList(list: unknown, key: string, valid: readonly string[]): unknown {
+  if (!Array.isArray(list)) return list;
+  return list
+    .map((item) => {
+      if (typeof item !== "object" || item === null) return item;
+      const v = (item as Record<string, unknown>)[key];
+      if (typeof v !== "string") return item;
+      return { ...item, [key]: v.trim().toLowerCase().replace(/\s+/g, "_") };
+    })
+    .filter((item) => {
+      if (typeof item !== "object" || item === null) return false;
+      const v = (item as Record<string, unknown>)[key];
+      return typeof v === "string" && valid.includes(v);
+    });
 }
