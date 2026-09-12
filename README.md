@@ -168,8 +168,10 @@ that exercises the real `lexicalSearch` → `titles_fts` path and the same
 via `@cloudflare/vitest-pool-workers` — no Cloudflare account or deployed data needed.
 Protect `main` in GitHub and require this workflow to pass before merging.
 
-After a pull request is merged, `.github/workflows/deploy-web.yml` deploys the
-web Worker from Ubuntu. It can also be started manually. Add these repository
+After a pull request is merged, `.github/workflows/deploy-web.yml`,
+`deploy-api.yml`, and `deploy-ingest.yml` each deploy their Worker from Ubuntu —
+every push to `main` redeploys all three, regardless of which app's files actually
+changed. Each can also be started manually from **Actions**. Add these repository
 secrets in GitHub:
 
 ```text
@@ -177,7 +179,8 @@ CLOUDFLARE_API_TOKEN
 CLOUDFLARE_ACCOUNT_ID
 ```
 
-Then merge a passing pull request, or run **Deploy web Worker** manually.
+Then merge a passing pull request, or run **Deploy web Worker** / **Deploy api
+Worker** / **Deploy ingest Worker** manually.
 
 Pull requests are labeled automatically by changed area and conventional title
 prefix. Releases are created manually from **Actions -> Release** using a
@@ -189,7 +192,9 @@ Adding a title to the canon is a normal PR: edit
 `.github/workflows/ingest-new-titles.yml` diffs the seed file and `POST`s just the
 newly added entries to the deployed ingest worker automatically — no manual
 `curl`/CLI step. See [infra/README.md](infra/README.md#8-github-actions-auto-ingest-new-canon-titles)
-for the one-time GitHub Actions config it needs.
+for the one-time GitHub Actions config it needs. This is separate from
+`deploy-ingest.yml` above: `ingest-new-titles.yml` sends data to whichever code is
+already live, it never redeploys the Worker's own code.
 
 ---
 
