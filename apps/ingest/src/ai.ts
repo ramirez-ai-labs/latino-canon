@@ -8,6 +8,7 @@ import {
   blurbSchema,
   coerceLlmText,
   extractJson,
+  normalizeClassificationJson,
   MODELS,
   type BlurbResult,
   type BlurbSource,
@@ -60,7 +61,7 @@ export async function classifyForIngest(env: Env, t: Title): Promise<Classificat
     countries: t.country,
   });
   const out = await runLlm(env, "classify", CLASSIFY_SYSTEM, user);
-  return parseLlm(classificationSchema, extractJson(out), "classify");
+  return parseLlm(classificationSchema, normalizeClassificationJson(extractJson(out)), "classify");
 }
 
 export interface BlurbGroundingResult {
