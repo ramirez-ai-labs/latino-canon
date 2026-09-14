@@ -47,8 +47,22 @@ jobs:
       - name: Typecheck api worker
         run: pnpm --filter @latino-canon/api run typecheck
 
+      # continue-on-error: a migration failure (e.g. CLOUDFLARE_API_TOKEN missing D1
+      # permissions - the exact thing that happened the first time this step ran)
+      # must not block deploying the Worker code, which is otherwise unrelated. The
+      # step still shows failed/yellow in the Actions UI, so it stays visible - it
+      # just can't take the whole job down with it. Ordered before deploy anyway, in
+      # case a future migration is one new code actually depends on.
       - name: Apply D1 migrations
+        id: migrate
+        continue-on-error: true
         run: pnpm --filter @latino-canon/api run db:migrate:remote
 
       - name: Deploy api Worker
         run: pnpm --filter @latino-canon/api run deploy
+
+      - name: Fail the job if migrations didn't apply
+        if: steps.migrate.outcome == 'failure'
+        run: |
+          echo "::error::D1 migrations failed to apply - see the 'Apply D1 migrations' step above (often a CLOUDFLARE_API_TOKEN permissions issue). The Worker deployed anyway; migrations still need to be applied."
+          exit 1
