@@ -64,6 +64,8 @@
     { "ref": "Problemista (2023)", "title": "Problemista", "year": 2023, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
     { "ref": "Fantasmas (2024)", "title": "Fantasmas", "year": 2024, "kind": "series", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
 
-    { "ref": "Griselda (2024)", "title": "Griselda", "year": 2024, "kind": "series", "seedInclusionTypes": ["led_by", "created_by", "about_community", "starring", "produced_by"] }
+    { "ref": "Griselda (2024)", "title": "Griselda", "year": 2024, "kind": "series", "seedInclusionTypes": ["led_by", "created_by", "about_community", "starring", "produced_by"] },
+
+    { "ref": "Lopez vs Lopez (2022)", "title": "Lopez vs Lopez", "year": 2022, "kind": "series", "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] }
   ]
 }
