@@ -50,6 +50,31 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
             ))}
         </div>
 
+        {(title.credits.length > 0 || title.runtime) && (
+          <section style={{ marginTop: "1.5rem", fontSize: "0.9rem" }}>
+            {title.credits.filter((c) => c.role === "creator" || c.role === "director").length > 0 && (
+              <p>
+                <strong>{title.credits.some((c) => c.role === "creator") ? "Created by" : "Directed by"}:</strong>{" "}
+                {title.credits
+                  .filter((c) => c.role === "creator" || c.role === "director")
+                  .map((c) => c.person.name)
+                  .join(", ")}
+              </p>
+            )}
+            {title.credits.filter((c) => c.role === "cast").length > 0 && (
+              <p>
+                <strong>Starring:</strong>{" "}
+                {title.credits
+                  .filter((c) => c.role === "cast")
+                  .slice(0, 6)
+                  .map((c) => c.person.name)
+                  .join(", ")}
+              </p>
+            )}
+            {title.runtime && <p><strong>Runtime:</strong> {title.runtime} min</p>}
+          </section>
+        )}
+
         {title.blurb && (
           <section style={{ marginTop: "1.5rem" }}>
             <h2 style={{ fontSize: "1rem" }}>
