@@ -97,6 +97,41 @@ once this was confirmed working end-to-end.
    product"). Worth borrowing the layout (hero banner + horizontal carousel instead
    of a plain grid), not the buried-tags approach.
 
+## Representation honesty: contextual/critical-archive schema
+
+A title can earn a clean `inclusion_type` tag and still deserve scrutiny of *how* it
+represents Latino people or communities (a narco-drama with a Latina star/EP; a
+sitcom praised at the time whose humor reads as stereotyping in retrospect).
+`packages/core`'s `RepresentationHandling`/`ContextNote` types + the
+`title_context_notes` table (migrations `0008`/`0009`) add a structured, queryable
+place for that instead of a PR description that disappears from discovery. Landed
+deliberately scoped to schema + one proof title (*Griselda*, 2024) rather than a
+batch import — see PR #40. Two things came out of that review and were deliberately
+deferred rather than bundled in:
+
+12. **Scale the contextual schema to more titles**, following the same
+    verify-every-credit discipline as `CRITERIA.md` rather than trusting a source
+    list. Candidates raised in review, not yet individually verified: *Narcos*,
+    *Queen of the South*, *Chico and the Man*, *Spanglish* as likely
+    contextual/critical-archive cases; a longer research queue (*The Brothers
+    García*, *Taina*, *Raising Victor Vargas*, *West Side Story* (1961), *I Love
+    Lucy*, and ~20 more) as standard-tag candidates needing full credit audits
+    before any tag — none of these should be added from the review's own claims
+    without independent verification first, the same lesson this project has hit
+    more than once (Tortilla Soup's director, Mask of Zorro under the old Spain
+    rule, Filly Brown's release year).
+13. **Scope-boundary question: does the canon include internationally-produced Latin
+    American cinema whose story doesn't center U.S. Latino/diaspora experience?**
+    Raised by titles like *Motorcycle Diaries* (Salles, Brazilian, but a Latin
+    American political journey, not a U.S. community story), *Babel* (Iñárritu,
+    Mexican, multinational ensemble), *Pan's Labyrinth* (del Toro, Mexican, but set
+    in Franco-era Spain), *Y Tu Mamá También*, *Desperado*, and *Once Upon a Time in
+    Mexico*. Not a research question like #12 — it's a product-scope decision (would
+    likely need separate filter facets: U.S./diaspora stories vs. Latin American
+    cinema vs. Latin American filmmakers working in Hollywood vs. Latino actors in
+    non-Latino-centered stories) big enough to deserve its own pass rather than
+    title-by-title guessing inside an unrelated PR.
+
 ## Standing backlog (SDLC / completeness, unchanged priority)
 
 8. Wire up `apps/ingest/src/maintenance.ts` (`retryErroredJobs`/`refreshPopularity`) —
