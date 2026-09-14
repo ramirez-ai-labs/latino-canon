@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { CONTEXT_NOTE_CATEGORIES, INCLUSION_TYPES, REPRESENTATION_HANDLINGS, THEMES } from "./taxonomy.js";
 
-export const titleKindSchema = z.enum(["film", "series"]);
+export const titleKindSchema = z.enum(["film", "series", "special"]);
 export const searchModeSchema = z.enum(["hybrid", "lexical", "semantic"]);
 export const inclusionTypeSchema = z.enum(INCLUSION_TYPES);
 export const themeSchema = z.enum(THEMES);
