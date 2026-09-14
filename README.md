@@ -175,21 +175,32 @@ three) redeploys all of them. `deploy-api.yml` also applies any pending D1
 migrations (`wrangler d1 migrations apply --remote`, idempotent — already-applied
 ones are skipped) before deploying, so a migration added under
 `apps/api/migrations/` takes effect automatically on merge rather than needing a
-manual follow-up step. Each workflow can also be started manually from **Actions**.
-Add these repository secrets in GitHub:
+manual follow-up step. That step runs with `continue-on-error` — a migration
+failure still shows up as a failed job (so it doesn't go unnoticed), but can no
+longer block the Worker from deploying, the way it did the first time this ran.
+Each workflow can also be started manually from **Actions**. Add these repository
+secrets in GitHub:
 
 ```text
 CLOUDFLARE_API_TOKEN
 CLOUDFLARE_ACCOUNT_ID
 ```
 
+`CLOUDFLARE_API_TOKEN` needs, at minimum: **Workers Scripts:Edit**, **D1:Edit**,
+**Workers KV Storage:Edit**, **Workers R2 Storage:Edit**, and **Account
+Settings:Read** — Cloudflare's built-in "Edit Cloudflare Workers" token template
+covers the first and last by default but not D1; add D1:Edit explicitly, or the
+migration step above will fail with a `7403` even though deploys still succeed
+(exactly what happened when this was first set up).
+
 Then merge a passing pull request, or run **Deploy web Worker** / **Deploy api
 Worker** / **Deploy ingest Worker** manually.
 
 Pull requests are labeled automatically by changed area and conventional title
-prefix. Releases are created manually from **Actions -> Release** using a
-semantic version such as `0.1.0`; the workflow creates a tag like
-`latino-canon-v0.1.0`, generates release notes, and supports prereleases.
+prefix. Releases are created manually from **Actions -> Release** using the next
+semantic version (current: `0.2.0`); the workflow creates a tag like
+`latino-canon-v0.2.0`, generates release notes from merged PRs since the last tag,
+and supports prereleases.
 
 Adding a title to the canon is a normal PR: edit
 `apps/ingest/src/seed/canon.seed.json`, open a PR, get it reviewed. Once merged,
