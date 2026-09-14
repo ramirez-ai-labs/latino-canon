@@ -71,6 +71,19 @@ is involved somewhere," but a specific, checkable credit. Six exist:
    This doesn't retroactively bless every older exclusion built on similar reasoning
    (e.g. *From Dusk till Dawn*) — those stay flagged rather than silently reopened.
 
+## Deferred, pending TMDB data
+
+Not editorial exclusions — these pass verification but can't be ingested yet because
+TMDB hasn't populated a `release_date` for them (`status: "Planned"` on TMDB, i.e. not
+yet considered released). `fetchTmdbDetails` hard-requires a derivable year and throws
+otherwise; there's no code fix for this, since the data genuinely isn't there yet.
+Revisit once TMDB updates the record — a `force: true` re-POST will pick it up then.
+
+| Title | Verified tags (ready to apply once ingestable) |
+|---|---|
+| *Suárez* (2026) | `about_community`, `produced_by` (Wilmer Valderrama) |
+| *20 Pounds to Happiness* (2025) | `led_by`, `created_by`, `starring`, `about_community` |
+
 ## Considered and excluded
 
 Titles specifically evaluated and left out, with why — check here before re-researching
