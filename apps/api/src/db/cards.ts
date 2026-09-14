@@ -2,6 +2,7 @@ import {
   MODEL_TAG_DISPLAY_THRESHOLD,
   type InclusionType,
   type RankedHit,
+  type RepresentationHandling,
   type Theme,
   type TitleCard,
 } from "@latino-canon/core";
@@ -19,6 +20,7 @@ interface CardRow {
   blurb: string | null;
   inclusion_types: string | null; // "slug:conf,slug:conf"
   themes: string | null;
+  representation_handling: RepresentationHandling | null;
 }
 
 /**
@@ -32,6 +34,7 @@ export async function hydrateCards(env: Env, hits: RankedHit[]): Promise<TitleCa
   const sql = `
     SELECT
       t.id, t.kind, t.title, t.year_start, t.year_end, t.poster_key, t.popularity,
+      t.representation_handling,
       (SELECT p.name FROM credits c JOIN people p ON p.id = c.person_id
         WHERE c.title_id = t.id AND c.role = 'director' ORDER BY c.ord LIMIT 1) AS director,
       b.text AS blurb,
@@ -65,6 +68,7 @@ export async function hydrateCards(env: Env, hits: RankedHit[]): Promise<TitleCa
       inclusionTypes: parseTags(r.inclusion_types) as InclusionType[],
       themes: parseTags(r.themes) as Theme[],
       score: scoreById.get(r.id) ?? 0,
+      representationHandling: r.representation_handling,
     }));
 }
 

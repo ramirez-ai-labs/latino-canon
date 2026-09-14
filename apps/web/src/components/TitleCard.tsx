@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   INCLUSION_TYPE_LABELS,
+  REPRESENTATION_HANDLING_LABELS,
   THEME_LABELS,
   type TitleCard as TitleCardData,
 } from "@latino-canon/core";
@@ -27,6 +28,9 @@ export function TitleCard({ title }: { title: TitleCardData }) {
         </div>
         {title.blurbTeaser && <p className="blurb">{title.blurbTeaser}</p>}
         <div className="tag-row">
+          {title.representationHandling && (
+            <span className="tag contextual">{REPRESENTATION_HANDLING_LABELS[title.representationHandling]}</span>
+          )}
           {title.inclusionTypes.map((t) => (
             <span key={t} className="tag inclusion">
               {INCLUSION_TYPE_LABELS[t]}

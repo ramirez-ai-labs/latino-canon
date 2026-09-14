@@ -1,5 +1,15 @@
 import { Hono } from "hono";
-import type { CreditRole, InclusionType, TagSource, Theme, Title, TitleKind } from "@latino-canon/core";
+import type {
+  ContextNote,
+  ContextNoteCategory,
+  CreditRole,
+  InclusionType,
+  RepresentationHandling,
+  TagSource,
+  Theme,
+  Title,
+  TitleKind,
+} from "@latino-canon/core";
 import type { Env } from "../bindings.js";
 
 export const titlesRoute = new Hono<{ Bindings: Env }>();
@@ -19,6 +29,7 @@ interface TitleRow {
   poster_key: string | null;
   popularity: number;
   runtime: number | null;
+  representation_handling: RepresentationHandling | null;
 }
 interface CreditRow {
   person_id: string;
@@ -42,6 +53,12 @@ interface BlurbRow {
   model: string;
   approved: number;
 }
+interface ContextNoteRow {
+  category: ContextNoteCategory;
+  status: "confirmed" | "review_required";
+  summary: string;
+  sources: string;
+}
 
 /**
  * GET /titles/:id — full Title (metadata + credits + tags + approved blurb with sources).
@@ -54,7 +71,7 @@ interface BlurbRow {
 titlesRoute.get("/:id", async (c) => {
   const id = c.req.param("id");
 
-  const [title, credits, tags, blurb] = await Promise.all([
+  const [title, credits, tags, blurb, contextNotes] = await Promise.all([
     c.env.DB.prepare("SELECT * FROM titles WHERE id = ?").bind(id).first<TitleRow>(),
     c.env.DB.prepare(
       `SELECT p.id AS person_id, p.tmdb_id, p.name, p.known_for_department, c.role, c.character, c.ord
@@ -73,6 +90,14 @@ titlesRoute.get("/:id", async (c) => {
     c.env.DB.prepare("SELECT text, sources, model, approved FROM blurbs WHERE title_id = ?1 AND approved = 1")
       .bind(id)
       .first<BlurbRow>(),
+    // display_policy = 'curator_only' notes exist for editorial tracking and are never
+    // returned by this public endpoint.
+    c.env.DB.prepare(
+      `SELECT category, status, summary, sources FROM title_context_notes
+       WHERE title_id = ?1 AND display_policy = 'public'`,
+    )
+      .bind(id)
+      .all<ContextNoteRow>(),
   ]);
 
   if (!title) return c.json({ error: "not found" }, 404);
@@ -113,6 +138,16 @@ titlesRoute.get("/:id", async (c) => {
           approved: Boolean(blurb.approved),
         }
       : null,
+    representationHandling: title.representation_handling,
+    contextNotes: contextNotes.results.map(
+      (n): ContextNote => ({
+        category: n.category,
+        status: n.status,
+        summary: n.summary,
+        sources: JSON.parse(n.sources),
+        displayPolicy: "public",
+      }),
+    ),
   };
 
   return c.json(body);

@@ -1,10 +1,27 @@
 import { z } from "zod";
-import { INCLUSION_TYPES, THEMES } from "./taxonomy.js";
+import { CONTEXT_NOTE_CATEGORIES, INCLUSION_TYPES, REPRESENTATION_HANDLINGS, THEMES } from "./taxonomy.js";
 
 export const titleKindSchema = z.enum(["film", "series"]);
 export const searchModeSchema = z.enum(["hybrid", "lexical", "semantic"]);
 export const inclusionTypeSchema = z.enum(INCLUSION_TYPES);
 export const themeSchema = z.enum(THEMES);
+export const representationHandlingSchema = z.enum(REPRESENTATION_HANDLINGS);
+export const contextNoteCategorySchema = z.enum(CONTEXT_NOTE_CATEGORIES);
+
+/** Editor-authored, not model output — no ingest pipeline writes this yet. */
+export const contextNoteSchema = z.object({
+  category: contextNoteCategorySchema,
+  status: z.enum(["confirmed", "review_required"]),
+  summary: z.string().min(1).max(500),
+  sources: z.array(
+    z.object({
+      kind: z.enum(["synopsis", "loc_filmography", "ucla_guide", "credit", "award", "criticism", "news"]),
+      ref: z.string(),
+      quote: z.string().nullable(),
+    }),
+  ),
+  displayPolicy: z.enum(["public", "curator_only"]),
+});
 
 export const searchFiltersSchema = z.object({
   kind: titleKindSchema.optional(),

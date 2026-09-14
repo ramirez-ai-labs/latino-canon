@@ -62,6 +62,8 @@
     { "ref": "Aristotle and Dante Discover the Secrets of the Universe (2022)", "title": "Aristotle and Dante Discover the Secrets of the Universe", "year": 2022, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
     { "ref": "Flamin' Hot (2023)", "title": "Flamin' Hot", "year": 2023, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
     { "ref": "Problemista (2023)", "title": "Problemista", "year": 2023, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
-    { "ref": "Fantasmas (2024)", "title": "Fantasmas", "year": 2024, "kind": "series", "seedInclusionTypes": ["led_by", "created_by", "about_community"] }
+    { "ref": "Fantasmas (2024)", "title": "Fantasmas", "year": 2024, "kind": "series", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+
+    { "ref": "Griselda (2024)", "title": "Griselda", "year": 2024, "kind": "series", "seedInclusionTypes": ["led_by", "created_by", "about_community", "starring", "produced_by"] }
   ]
 }
