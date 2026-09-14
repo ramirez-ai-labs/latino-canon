@@ -70,6 +70,7 @@ one of these from scratch.
 | *From Dusk till Dawn* (1996) | Robert Rodriguez directed | Tarantino wrote it, not Rodriguez or any Latino writer; not about Latino experience or community — genre thriller set partly in Mexico. `led_by` alone would be a thin, technicality-only claim. |
 | *Once Upon a Time in Mexico* (2003) | Rodriguez wrote/directed/scored solo, same as *El Mariachi*/*Machete* | Genre spectacle (CIA agent vs. cartel-backed coup), not substantive `about_community` engagement; would also have been a fourth Rodriguez title in one batch alongside *El Mariachi*, *Machete*, and *Spy Kids* — over-concentrates one director at the expense of the breadth this catalog is for. |
 | *Spider-Man: Into the Spider-Verse* (2018) | Miles Morales is coded Afro-Puerto Rican | No credited director or writer is Latino, and voice actor Shameik Moore isn't either — unlike *Coco*/*Encanto*, there's no actual person to hang a tag on. |
+| *Frybread Face and Me* (2023) | Surfaced in a Netflix "latino culture" search result set | Not Latino at all — it's a Navajo coming-of-age film; director Billy Luther is Navajo/Hopi/Laguna Pueblo. Indigenous American and Latino are different categories; this is a real example of a streaming platform's own search surfacing a false positive by thematic proximity (coming-of-age, Indigenous identity) rather than actual heritage. |
 
 *The Mask of Zorro* was excluded here in an earlier pass on the grounds that Antonio
 Banderas is Spanish, not Latin American, and Spain didn't qualify under this taxonomy
