@@ -51,7 +51,14 @@ export async function resolveTmdbId(
   // TMDB catalogs stand-up specials as movies, same surface as film - confirmed by
   // querying TMDB directly (a special has no separate TMDB media type of its own).
   const path = kind === "series" ? "search/tv" : "search/movie";
-  const url = `${BASE}/${path}?query=${encodeURIComponent(title)}&year=${year}&api_key=${env.TMDB_API_KEY}`;
+  // Deliberately no &year= param: TMDB's server-side year filter excludes any
+  // candidate with an empty release_date, even an exact-title match - found via
+  // "20 Pounds to Happiness" resolving with a plain title search but returning zero
+  // results once &year=2025 was added, despite existing on TMDB (just undated).
+  // scoreCandidate below already does year-proximity disambiguation client-side, so
+  // the server-side filter was redundant for correct matches and actively harmful
+  // for undated ones.
+  const url = `${BASE}/${path}?query=${encodeURIComponent(title)}&api_key=${env.TMDB_API_KEY}`;
   const res = await fetchJson<{ results: TmdbSearchResult[] }>(url);
   if (res.results.length === 0) throw new Error(`TMDB: no match for "${title}" (${year})`);
 

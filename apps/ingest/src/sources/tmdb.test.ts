@@ -56,6 +56,20 @@ describe("resolveTmdbId", () => {
     await resolveTmdbId(env, "We'll Do It for Half", 2020, "special");
     expect(fetchMock.mock.calls[0]?.[0]).toContain("/search/movie?");
   });
+
+  it("never sends &year= - TMDB's server-side year filter excludes undated candidates entirely", async () => {
+    // Real bug: "20 Pounds to Happiness" exists on TMDB with no release_date. A plain
+    // title search found it; adding &year=2025 made TMDB return zero results, even
+    // though this function's own scoreCandidate already disambiguates by year
+    // client-side. The fix is to never filter server-side and let scoreCandidate do
+    // the one job it was already doing.
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({ results: [{ id: 9, title: "20 Pounds to Happiness", release_date: "" }] }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(resolveTmdbId(env, "20 Pounds to Happiness", 2025, "film")).resolves.toBe(9);
+    expect(fetchMock.mock.calls[0]?.[0]).not.toContain("year=");
+  });
 });
 
 describe("fetchTmdbDetails", () => {
