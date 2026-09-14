@@ -36,7 +36,7 @@ export const queryInterpretationSchema = z.object({
 export const classificationSchema = z.object({
   inclusionTypes: z
     .array(z.object({ type: inclusionTypeSchema, confidence: z.number().min(0).max(1) }))
-    .max(4),
+    .max(6), // = INCLUSION_TYPES.length; this was max(4) when there were only 4 possible values
   themes: z
     .array(z.object({ theme: themeSchema, confidence: z.number().min(0).max(1) }))
     .max(6),

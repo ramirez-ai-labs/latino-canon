@@ -4,7 +4,14 @@
  * The classifier (apps/ingest) proposes these; an editor can override.
  */
 
-export const INCLUSION_TYPES = ["led_by", "created_by", "about_community", "breakthrough"] as const;
+export const INCLUSION_TYPES = [
+  "led_by",
+  "created_by",
+  "about_community",
+  "breakthrough",
+  "starring",
+  "produced_by",
+] as const;
 export type InclusionType = (typeof INCLUSION_TYPES)[number];
 
 export const INCLUSION_TYPE_LABELS: Record<InclusionType, string> = {
@@ -12,6 +19,8 @@ export const INCLUSION_TYPE_LABELS: Record<InclusionType, string> = {
   created_by: "Latino-created",
   about_community: "About the community",
   breakthrough: "Breakthrough first",
+  starring: "Latino-led cast",
+  produced_by: "Latino-produced",
 };
 
 export const INCLUSION_TYPE_DEFINITIONS: Record<InclusionType, string> = {
@@ -23,6 +32,10 @@ export const INCLUSION_TYPE_DEFINITIONS: Record<InclusionType, string> = {
     "The work centers Latino characters, stories, or experience, regardless of who made it.",
   breakthrough:
     "The work is a documented 'first' — in representation, a major award, or a box-office / audience milestone.",
+  starring:
+    "A Latino actor holds the lead/title role, even when the work's story or other creative leadership isn't otherwise Latino-focused (e.g. a Latino star in a genre ensemble). Distinct from about_community, which is about what the story centers, not who's cast.",
+  produced_by:
+    "A Latino producer held significant creative or executive control over the work, distinct from directing (led_by) or writing (created_by) it.",
 };
 
 /**
