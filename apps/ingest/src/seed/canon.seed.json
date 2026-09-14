@@ -81,6 +81,19 @@
     { "ref": "A Place of Absence (2025)", "title": "A Place of Absence", "year": 2025, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
     { "ref": "The Blue Trail (2025)", "title": "The Blue Trail", "year": 2025, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
     { "ref": "The Secret Agent (2025)", "title": "The Secret Agent", "year": 2025, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "starring", "about_community"] },
-    { "ref": "A Poet (2025)", "title": "A Poet", "year": 2025, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] }
+    { "ref": "A Poet (2025)", "title": "A Poet", "year": 2025, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+
+    { "ref": "El Cantante (2006)", "title": "El Cantante", "year": 2006, "kind": "film", "seedInclusionTypes": ["led_by", "starring", "produced_by", "about_community"] },
+    { "ref": "The Day of the Dead Is Cancelled (2023)", "title": "The Day of the Dead Is Cancelled", "year": 2023, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Bendito Corazón (2026)", "title": "Bendito Corazón", "year": 2026, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Las Tres Sisters (2025)", "title": "Las Tres Sisters", "year": 2025, "kind": "film", "tmdbId": 1227852, "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "No Manches Frida (2016)", "title": "No Manches Frida", "year": 2016, "kind": "film", "seedInclusionTypes": ["led_by", "starring"] },
+    { "ref": "Radical (2023)", "title": "Radical", "year": 2023, "kind": "film", "seedInclusionTypes": ["starring", "about_community", "breakthrough"] },
+
+    { "ref": "Barreda (2026)", "title": "Barreda", "year": 2026, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Vengeance (2026)", "title": "Vengeance", "year": 2026, "kind": "film", "seedInclusionTypes": ["starring", "breakthrough"] },
+
+    { "ref": "Apocalypse Z: The Beginning of the End (2024)", "title": "Apocalypse Z: The Beginning of the End", "year": 2024, "kind": "film", "seedInclusionTypes": ["led_by", "starring"] },
+    { "ref": "Agent Zeta (2026)", "title": "Agent Zeta", "year": 2026, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "starring"] }
   ]
 }

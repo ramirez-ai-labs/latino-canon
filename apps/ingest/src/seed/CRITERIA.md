@@ -59,6 +59,17 @@ is involved somewhere," but a specific, checkable credit. Six exist:
    anywhere near the seed file. Several such lists reviewed this way turned out to
    overstate creative-leadership claims (a coded-Latino character isn't the same as a
    Latino writer/director) that steps 1-2 above would have caught.
+9. **`led_by`/`created_by` don't require `about_community` as a companion tag — they're
+   independent credits with their own bar, not a package deal.** *Apocalypse Z: The
+   Beginning of the End* and *Agent Zeta* were both wrongly excluded in an earlier pass
+   on the reasoning that a confirmed-Spanish director's genre film (zombie horror, spy
+   thriller) needed `about_community` too or `led_by` alone was "too thin" — an
+   inconsistent standard that was never applied to, say, *No Manches Frida* (`led_by` +
+   `starring`, no `about_community`, added without issue in the same batch). The bar
+   for `led_by` is just "a confirmed Latino director held primary creative control" —
+   genre or subject matter doesn't change that. Caught on review; both titles added.
+   This doesn't retroactively bless every older exclusion built on similar reasoning
+   (e.g. *From Dusk till Dawn*) — those stay flagged rather than silently reopened.
 
 ## Considered and excluded
 
@@ -71,6 +82,7 @@ one of these from scratch.
 | *Once Upon a Time in Mexico* (2003) | Rodriguez wrote/directed/scored solo, same as *El Mariachi*/*Machete* | Genre spectacle (CIA agent vs. cartel-backed coup), not substantive `about_community` engagement; would also have been a fourth Rodriguez title in one batch alongside *El Mariachi*, *Machete*, and *Spy Kids* — over-concentrates one director at the expense of the breadth this catalog is for. |
 | *Spider-Man: Into the Spider-Verse* (2018) | Miles Morales is coded Afro-Puerto Rican | No credited director or writer is Latino, and voice actor Shameik Moore isn't either — unlike *Coco*/*Encanto*, there's no actual person to hang a tag on. |
 | *Frybread Face and Me* (2023) | Surfaced in a Netflix "latino culture" search result set | Not Latino at all — it's a Navajo coming-of-age film; director Billy Luther is Navajo/Hopi/Laguna Pueblo. Indigenous American and Latino are different categories; this is a real example of a streaming platform's own search surfacing a false positive by thematic proximity (coming-of-age, Indigenous identity) rather than actual heritage. |
+| *The House of the Spirits* (1993) | Based on Isabel Allende's (Chilean) novel; Antonio Banderas in the cast | Written and directed solo by Bille August (Danish) — Allende is only the source novelist, explicitly excluded from `created_by` by rule #1. Banderas is billed fifth in an ensemble (Irons, Streep, Close, Ryder, Banderas, Redgrave), not the lead — doesn't meet `starring`'s bar either. No Latino creative control anywhere on the production. |
 
 *The Mask of Zorro* was excluded here in an earlier pass on the grounds that Antonio
 Banderas is Spanish, not Latin American, and Spain didn't qualify under this taxonomy
