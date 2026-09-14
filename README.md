@@ -203,7 +203,9 @@ semantic version (current: `0.2.0`); the workflow creates a tag like
 and supports prereleases.
 
 Adding a title to the canon is a normal PR: edit
-`apps/ingest/src/seed/canon.seed.json`, open a PR, get it reviewed. Once merged,
+`apps/ingest/src/seed/canon.seed.json` — see
+[`apps/ingest/src/seed/CRITERIA.md`](apps/ingest/src/seed/CRITERIA.md) for the
+inclusion-type verification checklist first — open a PR, get it reviewed. Once merged,
 `.github/workflows/ingest-new-titles.yml` diffs the seed file and `POST`s just the
 newly added entries to the deployed ingest worker automatically — no manual
 `curl`/CLI step. See [infra/README.md](infra/README.md#8-github-actions-auto-ingest-new-canon-titles)
