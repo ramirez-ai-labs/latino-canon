@@ -54,7 +54,7 @@ describe("resolveTmdbId", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
     await resolveTmdbId(env, "We'll Do It for Half", 2020, "special");
-    expect(fetchMock.mock.calls[0][0]).toContain("/search/movie?");
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("/search/movie?");
   });
 });
 
