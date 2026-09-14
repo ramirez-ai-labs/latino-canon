@@ -59,6 +59,16 @@ is involved somewhere," but a specific, checkable credit. Six exist:
    overstate creative-leadership claims (a coded-Latino character isn't the same as a
    Latino writer/director) that steps 1-2 above would have caught.
 
+## Considered and excluded
+
+Titles specifically evaluated and left out, with why — check here before re-researching
+one of these from scratch.
+
+| Title | Why it was considered | Why it's out |
+|---|---|---|
+| *From Dusk till Dawn* (1996) | Robert Rodriguez directed | Tarantino wrote it, not Rodriguez or any Latino writer; not about Latino experience or community — genre thriller set partly in Mexico. `led_by` alone would be a thin, technicality-only claim. |
+| *Once Upon a Time in Mexico* (2003) | Rodriguez wrote/directed/scored solo, same as *El Mariachi*/*Machete* | Genre spectacle (CIA agent vs. cartel-backed coup), not substantive `about_community` engagement; would also have been a fourth Rodriguez title in one batch alongside *El Mariachi*, *Machete*, and *Spy Kids* — over-concentrates one director at the expense of the breadth this catalog is for. |
+
 ## What this doesn't resolve
 
 **Scope of "Latino."** This taxonomy has consistently treated it as Hispanic/Latin
