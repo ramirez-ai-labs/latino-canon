@@ -18,6 +18,7 @@ export default async function SearchPage({
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page ?? 1));
   const offset = (page - 1) * PER_PAGE;
+  const isBrowse = !sp.q;
 
   const res = await search({
     q: sp.q,
@@ -26,14 +27,13 @@ export default async function SearchPage({
     kind: sp.kind,
     decade: sp.decade ? Number(sp.decade) : undefined,
     inclusionType: sp.inclusionType,
-    limit: PER_PAGE + 1, // fetch one extra to detect if there's a next page
-    offset,
+    limit: PER_PAGE + 1,
+    offset: isBrowse ? offset : undefined,
   });
 
   const hasNext = res.results.length > PER_PAGE;
   const results = res.results.slice(0, PER_PAGE);
   const hasPrev = page > 1;
-  const isBrowse = !sp.q;
 
   return (
     <>
