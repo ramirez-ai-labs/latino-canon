@@ -1,6 +1,6 @@
 import type { ContextNoteCategory, InclusionType, RepresentationHandling, Theme, TagSource } from "./taxonomy.js";
 
-export type TitleKind = "film" | "series";
+export type TitleKind = "film" | "series" | "special";
 export type CreditRole = "director" | "writer" | "creator" | "cast";
 export type SearchMode = "hybrid" | "lexical" | "semantic";
 

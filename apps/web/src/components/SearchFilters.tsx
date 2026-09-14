@@ -21,6 +21,7 @@ const MODES: { value: SearchMode; label: string }[] = [
 const KINDS: { value: TitleKind; label: string }[] = [
   { value: "film", label: "Film" },
   { value: "series", label: "Series" },
+  { value: "special", label: "Special" },
 ];
 
 const DECADES = [1980, 1990, 2000, 2010, 2020];

@@ -4,13 +4,14 @@ import {
   type RankedHit,
   type RepresentationHandling,
   type Theme,
+  type TitleKind,
   type TitleCard,
 } from "@latino-canon/core";
 import type { Env } from "../bindings.js";
 
 interface CardRow {
   id: string;
-  kind: "film" | "series";
+  kind: TitleKind;
   title: string;
   year_start: number;
   year_end: number | null;

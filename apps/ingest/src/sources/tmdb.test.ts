@@ -47,6 +47,15 @@ describe("resolveTmdbId", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ results: [] })));
     await expect(resolveTmdbId(env, "Nonexistent Title", 1999, "film")).rejects.toThrow(/no match/);
   });
+
+  it("routes a special to search/movie, the same TMDB surface as film", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({ results: [{ id: 5, title: "We'll Do It for Half", release_date: "2020-06-30" }] }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    await resolveTmdbId(env, "We'll Do It for Half", 2020, "special");
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("/search/movie?");
+  });
 });
 
 describe("fetchTmdbDetails", () => {
