@@ -88,6 +88,9 @@
     { "ref": "Bendito Corazón (2026)", "title": "Bendito Corazón", "year": 2026, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
     { "ref": "Las Tres Sisters (2025)", "title": "Las Tres Sisters", "year": 2025, "kind": "film", "tmdbId": 1227852, "seedInclusionTypes": ["led_by", "about_community"] },
     { "ref": "No Manches Frida (2016)", "title": "No Manches Frida", "year": 2016, "kind": "film", "seedInclusionTypes": ["led_by", "starring"] },
-    { "ref": "Radical (2023)", "title": "Radical", "year": 2023, "kind": "film", "seedInclusionTypes": ["starring", "about_community", "breakthrough"] }
+    { "ref": "Radical (2023)", "title": "Radical", "year": 2023, "kind": "film", "seedInclusionTypes": ["starring", "about_community", "breakthrough"] },
+
+    { "ref": "Barreda (2026)", "title": "Barreda", "year": 2026, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Vengeance (2026)", "title": "Vengeance", "year": 2026, "kind": "film", "seedInclusionTypes": ["starring", "breakthrough"] }
   ]
 }
