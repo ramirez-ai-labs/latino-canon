@@ -51,6 +51,15 @@ against that same framework, is the rest of this document.
    work but has never actually been executed — needs a real `CLOUDFLARE_API_TOKEN`
    to test.
 
+~~D1 migrations were entirely manual.~~ **Done.** Every migration in this project had
+to be applied to production by hand via `wrangler d1 migrations apply --remote`
+after merge — including one (0004) that was simply forgotten about for a day.
+`deploy-api.yml` now applies pending migrations automatically (`continue-on-error`,
+so a migration failure can't take an otherwise-good deploy down with it — which is
+exactly what happened the first time it ran, tracing back to the CI
+`CLOUDFLARE_API_TOKEN` never having been granted D1 permissions). `v0.2.0` was cut
+once this was confirmed working end-to-end.
+
 ## Near-term: closing the Spotify gap (obscure/half-remembered search)
 
 3. **Alias / alternate-title layer.** Nothing today lets "the road trip movie" or a
