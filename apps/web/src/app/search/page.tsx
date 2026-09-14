@@ -67,8 +67,8 @@ export default async function SearchPage({
           {hasPrev && (
             <Link
               href={`/search?page=${page - 1}${Object.entries(sp)
-                .filter(([k]) => k !== "page" && k !== "q")
-                .map(([k, v]) => `&${k}=${v}`)
+                .filter(([k, v]) => k !== "page" && k !== "q" && v != null)
+                .map(([k, v]) => `&${k}=${encodeURIComponent(String(v))}`)
                 .join("")}`}
               style={{ padding: "0.5rem 1rem", background: "var(--surface)", borderRadius: 6 }}
             >
@@ -79,8 +79,8 @@ export default async function SearchPage({
           {hasNext && (
             <Link
               href={`/search?page=${page + 1}${Object.entries(sp)
-                .filter(([k]) => k !== "page" && k !== "q")
-                .map(([k, v]) => `&${k}=${v}`)
+                .filter(([k, v]) => k !== "page" && k !== "q" && v != null)
+                .map(([k, v]) => `&${k}=${encodeURIComponent(String(v))}`)
                 .join("")}`}
               style={{ padding: "0.5rem 1rem", background: "var(--surface)", borderRadius: 6 }}
             >
