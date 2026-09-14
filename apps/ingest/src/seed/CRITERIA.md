@@ -25,10 +25,11 @@ is involved somewhere," but a specific, checkable credit. Six exist:
    because only the director, Julie Taymor, was checked — the full writing credit
    included Gregory Nava, already in this catalog three times over. Missed on the first
    pass, caught on review.)
-2. **Verify heritage from an actual source, never from a surname.** A Spanish name
-   doesn't mean Latin American heritage. *In the Time of the Butterflies*' director,
-   Mariano Barroso, is Spanish (Madrid) — Spain is not Latin America, and doesn't
-   qualify under this taxonomy regardless of the film's subject or language.
+2. **Verify heritage from an actual source, never from a surname.** A Spanish-sounding
+   name doesn't by itself tell you someone's actual heritage — confirm it, the same
+   way you'd confirm any other credit. Spain/Spanish (Iberian) heritage **does**
+   qualify under this taxonomy (see "Scope of 'Latino'" below) — this project treats
+   "Latino" as Hispanic broadly, not narrowed to Latin America only.
 3. **A co-director under a primary non-Latino director doesn't earn `led_by`.** *Coco*
    (Adrian Molina co-directed under Lee Unkrich) and *Encanto* (Charise Castro Smith
    co-directed under Byron Howard) both stay `about_community`/`breakthrough` only —
@@ -68,12 +69,25 @@ one of these from scratch.
 |---|---|---|
 | *From Dusk till Dawn* (1996) | Robert Rodriguez directed | Tarantino wrote it, not Rodriguez or any Latino writer; not about Latino experience or community — genre thriller set partly in Mexico. `led_by` alone would be a thin, technicality-only claim. |
 | *Once Upon a Time in Mexico* (2003) | Rodriguez wrote/directed/scored solo, same as *El Mariachi*/*Machete* | Genre spectacle (CIA agent vs. cartel-backed coup), not substantive `about_community` engagement; would also have been a fourth Rodriguez title in one batch alongside *El Mariachi*, *Machete*, and *Spy Kids* — over-concentrates one director at the expense of the breadth this catalog is for. |
+| *Spider-Man: Into the Spider-Verse* (2018) | Miles Morales is coded Afro-Puerto Rican | No credited director or writer is Latino, and voice actor Shameik Moore isn't either — unlike *Coco*/*Encanto*, there's no actual person to hang a tag on. |
 
-## What this doesn't resolve
+*The Mask of Zorro* was excluded here in an earlier pass on the grounds that Antonio
+Banderas is Spanish, not Latin American, and Spain didn't qualify under this taxonomy
+at the time. That scope decision changed (see below) — Spain now qualifies, so this
+exclusion no longer holds and the title needs re-review under the current rule rather
+than staying flagged as rejected.
 
-**Scope of "Latino."** This taxonomy has consistently treated it as Hispanic/Latin
-American heritage — Spanish-speaking Latin America plus the US Latino diaspora — and
-excluded Spain (Iberian, European) on that basis. Portuguese-speaking Brazil is a real
-edge case that hasn't come up yet (e.g. a Brazilian director like Walter Salles) and
-isn't settled either way. If it comes up, decide once and apply it consistently rather
-than case-by-case.
+## Scope of "Latino"
+
+**Decided:** this taxonomy treats "Latino" as Hispanic broadly — Spain/Spanish
+(Iberian) heritage qualifies, alongside Latin America and the US Latino diaspora. This
+reverses an earlier, narrower reading (Latin-America-only, Spain excluded) that had
+been applied by default in the absence of an explicit call; that default excluded
+*In the Time of the Butterflies*' director (Mariano Barroso) and *Tortilla Soup*'s
+director (María Ripoll) from `led_by`, and excluded *The Mask of Zorro* entirely.
+Those need re-review under the current rule (see the seed file's own history for
+what's actually been fixed vs. still pending).
+
+**Still unresolved:** Portuguese-speaking Brazil is a real edge case that hasn't come
+up yet (e.g. a Brazilian director like Walter Salles) and isn't settled either way. If
+it comes up, decide once and apply it consistently rather than case-by-case.

@@ -26,7 +26,7 @@
     { "ref": "Blood In Blood Out (1993)", "title": "Blood In Blood Out", "year": 1993, "kind": "film", "seedInclusionTypes": ["created_by", "about_community"] },
     { "ref": "Spy Kids (2001)", "title": "Spy Kids", "year": 2001, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
     { "ref": "Frida (2002)", "title": "Frida", "year": 2002, "kind": "film", "seedInclusionTypes": ["created_by", "about_community", "breakthrough"] },
-    { "ref": "In the Time of the Butterflies (2001)", "title": "In the Time of the Butterflies", "year": 2001, "kind": "film", "seedInclusionTypes": ["created_by", "about_community"] },
+    { "ref": "In the Time of the Butterflies (2001)", "title": "In the Time of the Butterflies", "year": 2001, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
     { "ref": "Ugly Betty (2006)", "title": "Ugly Betty", "year": 2006, "kind": "series", "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
     { "ref": "Machete (2010)", "title": "Machete", "year": 2010, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
     { "ref": "Filly Brown (2013)", "title": "Filly Brown", "year": 2013, "kind": "film", "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
@@ -43,10 +43,25 @@
     { "ref": "The Milagro Beanfield War (1988)", "title": "The Milagro Beanfield War", "year": 1988, "kind": "film", "seedInclusionTypes": ["about_community"] },
     { "ref": "Mi Vida Loca (1993)", "title": "Mi Vida Loca", "year": 1993, "kind": "film", "seedInclusionTypes": ["about_community"] },
     { "ref": "Gotta Kick It Up! (2002)", "title": "Gotta Kick It Up!", "year": 2002, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
-    { "ref": "Tortilla Soup (2001)", "title": "Tortilla Soup", "year": 2001, "kind": "film", "seedInclusionTypes": ["about_community"] },
+    { "ref": "Tortilla Soup (2001)", "title": "Tortilla Soup", "year": 2001, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
     { "ref": "Walkout (2006)", "title": "Walkout", "year": 2006, "kind": "film", "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
     { "ref": "Sleep Dealer (2008)", "title": "Sleep Dealer", "year": 2008, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
     { "ref": "Bless Me, Ultima (2013)", "title": "Bless Me, Ultima", "year": 2013, "kind": "film", "seedInclusionTypes": ["about_community"] },
-    { "ref": "The Infiltrators (2019)", "title": "The Infiltrators", "year": 2019, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] }
+    { "ref": "The Infiltrators (2019)", "title": "The Infiltrators", "year": 2019, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+    { "ref": "A Million to Juan (1994)", "title": "A Million to Juan", "year": 1994, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+
+    { "ref": "Zoot Suit (1981)", "title": "Zoot Suit", "year": 1981, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
+    { "ref": "Born in East L.A. (1987)", "title": "Born in East L.A.", "year": 1987, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+    { "ref": "Like Water for Chocolate (1992)", "title": "Like Water for Chocolate", "year": 1992, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
+    { "ref": "Maria Full of Grace (2004)", "title": "Maria Full of Grace", "year": 2004, "kind": "film", "seedInclusionTypes": ["about_community", "starring"] },
+    { "ref": "The George Lopez Show (2002)", "title": "The George Lopez Show", "year": 2002, "kind": "series", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+    { "ref": "La Mission (2009)", "title": "La Mission", "year": 2009, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+    { "ref": "Instructions Not Included (2013)", "title": "Instructions Not Included", "year": 2013, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
+    { "ref": "A Fantastic Woman (2017)", "title": "A Fantastic Woman", "year": 2017, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
+    { "ref": "Identifying Features (2020)", "title": "Identifying Features", "year": 2020, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+    { "ref": "Aristotle and Dante Discover the Secrets of the Universe (2022)", "title": "Aristotle and Dante Discover the Secrets of the Universe", "year": 2022, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+    { "ref": "Flamin' Hot (2023)", "title": "Flamin' Hot", "year": 2023, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+    { "ref": "Problemista (2023)", "title": "Problemista", "year": 2023, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+    { "ref": "Fantasmas (2024)", "title": "Fantasmas", "year": 2024, "kind": "series", "seedInclusionTypes": ["led_by", "created_by", "about_community"] }
   ]
 }
