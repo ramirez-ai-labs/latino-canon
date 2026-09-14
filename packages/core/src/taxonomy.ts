@@ -81,3 +81,48 @@ export type TagSource = "seed" | "model" | "editor";
 
 /** Below this confidence the tag is hidden from the UI and sent to the review queue. */
 export const MODEL_TAG_DISPLAY_THRESHOLD = 0.6;
+
+/**
+ * A title can earn an inclusion_type and still deserve scrutiny of how it represents
+ * Latino people or communities — e.g. a narco-drama with a Latina lead and executive
+ * producer, or a sitcom whose creator was praised for representation at the time but
+ * whose humor reads as stereotyping in retrospect. `null` (no row) means "standard":
+ * no known representation concern. This is deliberately not a rejection mechanism —
+ * a contextual/critical_archive title is still in the canon, just labeled honestly
+ * instead of presented as an uncomplicated recommendation.
+ */
+export const REPRESENTATION_HANDLINGS = ["contextual", "critical_archive"] as const;
+export type RepresentationHandling = (typeof REPRESENTATION_HANDLINGS)[number];
+
+export const REPRESENTATION_HANDLING_LABELS: Record<RepresentationHandling, string> = {
+  contextual: "Contextual entry",
+  critical_archive: "Critical archive entry",
+};
+
+export const REPRESENTATION_HANDLING_DEFINITIONS: Record<RepresentationHandling, string> = {
+  contextual:
+    "Included for its relevance to Latino representation; the work's framing (of a character, a community, or a role) warrants a caveat alongside the standard tags.",
+  critical_archive:
+    "Included as a documented, discussed case in the history of Latino representation — the point of the record is the discussion, not an uncomplicated recommendation.",
+};
+
+/**
+ * Grows the same way INCLUSION_TYPES/THEMES did: add a category only when a real
+ * title needs one that doesn't fit, not speculatively.
+ */
+export const CONTEXT_NOTE_CATEGORIES = [
+  "crime_stereotype_risk",
+  "employer_centered_framing",
+  "era_specific_stereotyping",
+  "authorship_gap",
+  "historical_context",
+] as const;
+export type ContextNoteCategory = (typeof CONTEXT_NOTE_CATEGORIES)[number];
+
+export const CONTEXT_NOTE_CATEGORY_LABELS: Record<ContextNoteCategory, string> = {
+  crime_stereotype_risk: "Crime/stereotype risk",
+  employer_centered_framing: "Employer-centered framing",
+  era_specific_stereotyping: "Era-specific stereotyping",
+  authorship_gap: "Authorship gap",
+  historical_context: "Historical context",
+};

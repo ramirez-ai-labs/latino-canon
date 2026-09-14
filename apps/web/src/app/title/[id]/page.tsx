@@ -1,5 +1,11 @@
 import { notFound } from "next/navigation";
-import { INCLUSION_TYPE_LABELS, THEME_LABELS } from "@latino-canon/core";
+import {
+  CONTEXT_NOTE_CATEGORY_LABELS,
+  INCLUSION_TYPE_LABELS,
+  REPRESENTATION_HANDLING_DEFINITIONS,
+  REPRESENTATION_HANDLING_LABELS,
+  THEME_LABELS,
+} from "@latino-canon/core";
 import { getTitle, posterUrl } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +25,13 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
           {title.yearStart}
           {title.yearEnd ? `–${title.yearEnd}` : ""} · {title.kind} · {title.country.join(", ")}
         </p>
+
+        {title.representationHandling && (
+          <p className="context-banner">
+            {REPRESENTATION_HANDLING_LABELS[title.representationHandling]} —{" "}
+            {REPRESENTATION_HANDLING_DEFINITIONS[title.representationHandling]}
+          </p>
+        )}
 
         <div className="tag-row">
           {title.tags
@@ -65,6 +78,34 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
           <section style={{ marginTop: "1.5rem" }}>
             <h2 style={{ fontSize: "1rem" }}>Synopsis</h2>
             <p>{title.synopsis}</p>
+          </section>
+        )}
+
+        {title.contextNotes.length > 0 && (
+          <section style={{ marginTop: "1.5rem" }}>
+            <h2 style={{ fontSize: "1rem" }}>Representation notes</h2>
+            {title.contextNotes.map((note, i) => (
+              <div key={i} style={{ marginBottom: "1rem" }}>
+                <p>
+                  <span className="tag" title={note.status === "review_required" ? "Still under editorial review" : "Confirmed"}>
+                    {CONTEXT_NOTE_CATEGORY_LABELS[note.category]}
+                  </span>
+                </p>
+                <p>{note.summary}</p>
+                {note.sources.length > 0 && (
+                  <details>
+                    <summary style={{ color: "var(--muted)", fontSize: "0.8rem" }}>Sources</summary>
+                    <ul style={{ color: "var(--muted)", fontSize: "0.8rem" }}>
+                      {note.sources.map((s, j) => (
+                        <li key={j}>
+                          <strong>{s.kind}</strong> — {s.quote ?? s.ref}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            ))}
           </section>
         )}
       </div>

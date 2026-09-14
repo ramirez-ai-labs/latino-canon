@@ -40,3 +40,13 @@ main { max-width: 1200px; margin: 0 auto; padding: 2rem; }
 .tag-row { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.5rem; }
 .tag { font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 999px; background: #2a2a30; color: var(--muted); }
 .tag.inclusion { background: rgba(217, 138, 61, 0.15); color: var(--accent); }
+.tag.contextual { background: rgba(217, 183, 61, 0.15); color: #d9b73d; }
+.context-banner {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid #d9b73d;
+  background: rgba(217, 183, 61, 0.08);
+  color: var(--text);
+  font-size: 0.85rem;
+}

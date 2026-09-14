@@ -43,6 +43,21 @@ beforeAll(async () => {
       `INSERT INTO blurbs (title_id, text, sources, model, approved)
        VALUES ('unapproved-2020', 'Draft text.', '[]', 'test-model', 0)`,
     ),
+    // representation_handling + context notes - one public (should be returned), one
+    // curator_only (should never reach this public endpoint)
+    env.DB.prepare(
+      `INSERT INTO titles (id, kind, title, year_start, countries, languages, representation_handling)
+       VALUES ('contextual-2020', 'film', 'Contextual Example', 2020, '[]', '[]', 'contextual')`,
+    ),
+    env.DB.prepare(
+      `INSERT INTO title_context_notes (title_id, category, status, summary, sources, display_policy)
+       VALUES ('contextual-2020', 'crime_stereotype_risk', 'confirmed', 'A public note.',
+         '[{"kind":"criticism","ref":"https://example.com","quote":null}]', 'public')`,
+    ),
+    env.DB.prepare(
+      `INSERT INTO title_context_notes (title_id, category, status, summary, sources, display_policy)
+       VALUES ('contextual-2020', 'authorship_gap', 'review_required', 'A curator-only note.', '[]', 'curator_only')`,
+    ),
   ]);
 });
 
@@ -73,5 +88,28 @@ describe("GET /titles/:id", () => {
   it("404s for a title that doesn't exist", async () => {
     const res = await app.request("/titles/does-not-exist", {}, env);
     expect(res.status).toBe(404);
+  });
+
+  it("returns representationHandling and only public context notes", async () => {
+    const res = await app.request("/titles/contextual-2020", {}, env);
+    const body = (await res.json()) as Title;
+
+    expect(body.representationHandling).toBe("contextual");
+    expect(body.contextNotes).toHaveLength(1);
+    expect(body.contextNotes[0]).toEqual({
+      category: "crime_stereotype_risk",
+      status: "confirmed",
+      summary: "A public note.",
+      sources: [{ kind: "criticism", ref: "https://example.com", quote: null }],
+      displayPolicy: "public",
+    });
+  });
+
+  it("defaults representationHandling to null and contextNotes to [] for a standard title", async () => {
+    const res = await app.request("/titles/blue-beetle-2023", {}, env);
+    const body = (await res.json()) as Title;
+
+    expect(body.representationHandling).toBeNull();
+    expect(body.contextNotes).toEqual([]);
   });
 });

@@ -37,6 +37,8 @@ export function normalizeTitle(
     credits: toCredits(details.credits),
     tags: [],
     blurb: null,
+    representationHandling: null,
+    contextNotes: [],
   };
 }
 

@@ -60,6 +60,7 @@ function title(id: string, name: string, year: number, kind: Title["kind"], dire
     credits: [{ person: { id: director.toLowerCase().replaceAll(" ", "-"), tmdbId: null, name: director, knownForDepartment: "Directing" }, role: "director", character: null, order: 0 }],
     tags: themes.map((theme) => ({ kind: "theme", slug: theme as never, label: theme.replaceAll("_", " "), confidence: 1, source: "seed" })),
     blurb: { text: blurb, sources: [{ kind: "synopsis", ref: id, quote: blurb }], model: "local-seed", approved: true },
+    representationHandling: null, contextNotes: [],
   };
 }
 
@@ -69,6 +70,7 @@ function toCard(item: Title): TitleCard {
     director: item.credits.find((credit) => credit.role === "director")?.person.name ?? null,
     posterKey: null, blurbTeaser: item.blurb?.text ?? null, inclusionTypes: [],
     themes: item.tags.filter((tag) => tag.kind === "theme").map((tag) => tag.slug as never), score: item.popularity,
+    representationHandling: item.representationHandling,
   };
 }
 

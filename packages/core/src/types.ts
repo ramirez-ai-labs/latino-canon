@@ -1,4 +1,4 @@
-import type { InclusionType, Theme, TagSource } from "./taxonomy.js";
+import type { ContextNoteCategory, InclusionType, RepresentationHandling, Theme, TagSource } from "./taxonomy.js";
 
 export type TitleKind = "film" | "series";
 export type CreditRole = "director" | "writer" | "creator" | "cast";
@@ -35,9 +35,24 @@ export interface Blurb {
 }
 
 export interface BlurbSource {
-  kind: "synopsis" | "loc_filmography" | "ucla_guide" | "credit" | "award";
+  kind: "synopsis" | "loc_filmography" | "ucla_guide" | "credit" | "award" | "criticism" | "news";
   ref: string;
   quote: string | null;
+}
+
+/**
+ * A sourced caveat about how a title represents Latino people or communities.
+ * Deliberately reuses BlurbSource's shape for sources rather than a parallel type —
+ * same "cite what backs this" discipline that grounds the blurb pipeline.
+ */
+export interface ContextNote {
+  category: ContextNoteCategory;
+  /** "review_required" notes exist for editorial tracking but shouldn't read as settled. */
+  status: "confirmed" | "review_required";
+  summary: string;
+  sources: BlurbSource[];
+  /** curator_only notes are never returned by the public title endpoint. */
+  displayPolicy: "public" | "curator_only";
 }
 
 export interface Title {
@@ -58,6 +73,9 @@ export interface Title {
   credits: Credit[];
   tags: Tag[];
   blurb: Blurb | null;
+  /** null = standard entry, no known representation concern. */
+  representationHandling: RepresentationHandling | null;
+  contextNotes: ContextNote[];
 }
 
 /** Compact shape returned by /search — enough to render a card. */
@@ -73,6 +91,7 @@ export interface TitleCard {
   inclusionTypes: InclusionType[];
   themes: Theme[];
   score: number;
+  representationHandling: RepresentationHandling | null;
 }
 
 export interface SearchFilters {
