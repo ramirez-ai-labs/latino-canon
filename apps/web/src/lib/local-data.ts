@@ -23,9 +23,11 @@ export function localSearch(params: {
   theme?: string;
   decade?: number;
   limit?: number;
+  offset?: number;
 }): SearchResponse {
   const started = Date.now();
   const query = params.q?.trim().toLowerCase() ?? "";
+  const offset = params.offset ?? 0;
   const results = titles
     .filter((item) => {
       const text = [item.title, item.synopsis, ...item.tags.map((tag) => tag.slug)].join(" ").toLowerCase();
@@ -34,7 +36,7 @@ export function localSearch(params: {
         && (!params.theme || item.tags.some((tag) => tag.slug === params.theme))
         && (!params.decade || item.yearStart >= params.decade && item.yearStart < params.decade + 10);
     })
-    .slice(0, params.limit ?? 36)
+    .slice(offset, offset + (params.limit ?? 36))
     .map(toCard);
 
   return { query: params.q ?? "", mode: "lexical", interpretation: null, results, tookMs: Date.now() - started };
