@@ -37,6 +37,16 @@
     { "ref": "Roma (2018)", "title": "Roma", "year": 2018, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
     { "ref": "Encanto (2021)", "title": "Encanto", "year": 2021, "kind": "film", "seedInclusionTypes": ["created_by", "about_community", "breakthrough"] },
     { "ref": "Acapulco (2021)", "title": "Acapulco", "year": 2021, "kind": "series", "seedInclusionTypes": ["created_by", "about_community"] },
-    { "ref": "With Love (2021)", "title": "With Love", "year": 2021, "kind": "series", "seedInclusionTypes": ["led_by", "created_by", "about_community"] }
+    { "ref": "With Love (2021)", "title": "With Love", "year": 2021, "kind": "series", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+
+    { "ref": "¡Alambrista! (1977)", "title": "Alambrista!", "year": 1977, "kind": "film", "seedInclusionTypes": ["about_community", "breakthrough"] },
+    { "ref": "The Milagro Beanfield War (1988)", "title": "The Milagro Beanfield War", "year": 1988, "kind": "film", "seedInclusionTypes": ["about_community"] },
+    { "ref": "Mi Vida Loca (1993)", "title": "Mi Vida Loca", "year": 1993, "kind": "film", "seedInclusionTypes": ["about_community"] },
+    { "ref": "Gotta Kick It Up! (2002)", "title": "Gotta Kick It Up!", "year": 2002, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Tortilla Soup (2001)", "title": "Tortilla Soup", "year": 2001, "kind": "film", "seedInclusionTypes": ["about_community"] },
+    { "ref": "Walkout (2006)", "title": "Walkout", "year": 2006, "kind": "film", "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
+    { "ref": "Sleep Dealer (2008)", "title": "Sleep Dealer", "year": 2008, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+    { "ref": "Bless Me, Ultima (2013)", "title": "Bless Me, Ultima", "year": 2013, "kind": "film", "seedInclusionTypes": ["about_community"] },
+    { "ref": "The Infiltrators (2019)", "title": "The Infiltrators", "year": 2019, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] }
   ]
 }
