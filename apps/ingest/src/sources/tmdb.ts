@@ -46,9 +46,11 @@ export async function resolveTmdbId(
   env: Env,
   title: string,
   year: number,
-  kind: "film" | "series",
+  kind: "film" | "series" | "special",
 ): Promise<number> {
-  const path = kind === "film" ? "search/movie" : "search/tv";
+  // TMDB catalogs stand-up specials as movies, same surface as film - confirmed by
+  // querying TMDB directly (a special has no separate TMDB media type of its own).
+  const path = kind === "series" ? "search/tv" : "search/movie";
   const url = `${BASE}/${path}?query=${encodeURIComponent(title)}&year=${year}&api_key=${env.TMDB_API_KEY}`;
   const res = await fetchJson<{ results: TmdbSearchResult[] }>(url);
   if (res.results.length === 0) throw new Error(`TMDB: no match for "${title}" (${year})`);
@@ -113,8 +115,8 @@ interface TmdbRaw {
 }
 
 /** Full details + credits for a resolved id. */
-export async function fetchTmdbDetails(env: Env, id: number, kind: "film" | "series"): Promise<TmdbDetails> {
-  const path = kind === "film" ? "movie" : "tv";
+export async function fetchTmdbDetails(env: Env, id: number, kind: "film" | "series" | "special"): Promise<TmdbDetails> {
+  const path = kind === "series" ? "tv" : "movie";
   const url = `${BASE}/${path}/${id}?append_to_response=credits,external_ids&api_key=${env.TMDB_API_KEY}`;
   const raw = await fetchJson<TmdbRaw>(url);
 
@@ -131,9 +133,9 @@ export async function fetchTmdbDetails(env: Env, id: number, kind: "film" | "ser
     posterPath: raw.poster_path ?? null,
     releaseYear,
     lastYear: raw.last_air_date ? Number(raw.last_air_date.slice(0, 4)) : null,
-    countries: kind === "film"
-      ? (raw.production_countries ?? []).map((c) => c.iso_3166_1)
-      : (raw.origin_country ?? []),
+    countries: kind === "series"
+      ? (raw.origin_country ?? [])
+      : (raw.production_countries ?? []).map((c) => c.iso_3166_1),
     languages: (raw.spoken_languages ?? []).map((l) => l.iso_639_1),
     runtime: raw.runtime ?? raw.episode_run_time?.[0] ?? null,
     popularity: raw.popularity ?? 0,

@@ -16,7 +16,7 @@ const themeList = Object.entries(THEME_LABELS)
 export const QUERY_REWRITE_SYSTEM = `You convert a movie/TV search phrase into a cleaned keyword query plus structured filters.
 
 Filters you may set (all optional):
-- kind: "film" | "series"
+- kind: "film" | "series" | "special" (a stand-up comedy special)
 - decade: a year like 1990 (the START of the decade)
 - country: ISO 3166-1 alpha-2 (e.g. MX, US, CL)
 - theme: one of ${themeList}

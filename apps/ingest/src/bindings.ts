@@ -19,7 +19,7 @@ export interface IngestParams {
   ref: string;
   title: string;
   year: number;
-  kind: "film" | "series";
+  kind: "film" | "series" | "special";
   /** Trusted inclusion types from the seed list; classifier still runs but seed wins. */
   seedInclusionTypes?: string[];
   /** Force re-run even if the title already exists. */

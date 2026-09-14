@@ -2,7 +2,7 @@ export interface SeedTitle {
   ref: string;
   title: string;
   year: number;
-  kind: "film" | "series";
+  kind: "film" | "series" | "special";
   seedInclusionTypes?: string[];
 }
 
