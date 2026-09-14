@@ -47,6 +47,7 @@
     { "ref": "Walkout (2006)", "title": "Walkout", "year": 2006, "kind": "film", "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
     { "ref": "Sleep Dealer (2008)", "title": "Sleep Dealer", "year": 2008, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
     { "ref": "Bless Me, Ultima (2013)", "title": "Bless Me, Ultima", "year": 2013, "kind": "film", "seedInclusionTypes": ["about_community"] },
-    { "ref": "The Infiltrators (2019)", "title": "The Infiltrators", "year": 2019, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] }
+    { "ref": "The Infiltrators (2019)", "title": "The Infiltrators", "year": 2019, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+    { "ref": "A Million to Juan (1994)", "title": "A Million to Juan", "year": 1994, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] }
   ]
 }
