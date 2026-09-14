@@ -7,6 +7,7 @@ export async function browseByPopularity(
   env: Env,
   filters: SearchFilters,
   limit: number,
+  offset: number = 0,
 ): Promise<RankedHit[]> {
   const { where, params } = filterToSql(filters, "t");
   const sql = `
@@ -14,10 +15,11 @@ export async function browseByPopularity(
     FROM titles t
     ${where ? `WHERE ${where}` : ""}
     ORDER BY t.popularity DESC
-    LIMIT ?${params.length + 1}
+    LIMIT ?
+    OFFSET ?
   `;
   const { results } = await env.DB.prepare(sql)
-    .bind(...params, limit)
+    .bind(...params, limit, offset)
     .all<{ titleId: string; score: number }>();
   return results;
 }

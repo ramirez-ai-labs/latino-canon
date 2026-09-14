@@ -44,6 +44,7 @@ export function search(params: {
   kind?: string;
   inclusionType?: string;
   limit?: number;
+  offset?: number;
 }): Promise<SearchResponse> {
   const qs = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) if (v != null && v !== "") qs.set(k, String(v));
