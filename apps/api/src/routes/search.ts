@@ -45,7 +45,7 @@ searchRoute.get("/", async (c) => {
 
   const hits = effectiveQuery
     ? await retrieve(c.env, { query: effectiveQuery, mode: input.mode, filters, limit: input.limit })
-    : await browseByPopularity(c.env, filters, input.limit);
+    : await browseByPopularity(c.env, filters, input.limit, input.offset);
 
   const results = await hydrateCards(c.env, hits);
 

@@ -38,6 +38,13 @@ export default async function HomePage() {
               <div style={{ color: "var(--muted)", fontSize: "0.82rem" }}>{c.description}</div>
             </Link>
           ))}
+          <Link
+            href="/catalog"
+            style={{ padding: "1rem 1.25rem", background: "var(--surface)", borderRadius: 8, minWidth: 180 }}
+          >
+            <strong>Browse All</strong>
+            <div style={{ color: "var(--muted)", fontSize: "0.82rem" }}>Full paginated catalog</div>
+          </Link>
         </div>
       </section>
 

@@ -35,6 +35,7 @@ export const searchQuerySchema = z.object({
   q: z.string().trim().max(200).default(""),
   mode: searchModeSchema.default("hybrid"),
   limit: z.coerce.number().int().min(1).max(50).default(24),
+  offset: z.coerce.number().int().min(0).default(0),
   kind: titleKindSchema.optional(),
   decade: z.coerce.number().int().optional(),
   country: z.string().length(2).optional(),
