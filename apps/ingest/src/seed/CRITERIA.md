@@ -68,6 +68,8 @@ one of these from scratch.
 |---|---|---|
 | *From Dusk till Dawn* (1996) | Robert Rodriguez directed | Tarantino wrote it, not Rodriguez or any Latino writer; not about Latino experience or community — genre thriller set partly in Mexico. `led_by` alone would be a thin, technicality-only claim. |
 | *Once Upon a Time in Mexico* (2003) | Rodriguez wrote/directed/scored solo, same as *El Mariachi*/*Machete* | Genre spectacle (CIA agent vs. cartel-backed coup), not substantive `about_community` engagement; would also have been a fourth Rodriguez title in one batch alongside *El Mariachi*, *Machete*, and *Spy Kids* — over-concentrates one director at the expense of the breadth this catalog is for. |
+| *The Mask of Zorro* (1998) | Antonio Banderas as "the Latino hero" | Banderas is Spanish (Málaga), not Latin American — same Spain-isn't-Latino issue as Mariano Barroso and María Ripoll. Doesn't qualify even for `starring`. |
+| *Spider-Man: Into the Spider-Verse* (2018) | Miles Morales is coded Afro-Puerto Rican | No credited director or writer is Latino, and voice actor Shameik Moore isn't either — unlike *Coco*/*Encanto*, there's no actual person to hang a tag on. |
 
 ## What this doesn't resolve
 
