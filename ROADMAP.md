@@ -36,17 +36,16 @@ against that same framework, is the rest of this document.
 
 ## Immediate (do first — small, high-visibility)
 
-1. **Fix the two empty homepage collections.** Found by testing live, not by reading
-   code: `collection_items` has zero rows for any collection, so the "Core Canon"
-   curated collection (the first, most prominent card on the homepage) shows nothing.
-   Separately, the "Border Stories" smart collection filters on `theme:borderlands`,
-   and no title has ever been tagged `borderlands` by the classifier — confirmed zero
-   matches, even though *El Norte*, *Under the Same Moon*, and *Y Tu Mamá También* are
-   textbook borderlands narratives (the model likely defaulted to `immigration`
-   instead). Fix: populate `collection_items` for Core Canon editorially, and either
-   add editor-sourced `borderlands` tags to titles that clearly qualify (the taxonomy's
-   `editor` precedence already supports this) or repoint that collection at a theme
-   with real coverage.
+1. ~~**Fix the two empty homepage collections.**~~ **Done.** Core Canon populated
+   with a curated 10-title "start here" shortlist; Border Stories tagged with a real
+   `borderlands` theme (*El Norte*, *Under the Same Moon* — the only two titles in
+   the catalog actually about crossing) instead of the looser `immigration` proxy
+   first tried. A follow-up pass checking every title's tags against what's actually
+   known about each work also found and fixed two representation gaps the classifier
+   missed: `queer_latino` wasn't tagged on *Vida* or *One Day at a Time* despite both
+   centering a queer Latina character's arc, and *One Day at a Time* / *Gentefied*'s
+   showrunner-creators weren't tagged `led_by` (only `created_by`), despite the
+   taxonomy's own definition of `led_by` covering showrunners, not just directors.
 2. **Verify `pnpm eval:groundedness`'s rewritten judge actually works.** It was
    rewired from Anthropic's API to Workers AI's REST API in the Anthropic-removal
    work but has never actually been executed — needs a real `CLOUDFLARE_API_TOKEN`
@@ -78,18 +77,28 @@ against that same framework, is the rest of this document.
 6. **Grow the golden eval set past 15 queries** and re-tune `hybrid.ts`'s RRF weights
    and `semantic.ts`'s `MIN_SEMANTIC_SCORE` floor against it — both are currently
    hand-picked heuristics, explicitly commented as such in the code.
+7. **Netflix-style hero + carousel layout for collection/title pages.** Prompted by
+   comparing our `TitleCard`/`/collections/[slug]` grid against an actual Netflix
+   collection page: Netflix's card shows the full synopsis inline (not a truncated
+   teaser) and its own AI-generated mood/tone tags ("Witty, Irreverent, Romantic")
+   are conceptually the same move as our `inclusion_type`/theme tags — just
+   presented as a details-panel afterthought rather than the product's whole point,
+   which is the opposite of this project's actual differentiator (`TitleCard`'s own
+   comment: surfacing the model's output on its face "is the whole point of the
+   product"). Worth borrowing the layout (hero banner + horizontal carousel instead
+   of a plain grid), not the buried-tags approach.
 
 ## Standing backlog (SDLC / completeness, unchanged priority)
 
-7. Wire up `apps/ingest/src/maintenance.ts` (`retryErroredJobs`/`refreshPopularity`) —
+8. Wire up `apps/ingest/src/maintenance.ts` (`retryErroredJobs`/`refreshPopularity`) —
    the nightly cron still does nothing real; every recovery from a stuck ingest job
    this project has needed so far has been a manual `force: true` re-POST.
-8. Add tests for `workflow.ts`, `persist.ts`, `hybrid.ts` — the highest-risk,
+9. Add tests for `workflow.ts`, `persist.ts`, `hybrid.ts` — the highest-risk,
    currently untested code, proven risky by every real bug found this session.
-9. Add real linting (`turbo.json`/`package.json` advertise a `lint` task with no
-   ESLint/Biome config and no per-package script behind it — currently dead
-   scaffolding, not run in CI).
-10. Smaller: add a LICENSE, a Dependabot config, confirm branch protection is
+10. Add real linting (`turbo.json`/`package.json` advertise a `lint` task with no
+    ESLint/Biome config and no per-package script behind it — currently dead
+    scaffolding, not run in CI).
+11. Smaller: add a LICENSE, a Dependabot config, confirm branch protection is
     actually enabled on `main` (unverifiable via API on a private repo), and clean up
     the `"community" as never` type-cast hack in `apps/web/src/lib/local-data.ts`.
 
