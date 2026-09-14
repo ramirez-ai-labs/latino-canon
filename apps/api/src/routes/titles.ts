@@ -87,7 +87,7 @@ titlesRoute.get("/:id", async (c) => {
     )
       .bind(id)
       .all<TagRow>(),
-    c.env.DB.prepare("SELECT text, sources, model, approved FROM blurbs WHERE title_id = ?1 AND approved = 1")
+    c.env.DB.prepare("SELECT text, sources, model, approved FROM blurbs WHERE title_id = ?1 ORDER BY approved DESC LIMIT 1")
       .bind(id)
       .first<BlurbRow>(),
     // display_policy = 'curator_only' notes exist for editorial tracking and are never
