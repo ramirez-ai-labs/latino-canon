@@ -171,7 +171,11 @@ After a pull request is merged, `.github/workflows/deploy-web.yml`,
 `deploy-api.yml`, and `deploy-ingest.yml` each deploy their Worker from Ubuntu —
 each is scoped by `paths:` to its own `apps/<name>/**`, so only the Worker(s) whose
 code actually changed redeploy; a change under `packages/core/**` (shared by all
-three) redeploys all of them. Each can also be started manually from **Actions**.
+three) redeploys all of them. `deploy-api.yml` also applies any pending D1
+migrations (`wrangler d1 migrations apply --remote`, idempotent — already-applied
+ones are skipped) before deploying, so a migration added under
+`apps/api/migrations/` takes effect automatically on merge rather than needing a
+manual follow-up step. Each workflow can also be started manually from **Actions**.
 Add these repository secrets in GitHub:
 
 ```text
