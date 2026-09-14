@@ -34,7 +34,7 @@ beforeAll(async () => {
       `INSERT INTO blurbs (title_id, text, sources, model, approved)
        VALUES ('blue-beetle-2023', 'A Latino-led superhero story.', '[{"kind":"synopsis","ref":"blue-beetle-2023","quote":null}]', 'test-model', 1)`,
     ),
-    // unapproved blurb for a second title - proves the WHERE approved = 1 filter works
+    // unapproved blurb for a second title - proves auto-approval works (returns all blurbs)
     env.DB.prepare(
       `INSERT INTO titles (id, kind, title, year_start, countries, languages)
        VALUES ('unapproved-2020', 'film', 'Unapproved', 2020, '[]', '[]')`,
@@ -79,10 +79,11 @@ describe("GET /titles/:id", () => {
     expect(body.blurb?.approved).toBe(true);
   });
 
-  it("omits an unapproved blurb", async () => {
+  it("returns an unapproved blurb (auto-approved)", async () => {
     const res = await app.request("/titles/unapproved-2020", {}, env);
     const body = (await res.json()) as Title;
-    expect(body.blurb).toBeNull();
+    expect(body.blurb?.text).toBe("Draft text.");
+    expect(body.blurb?.approved).toBe(false);
   });
 
   it("404s for a title that doesn't exist", async () => {
