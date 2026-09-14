@@ -91,6 +91,9 @@
     { "ref": "Radical (2023)", "title": "Radical", "year": 2023, "kind": "film", "seedInclusionTypes": ["starring", "about_community", "breakthrough"] },
 
     { "ref": "Barreda (2026)", "title": "Barreda", "year": 2026, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
-    { "ref": "Vengeance (2026)", "title": "Vengeance", "year": 2026, "kind": "film", "seedInclusionTypes": ["starring", "breakthrough"] }
+    { "ref": "Vengeance (2026)", "title": "Vengeance", "year": 2026, "kind": "film", "seedInclusionTypes": ["starring", "breakthrough"] },
+
+    { "ref": "Apocalypse Z: The Beginning of the End (2024)", "title": "Apocalypse Z: The Beginning of the End", "year": 2024, "kind": "film", "seedInclusionTypes": ["led_by", "starring"] },
+    { "ref": "Agent Zeta (2026)", "title": "Agent Zeta", "year": 2026, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "starring"] }
   ]
 }
