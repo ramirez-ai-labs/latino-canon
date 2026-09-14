@@ -47,5 +47,8 @@ jobs:
       - name: Typecheck api worker
         run: pnpm --filter @latino-canon/api run typecheck
 
+      - name: Apply D1 migrations
+        run: pnpm --filter @latino-canon/api run db:migrate:remote
+
       - name: Deploy api Worker
         run: pnpm --filter @latino-canon/api run deploy
