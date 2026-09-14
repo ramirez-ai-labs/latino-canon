@@ -3,6 +3,8 @@ export interface SeedTitle {
   title: string;
   year: number;
   kind: "film" | "series";
+  /** Pins the exact TMDB id, skipping search - see bindings.ts IngestParams.tmdbId. */
+  tmdbId?: number;
   seedInclusionTypes?: string[];
 }
 

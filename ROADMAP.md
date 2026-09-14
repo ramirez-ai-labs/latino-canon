@@ -120,17 +120,22 @@ deferred rather than bundled in:
     without independent verification first, the same lesson this project has hit
     more than once (Tortilla Soup's director, Mask of Zorro under the old Spain
     rule, Filly Brown's release year).
-13. **Scope-boundary question: does the canon include internationally-produced Latin
-    American cinema whose story doesn't center U.S. Latino/diaspora experience?**
-    Raised by titles like *Motorcycle Diaries* (Salles, Brazilian, but a Latin
-    American political journey, not a U.S. community story), *Babel* (Iñárritu,
-    Mexican, multinational ensemble), *Pan's Labyrinth* (del Toro, Mexican, but set
-    in Franco-era Spain), *Y Tu Mamá También*, *Desperado*, and *Once Upon a Time in
-    Mexico*. Not a research question like #12 — it's a product-scope decision (would
-    likely need separate filter facets: U.S./diaspora stories vs. Latin American
-    cinema vs. Latin American filmmakers working in Hollywood vs. Latino actors in
-    non-Latino-centered stories) big enough to deserve its own pass rather than
-    title-by-title guessing inside an unrelated PR.
+13. ~~**Scope-boundary question: does the canon include internationally-produced Latin
+    American cinema whose story doesn't center U.S. Latino/diaspora experience?**~~
+    **Decided: yes**, per `CRITERIA.md`'s "Scope of 'Latino'" section — rule #4's
+    `about_community` test was never actually written as U.S.-only, and a title like
+    *A Poet* (Simón Mesa Soto, Colombian, set entirely in Medellín's art scene) passes
+    it as written. Raised concretely (not hypothetically) while researching a 2026
+    festival-circuit batch — see the seed file's history around that PR. *Motorcycle
+    Diaries*, *Babel*, *Pan's Labyrinth*, *Y Tu Mamá También*, *Desperado*, and *Once
+    Upon a Time in Mexico* (the titles that originally raised this question) still
+    need their own individual verification pass under the now-decided rule, not an
+    automatic re-add — a broader scope doesn't relax rule #1's credit-checking bar.
+    **Follow-up, not yet built:** the separate filter facets this decision implies
+    (U.S./diaspora stories vs. Latin American cinema vs. Latin American filmmakers
+    working in Hollywood vs. Latino actors in non-Latino-centered stories) so users
+    can actually distinguish these categories in search/browse, rather than everything
+    just being `about_community` with no further distinction.
 
 ## Standing backlog (SDLC / completeness, unchanged priority)
 

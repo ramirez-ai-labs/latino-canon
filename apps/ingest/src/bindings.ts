@@ -20,6 +20,9 @@ export interface IngestParams {
   title: string;
   year: number;
   kind: "film" | "series";
+  /** Pins the exact TMDB id, skipping search - for titles whose title+year search
+   * result collides with an unrelated, same-titled, same-year work. */
+  tmdbId?: number;
   /** Trusted inclusion types from the seed list; classifier still runs but seed wins. */
   seedInclusionTypes?: string[];
   /** Force re-run even if the title already exists. */
