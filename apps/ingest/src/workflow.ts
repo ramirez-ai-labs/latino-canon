@@ -30,8 +30,12 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
     // "running" row is invisible to it.
     let stage = "resolve";
     try {
+      // A plain title+year search can't disambiguate two different films that share
+      // both (e.g. two unrelated 2026 movies both titled "Ashes") - p.tmdbId lets the
+      // seed pin the exact id when that collision is a real, checked risk rather than
+      // a hypothetical one.
       const tmdbId = await step.do("resolve tmdb id", { retries: { limit: 3, delay: "5 seconds" } }, () =>
-        resolveTmdbId(this.env, p.title, p.year, p.kind),
+        p.tmdbId ? Promise.resolve(p.tmdbId) : resolveTmdbId(this.env, p.title, p.year, p.kind),
       );
 
       stage = "fetch";

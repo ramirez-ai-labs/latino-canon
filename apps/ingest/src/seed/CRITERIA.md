@@ -89,6 +89,18 @@ director (María Ripoll) from `led_by`, and excluded *The Mask of Zorro* entirel
 Those need re-review under the current rule (see the seed file's own history for
 what's actually been fixed vs. still pending).
 
-**Still unresolved:** Portuguese-speaking Brazil is a real edge case that hasn't come
-up yet (e.g. a Brazilian director like Walter Salles) and isn't settled either way. If
-it comes up, decide once and apply it consistently rather than case-by-case.
+**Decided: Portuguese-speaking Brazil qualifies too.** Extends the same logic as the
+Spain decision — heritage, not a specific colonial language, is what the taxonomy
+gates on. Confirmed Brazilian directors (e.g. Gabriel Mascaro, Kleber Mendonça Filho)
+earn `led_by`/`created_by` the same way a confirmed Mexican or Cuban director would.
+
+**Decided: `about_community` isn't narrowed to U.S. Latino/diaspora stories.**
+Rule #4's test ("the Latino community/experience is the actual subject... would the
+story still make sense without that context?") was never actually written with a
+U.S.-only scope — a story that centers a specific Latin American community's own
+experience (e.g. *A Poet*, set entirely in Medellín's art scene) passes the test as
+written just as much as a U.S.-set immigrant story does. This was a real, live
+question (not hypothetical) once verification turned up genuine Latin American
+festival cinema with confirmed Latino creative leadership and a community-centered
+story — formalizing the reading the rule already implied rather than leaving it to
+guess case-by-case.
