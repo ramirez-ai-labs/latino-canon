@@ -162,6 +162,16 @@ deferred rather than bundled in:
     tags/annotates a title introduced in the same PR ships as a **follow-up** PR after
     ingestion is confirmed complete via the live API, not bundled into the title's own
     introducing PR.
+15. **No tracking of cumulative Workers AI neuron usage across a day's ingest
+    batches.** Found the hard way: growing the catalog by ~85 titles in one session
+    (plus a ~60-title remediation re-ingest) burned 11.18k of the account's 10k daily
+    neuron cap on `classify`/`blurb` alone, which also broke live search for the rest
+    of the day (`GET /search` depends on the same account-wide budget). See the
+    README's "Free-tier budget" section for the full writeup. `post-titles.ts`'s
+    `BATCH = 4` rate-limits a single run; nothing tracks the running total *across*
+    runs in a day, and the cap is shared with any other Workers AI usage on the same
+    Cloudflare account. Worth either a lightweight neuron-spend tracker before a large
+    batch, or just a standing discipline of checking current usage first.
 
 ## Deliberately deferred (Netflix's Stage 4, not needed yet)
 

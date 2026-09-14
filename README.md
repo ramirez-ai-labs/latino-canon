@@ -229,6 +229,38 @@ already live, it never redeploys the Worker's own code.
 Runtime cost target: **$0**, including ingestion — no paid or closed-model dependency
 anywhere in the stack.
 
+### The Workers AI neuron budget is account-wide, and ingestion can blow it
+
+This actually happened: growing the catalog from 16 to ~85 titles in one session (plus a
+~60-title `force:true` re-ingest run to recover from an unrelated incident) burned
+**11.18k of the account's 10k daily neuron cap** on `classify`/`blurb` alone — both run
+on `@cf/meta/llama-3.3-70b-instruct-fp8-fast`, the most expensive model this project
+uses, twice per title. That one pipeline was ~98% of the day's entire usage.
+
+Two things worth being deliberate about going forward:
+
+1. **The cap is per Cloudflare *account*, not per Worker or per project.** If other
+   Workers projects share this account (they do here — this account also runs
+   unrelated projects with their own Workers AI usage), their usage counts against
+   the same daily 10,000-neuron ceiling. `apps/ingest/scripts/lib/post-titles.ts`'s
+   `BATCH = 4` with a 5s delay keeps any *single* ingest run from spiking neuron
+   usage all at once, but it doesn't prevent the *cumulative* total across many
+   batches in one day from crossing the account-wide cap — nothing currently tracks
+   that running total.
+2. **Exhausting the cap doesn't just stall ingestion — it breaks live search.**
+   `apps/api`'s hybrid/semantic search and query-rewrite both call Workers AI on
+   every request. Once the account hits the cap, `GET /search` starts erroring for
+   real users until the daily reset at **00:00 UTC**, not just new titles failing to
+   classify.
+
+Practical guidance: when growing the catalog by more than a handful of titles, spread
+large batches across more than one day rather than running them all at once, and treat
+"is there other Workers AI activity in this account today" as a real input before
+running a big batch — not just this project's own ingest volume. If the catalog's
+growth pace outgrows the free tier long-term, Workers AI's paid plan removes the daily
+cap; that's a deliberate cost decision to make explicitly, not something to back into
+by accident.
+
 ---
 
 ## Evaluation results
