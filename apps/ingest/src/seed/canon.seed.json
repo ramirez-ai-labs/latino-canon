@@ -38,6 +38,8 @@
     { "ref": "Encanto (2021)", "title": "Encanto", "year": 2021, "kind": "film", "seedInclusionTypes": ["created_by", "about_community", "breakthrough"] },
     { "ref": "Acapulco (2021)", "title": "Acapulco", "year": 2021, "kind": "series", "seedInclusionTypes": ["created_by", "about_community"] },
     { "ref": "With Love (2021)", "title": "With Love", "year": 2021, "kind": "series", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+    { "ref": "Vivo (2021)", "title": "Vivo", "year": 2021, "kind": "film", "seedInclusionTypes": ["created_by", "about_community"] },
+    { "ref": "Ferdinand (2017)", "title": "Ferdinand", "year": 2017, "kind": "film", "seedInclusionTypes": ["led_by"] },
 
     { "ref": "¡Alambrista! (1977)", "title": "Alambrista!", "year": 1977, "kind": "film", "seedInclusionTypes": ["about_community", "breakthrough"] },
     { "ref": "The Milagro Beanfield War (1988)", "title": "The Milagro Beanfield War", "year": 1988, "kind": "film", "seedInclusionTypes": ["about_community"] },
