@@ -71,7 +71,7 @@
     { "ref": "TheyDream (2026)", "title": "TheyDream", "year": 2026, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
     { "ref": "No Translation Required (2026)", "title": "No Translation Required", "year": 2026, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "starring", "about_community"] },
     { "ref": "ASCO: Without Permission (2025)", "title": "ASCO: Without Permission", "year": 2025, "kind": "film", "seedInclusionTypes": ["about_community", "produced_by"] },
-    { "ref": "20 Pounds to Happiness (2025)", "title": "20 Pounds to Happiness", "year": 2025, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "starring", "about_community"] },
+    { "ref": "20 Pounds to Happiness (2025)", "title": "20 Pounds to Happiness", "year": 2025, "kind": "film", "tmdbId": 1367725, "seedInclusionTypes": ["led_by", "created_by", "starring", "about_community"] },
     { "ref": "Mad Bills to Pay (2026)", "title": "Mad Bills to Pay", "year": 2026, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
     { "ref": "Colada (2026)", "title": "Colada", "year": 2026, "kind": "film", "tmdbId": 1668285, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
     { "ref": "42nd Street (2025)", "title": "42nd Street", "year": 2025, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
