@@ -145,6 +145,18 @@ deferred rather than bundled in:
 11. Smaller: add a LICENSE, a Dependabot config, confirm branch protection is
     actually enabled on `main` (unverifiable via API on a private repo), and clean up
     the `"community" as never` type-cast hack in `apps/web/src/lib/local-data.ts`.
+14. **Process rule, found the hard way (PR #40/#41): `deploy-api.yml` (runs
+    migrations) and `ingest-new-titles.yml` (POSTs new titles for async ingestion)
+    both trigger off the same merge push and run in parallel, with no ordering
+    guarantee between them.** An editor migration that targets a title seeded in that
+    *same* PR will very likely run before the title's multi-step ingest Workflow
+    finishes, silently no-op against a guarded `WHERE EXISTS`/`WHERE id = ...` that
+    can't yet find the row (see `migrations/0011`, backfilling what `0009` should have
+    done for *Griselda*). Until this has a real CI fix (making `deploy-api.yml` wait
+    on ingestion, or moving migrations after it), the rule is: a migration that
+    tags/annotates a title introduced in the same PR ships as a **follow-up** PR after
+    ingestion is confirmed complete via the live API, not bundled into the title's own
+    introducing PR.
 
 ## Deliberately deferred (Netflix's Stage 4, not needed yet)
 
