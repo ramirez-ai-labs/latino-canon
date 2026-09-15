@@ -185,6 +185,17 @@
     { "ref": "São Paulo, Incorporated (1965)", "title": "São Paulo, Incorporated", "year": 1965, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
     { "ref": "A Dog's Will (2000)", "title": "A Dog's Will", "year": 2000, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
     { "ref": "Brainstorm (2000)", "title": "Brainstorm", "year": 2000, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
-    { "ref": "Estômago (2007)", "title": "Estômago", "year": 2007, "kind": "film", "tmdbId": 68620, "seedInclusionTypes": ["led_by", "about_community"] }
+    { "ref": "Estômago (2007)", "title": "Estômago", "year": 2007, "kind": "film", "tmdbId": 68620, "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "The Maid (2009)", "title": "The Maid", "year": 2009, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "XXY (2007)", "title": "XXY", "year": 2007, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Neruda (2016)", "title": "Neruda", "year": 2016, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Gloria (2013)", "title": "Gloria", "year": 2013, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Bad Hair (2013)", "title": "Bad Hair", "year": 2013, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Bear Story (2014)", "title": "Bear Story", "year": 2014, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Good Manners (2017)", "title": "Good Manners", "year": 2017, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+    { "ref": "Valentina (2020)", "title": "Valentina", "year": 2020, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "The Edge of Democracy (2019)", "title": "The Edge of Democracy", "year": 2019, "kind": "film", "seedInclusionTypes": ["created_by", "about_community"] },
+    { "ref": "At the Gates (2022)", "title": "At the Gates", "year": 2022, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Celia (2015)", "title": "Celia", "year": 2015, "kind": "series", "seedInclusionTypes": ["created_by", "about_community", "breakthrough"] }
   ]
 }
