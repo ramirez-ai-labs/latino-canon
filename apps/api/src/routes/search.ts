@@ -39,7 +39,12 @@ searchRoute.get("/", async (c) => {
     }
   }
 
-  const cacheKey = `search:${input.mode}:${effectiveQuery}:${JSON.stringify(filters)}:${input.limit}`;
+  // offset must be part of the key - every page of the same query/filters/limit
+  // otherwise collides on one cache entry, so page 2's request could return whatever
+  // page happened to be cached last (page 1's data, or page 4's, depending on timing),
+  // not its own. Found live: pagination let you click "Next" well past where the real
+  // title count justified it, and pages didn't reliably show their own titles.
+  const cacheKey = `search:${input.mode}:${effectiveQuery}:${JSON.stringify(filters)}:${input.limit}:${input.offset}`;
   const cached = await c.env.CACHE.get<SearchResponse>(cacheKey, "json");
   if (cached) return c.json({ ...cached, tookMs: Date.now() - started });
 
