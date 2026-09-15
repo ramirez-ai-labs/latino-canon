@@ -177,6 +177,10 @@
     { "ref": "Violeta Went to Heaven (2011)", "title": "Violeta Went to Heaven", "year": 2011, "kind": "film", "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
     { "ref": "Undertow (2009)", "title": "Undertow", "year": 2009, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
     { "ref": "A Twelve-Year Night (2018)", "title": "A Twelve-Year Night", "year": 2018, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
-    { "ref": "Museo (2018)", "title": "Museo", "year": 2018, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] }
+    { "ref": "Museo (2018)", "title": "Museo", "year": 2018, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Intimate Stories (2002)", "title": "Intimate Stories", "year": 2002, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Valentín (2002)", "title": "Valentín", "year": 2002, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Burnt Money (2000)", "title": "Burnt Money", "year": 2000, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Foolish Heart (1998)", "title": "Foolish Heart", "year": 1998, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] }
   ]
 }
