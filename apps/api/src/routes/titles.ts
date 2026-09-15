@@ -1,14 +1,15 @@
 import { Hono } from "hono";
-import type {
-  ContextNote,
-  ContextNoteCategory,
-  CreditRole,
-  InclusionType,
-  RepresentationHandling,
-  TagSource,
-  Theme,
-  Title,
-  TitleKind,
+import {
+  MODEL_TAG_DISPLAY_THRESHOLD,
+  type ContextNote,
+  type ContextNoteCategory,
+  type CreditRole,
+  type InclusionType,
+  type RepresentationHandling,
+  type TagSource,
+  type Theme,
+  type Title,
+  type TitleKind,
 } from "@latino-canon/core";
 import type { Env } from "../bindings.js";
 
@@ -72,7 +73,19 @@ titlesRoute.get("/:id", async (c) => {
   const id = c.req.param("id");
 
   const [title, credits, tags, blurb, contextNotes] = await Promise.all([
-    c.env.DB.prepare("SELECT * FROM titles WHERE id = ?").bind(id).first<TitleRow>(),
+    // Same public-visibility gate as hydrateCards (db/cards.ts): a title with no
+    // qualifying inclusion_type tag isn't part of the canon yet, so it 404s here too -
+    // not just missing from listings while still reachable by direct URL.
+    c.env.DB.prepare(
+      `SELECT t.* FROM titles t WHERE t.id = ?1
+       AND EXISTS (
+         SELECT 1 FROM title_tags tt JOIN tags g ON g.id = tt.tag_id
+         WHERE tt.title_id = t.id AND g.kind = 'inclusion_type'
+           AND (tt.source != 'model' OR tt.confidence >= ?2)
+       )`,
+    )
+      .bind(id, MODEL_TAG_DISPLAY_THRESHOLD)
+      .first<TitleRow>(),
     c.env.DB.prepare(
       `SELECT p.id AS person_id, p.tmdb_id, p.name, p.known_for_department, c.role, c.character, c.ord
        FROM credits c JOIN people p ON p.id = c.person_id
