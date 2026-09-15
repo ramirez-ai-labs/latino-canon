@@ -200,3 +200,19 @@ INGEST_URL=https://latino-canon-ingest.<account>.workers.dev
 - Quota resets at 00:00 UTC
 - Can continue with seed:only loads (zero quota)
 - Full ingest (classify + blurb) paused until reset
+
+**Any script (`seed`, `seed:only`, `backfill:gender`) fails with `401 unauthorized`:**
+- Most common cause: the command was run from inside `apps/ingest/` instead of the repo
+  root. `pnpm --filter @latino-canon/ingest run <script>` itself works from anywhere in
+  the monorepo, but a `.dev.vars` path typed *inside* the command
+  (`grep INGEST_ADMIN_TOKEN apps/ingest/.dev.vars`) resolves against your current shell
+  directory, not the filtered package — from inside `apps/ingest/`, that path means
+  `apps/ingest/apps/ingest/.dev.vars`, which doesn't exist, so `grep` finds nothing and
+  the token comes through as an empty string instead of erroring loudly.
+- Fix: run from the repo root, or drop the leading `apps/ingest/` from the `.dev.vars`
+  path if you're already inside that directory.
+- `POST /backfill-gender` also has its own limit: it makes one TMDB fetch per person
+  checked, and Cloudflare's free-tier Workers plan caps subrequests at 50 per
+  invocation — `limit` values above 50 fail partway through with
+  `Too many subrequests by single Worker invocation`. 50 is the actual ceiling, not
+  just the default.
