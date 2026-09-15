@@ -1,7 +1,7 @@
 {
   "$comment": "Trusted seed list. seedInclusionTypes is authoritative; the classifier still runs for themes and to measure agreement. Sourced from LOC Latinx filmography, UCLA Chicano/Latino TV guide, and editorial curation. Before adding a title, see CRITERIA.md in this directory for the verification checklist.",
   "titles": [
-    { "ref": "Mi Familia (1995)", "title": "Mi Familia", "year": 1995, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Mi Familia (1995)", "title": "Mi Familia", "year": 1995, "kind": "film", "tmdbId": 38722, "seedInclusionTypes": ["led_by", "about_community"] },
     { "ref": "Selena (1997)", "title": "Selena", "year": 1997, "kind": "film", "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
     { "ref": "Real Women Have Curves (2002)", "title": "Real Women Have Curves", "year": 2002, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
     { "ref": "Machuca (2004)", "title": "Machuca", "year": 2004, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
