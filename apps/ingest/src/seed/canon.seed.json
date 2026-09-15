@@ -136,6 +136,10 @@
     { "ref": "Apocalypse Z: The Beginning of the End (2024)", "title": "Apocalypse Z: The Beginning of the End", "year": 2024, "kind": "film", "seedInclusionTypes": ["led_by", "starring"] },
     { "ref": "Agent Zeta (2026)", "title": "Agent Zeta", "year": 2026, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "starring"] },
 
-    { "ref": "Valley of the Dead (2020)", "title": "Valley of the Dead", "year": 2020, "kind": "film", "tmdbId": 613093, "seedInclusionTypes": ["led_by"] }
+    { "ref": "Valley of the Dead (2020)", "title": "Valley of the Dead", "year": 2020, "kind": "film", "tmdbId": 613093, "seedInclusionTypes": ["led_by"] },
+
+    { "ref": "Marcello Hernandez: American Boy (2025)", "title": "Marcello Hernandez: American Boy", "year": 2025, "kind": "special", "tmdbId": 1599078, "seedInclusionTypes": ["about_community", "starring"] },
+    { "ref": "Cristela Alonzo: Upper Classy (2025)", "title": "Cristela Alonzo: Upper Classy", "year": 2025, "kind": "special", "tmdbId": 1533898, "seedInclusionTypes": ["about_community", "starring"] },
+    { "ref": "Cristela Alonzo: Lower Classy (2017)", "title": "Cristela Alonzo: Lower Classy", "year": 2017, "kind": "special", "tmdbId": 437013, "seedInclusionTypes": ["about_community", "starring"] }
   ]
 }
