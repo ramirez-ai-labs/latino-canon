@@ -87,6 +87,21 @@ pnpm --filter @latino-canon/ingest seed
 
 ---
 
+## Backfilling director/cast gender (zero quota cost)
+
+`gender` on `people` was added after most of the catalog was already ingested, so
+existing rows have it as `NULL` until either a `force: true` re-ingest touches them or
+this runs. TMDB-only — no Workers AI neurons spent.
+
+```bash
+INGEST_ADMIN_TOKEN=<your-token> pnpm --filter @latino-canon/ingest backfill:gender 50
+```
+
+Processes up to `limit` (default 50, first CLI arg) people with `tmdb_id` set and
+`gender` still unknown, one TMDB `/person/{id}` call each. Re-run with a higher limit,
+or call it a few times, to work through the rest of the backlog — safe to run
+repeatedly, since it only ever touches rows still missing a gender.
+
 ## Checking Ingest Status
 
 **Monitor job queue (full ingest only):**

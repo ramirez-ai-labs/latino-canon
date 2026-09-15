@@ -23,6 +23,23 @@ export const INCLUSION_TYPE_LABELS: Record<InclusionType, string> = {
   produced_by: "Latino-produced",
 };
 
+export const PERSON_GENDERS = ["female", "male", "non_binary"] as const;
+export type PersonGender = (typeof PERSON_GENDERS)[number];
+
+/**
+ * led_by's label is gendered when the credited director's gender is known: "Latina" for
+ * a confirmed female director, "Latino" otherwise. "Latino" already does double duty as
+ * both the specific male term and this taxonomy's gender-neutral default everywhere else
+ * (Latino Canon, Latino-led cast) - so a male, non-binary, or unknown/unspecified
+ * director (TMDB's gender field is self-reported and frequently unset) all fall to the
+ * same "Latino-directed" wording without needing a separate unknown-gender bucket. Only
+ * used for led_by - the other inclusion types aren't tied to one specific credited
+ * person's gender the same direct way.
+ */
+export function ledByLabel(directorGender: PersonGender | null | undefined): string {
+  return directorGender === "female" ? "Latina-directed" : "Latino-directed";
+}
+
 export const INCLUSION_TYPE_DEFINITIONS: Record<InclusionType, string> = {
   led_by:
     "A Latino director or showrunner held primary creative control of the work.",

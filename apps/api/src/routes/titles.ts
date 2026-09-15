@@ -5,6 +5,7 @@ import {
   type ContextNoteCategory,
   type CreditRole,
   type InclusionType,
+  type PersonGender,
   type RepresentationHandling,
   type TagSource,
   type Theme,
@@ -37,6 +38,7 @@ interface CreditRow {
   tmdb_id: number | null;
   name: string;
   known_for_department: string | null;
+  gender: PersonGender | null;
   role: CreditRole;
   character: string | null;
   ord: number;
@@ -87,7 +89,7 @@ titlesRoute.get("/:id", async (c) => {
       .bind(id, MODEL_TAG_DISPLAY_THRESHOLD)
       .first<TitleRow>(),
     c.env.DB.prepare(
-      `SELECT p.id AS person_id, p.tmdb_id, p.name, p.known_for_department, c.role, c.character, c.ord
+      `SELECT p.id AS person_id, p.tmdb_id, p.name, p.known_for_department, p.gender, c.role, c.character, c.ord
        FROM credits c JOIN people p ON p.id = c.person_id
        WHERE c.title_id = ?1 ORDER BY c.role, c.ord`,
     )
@@ -131,7 +133,13 @@ titlesRoute.get("/:id", async (c) => {
     popularity: title.popularity,
     runtime: title.runtime,
     credits: credits.results.map((r) => ({
-      person: { id: r.person_id, tmdbId: r.tmdb_id, name: r.name, knownForDepartment: r.known_for_department },
+      person: {
+        id: r.person_id,
+        tmdbId: r.tmdb_id,
+        name: r.name,
+        knownForDepartment: r.known_for_department,
+        gender: r.gender,
+      },
       role: r.role,
       character: r.character,
       order: r.ord,

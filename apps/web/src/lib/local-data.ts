@@ -13,7 +13,7 @@ const titles: Title[] = [
 const collections: Collection[] = [
   collection("core-canon", "Core Canon", "Essential works for an evolving Latino screen canon."),
   collection("border-stories", "Border Stories", "Migration, belonging, and borderlands narratives."),
-  collection("latina-directors", "Latino Directors", "Films and series shaped by Latino filmmakers."),
+  collection("latina-directors", "Directors", "Films and series shaped by Latino and Latina filmmakers."),
   collection("breakthrough-firsts", "Breakthrough Firsts", "Projects that opened new space in U.S. screen culture."),
 ];
 
@@ -59,7 +59,7 @@ function title(id: string, name: string, year: number, kind: Title["kind"], dire
   return {
     id, title: name, tmdbId: null, imdbId: null, kind, originalTitle: null, yearStart: year, yearEnd: null,
     country: ["US"], language: ["en"], synopsis: blurb, posterKey: null, popularity: 1, runtime: null,
-    credits: [{ person: { id: director.toLowerCase().replaceAll(" ", "-"), tmdbId: null, name: director, knownForDepartment: "Directing" }, role: "director", character: null, order: 0 }],
+    credits: [{ person: { id: director.toLowerCase().replaceAll(" ", "-"), tmdbId: null, name: director, knownForDepartment: "Directing", gender: null }, role: "director", character: null, order: 0 }],
     tags: themes.map((theme) => ({ kind: "theme", slug: theme as never, label: theme.replaceAll("_", " "), confidence: 1, source: "seed" })),
     blurb: { text: blurb, sources: [{ kind: "synopsis", ref: id, quote: blurb }], model: "local-seed", approved: true },
     representationHandling: null, contextNotes: [],
@@ -70,6 +70,7 @@ function toCard(item: Title): TitleCard {
   return {
     id: item.id, kind: item.kind, title: item.title, yearStart: item.yearStart, yearEnd: item.yearEnd,
     director: item.credits.find((credit) => credit.role === "director")?.person.name ?? null,
+    directorGender: item.credits.find((credit) => credit.role === "director")?.person.gender ?? null,
     posterKey: null, blurbTeaser: item.blurb?.text ?? null, inclusionTypes: [],
     themes: item.tags.filter((tag) => tag.kind === "theme").map((tag) => tag.slug as never), score: item.popularity,
     representationHandling: item.representationHandling,

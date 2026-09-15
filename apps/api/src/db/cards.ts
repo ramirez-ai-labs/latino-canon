@@ -1,6 +1,7 @@
 import {
   MODEL_TAG_DISPLAY_THRESHOLD,
   type InclusionType,
+  type PersonGender,
   type RankedHit,
   type RepresentationHandling,
   type Theme,
@@ -18,6 +19,7 @@ interface CardRow {
   poster_key: string | null;
   popularity: number;
   director: string | null;
+  director_gender: PersonGender | null;
   blurb: string | null;
   inclusion_types: string | null; // "slug:conf,slug:conf"
   themes: string | null;
@@ -39,6 +41,8 @@ export async function hydrateCards(env: Env, hits: RankedHit[]): Promise<TitleCa
       t.representation_handling,
       (SELECT p.name FROM credits c JOIN people p ON p.id = c.person_id
         WHERE c.title_id = t.id AND c.role = 'director' ORDER BY c.ord LIMIT 1) AS director,
+      (SELECT p.gender FROM credits c JOIN people p ON p.id = c.person_id
+        WHERE c.title_id = t.id AND c.role = 'director' ORDER BY c.ord LIMIT 1) AS director_gender,
       b.text AS blurb,
       (SELECT group_concat(g.slug || ':' || tt.confidence)
         FROM title_tags tt JOIN tags g ON g.id = tt.tag_id
@@ -76,6 +80,7 @@ export async function hydrateCards(env: Env, hits: RankedHit[]): Promise<TitleCa
       yearStart: r.year_start,
       yearEnd: r.year_end,
       director: r.director,
+      directorGender: r.director_gender,
       posterKey: r.poster_key,
       blurbTeaser: r.blurb ? truncate(r.blurb, 140) : null,
       inclusionTypes: parseTags(r.inclusion_types) as InclusionType[],

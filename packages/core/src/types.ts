@@ -1,4 +1,11 @@
-import type { ContextNoteCategory, InclusionType, RepresentationHandling, Theme, TagSource } from "./taxonomy.js";
+import type {
+  ContextNoteCategory,
+  InclusionType,
+  PersonGender,
+  RepresentationHandling,
+  Theme,
+  TagSource,
+} from "./taxonomy.js";
 
 export type TitleKind = "film" | "series" | "special";
 export type CreditRole = "director" | "writer" | "creator" | "cast";
@@ -9,6 +16,8 @@ export interface Person {
   tmdbId: number | null;
   name: string;
   knownForDepartment: string | null;
+  /** null = not specified/unset on TMDB, or not yet backfilled. */
+  gender: PersonGender | null;
 }
 
 export interface Credit {
@@ -86,6 +95,8 @@ export interface TitleCard {
   yearStart: number;
   yearEnd: number | null;
   director: string | null;
+  /** Gender of the primary (first-ordered) credited director, if known - drives led_by's label. */
+  directorGender: PersonGender | null;
   posterKey: string | null;
   blurbTeaser: string | null;
   inclusionTypes: InclusionType[];

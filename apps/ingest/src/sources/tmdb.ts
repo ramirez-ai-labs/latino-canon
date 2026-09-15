@@ -1,3 +1,4 @@
+import type { PersonGender } from "@latino-canon/core";
 import type { Env } from "../bindings.js";
 
 const BASE = "https://api.themoviedb.org/3";
@@ -5,6 +6,7 @@ const BASE = "https://api.themoviedb.org/3";
 export interface TmdbPerson {
   id: number;
   name: string;
+  gender: PersonGender | null;
 }
 
 export interface TmdbCastMember extends TmdbPerson {
@@ -79,18 +81,25 @@ function scoreCandidate(title: string, year: number, c: TmdbSearchResult): numbe
 interface TmdbCrewMember {
   id: number;
   name: string;
+  gender?: number;
   job?: string;
   department?: string;
 }
 interface TmdbCastRaw {
   id: number;
   name: string;
+  gender?: number;
   character?: string;
   order?: number;
 }
 interface TmdbCreditsRaw {
   cast?: TmdbCastRaw[];
   crew?: TmdbCrewMember[];
+}
+interface TmdbCreatedByRaw {
+  id: number;
+  name: string;
+  gender?: number;
 }
 interface TmdbCountryRaw {
   iso_3166_1: string;
@@ -117,7 +126,7 @@ interface TmdbRaw {
   origin_country?: string[];
   spoken_languages?: TmdbLanguageRaw[];
   credits?: TmdbCreditsRaw;
-  created_by?: TmdbPerson[];
+  created_by?: TmdbCreatedByRaw[];
   external_ids?: { imdb_id?: string | null };
 }
 
@@ -153,7 +162,11 @@ export async function fetchTmdbDetails(env: Env, id: number, kind: "film" | "ser
 function mapCredits(raw: TmdbRaw): TmdbDetails["credits"] {
   const crew = raw.credits?.crew ?? [];
   const cast = raw.credits?.cast ?? [];
-  const toPerson = (p: TmdbPerson): TmdbPerson => ({ id: p.id, name: p.name });
+  const toPerson = (p: { id: number; name: string; gender?: number }): TmdbPerson => ({
+    id: p.id,
+    name: p.name,
+    gender: mapGender(p.gender),
+  });
 
   return {
     directors: dedupeById(crew.filter((c) => c.job === "Director").map(toPerson)),
@@ -161,8 +174,25 @@ function mapCredits(raw: TmdbRaw): TmdbDetails["credits"] {
     creators: dedupeById((raw.created_by ?? []).map(toPerson)),
     cast: cast
       .slice(0, 10)
-      .map((c, i) => ({ id: c.id, name: c.name, character: c.character ?? "", order: c.order ?? i })),
+      .map((c, i) => ({ id: c.id, name: c.name, gender: mapGender(c.gender), character: c.character ?? "", order: c.order ?? i })),
   };
+}
+
+/** TMDB's own gender enum: 0 = not specified, 1 = female, 2 = male, 3 = non-binary. */
+export function mapGender(code: number | undefined): PersonGender | null {
+  switch (code) {
+    case 1: return "female";
+    case 2: return "male";
+    case 3: return "non_binary";
+    default: return null;
+  }
+}
+
+/** Backfill path for a person credited before this project captured gender at ingest time. */
+export async function fetchTmdbPersonGender(env: Env, tmdbId: number): Promise<PersonGender | null> {
+  const url = `${BASE}/person/${tmdbId}?api_key=${env.TMDB_API_KEY}`;
+  const raw = await fetchJson<{ gender?: number }>(url);
+  return mapGender(raw.gender);
 }
 
 function dedupeById<T extends { id: number }>(items: T[]): T[] {

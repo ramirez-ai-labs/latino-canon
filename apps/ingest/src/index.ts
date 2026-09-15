@@ -1,13 +1,15 @@
 import type { Env, IngestParams } from "./bindings.js";
 import { retryErroredJobs, refreshPopularity } from "./maintenance.js";
+import { fetchTmdbPersonGender } from "./sources/tmdb.js";
 
 export { IngestWorkflow } from "./workflow.js";
 
 export default {
   /**
    * Admin surface — protected by INGEST_ADMIN_TOKEN. Not public.
-   *   POST /ingest        { titles: IngestParams[] }   → kicks off one workflow per title
-   *   GET  /jobs                                       → review queue
+   *   POST /ingest          { titles: IngestParams[] }   → kicks off one workflow per title
+   *   GET  /jobs                                         → review queue
+   *   POST /backfill-gender { limit?: number }           → TMDB-only, no Workers AI neurons
    */
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
@@ -67,6 +69,31 @@ export default {
       }
 
       return Response.json({ inserted: inserted.length, skipped: skipped.length, details: { inserted, skipped } });
+    }
+
+    if (req.method === "POST" && url.pathname === "/backfill-gender") {
+      const { limit } = (await req.json().catch(() => ({}))) as { limit?: number };
+      const { results: people } = await env.DB.prepare(
+        "SELECT id, tmdb_id FROM people WHERE tmdb_id IS NOT NULL AND gender IS NULL LIMIT ?",
+      )
+        .bind(limit ?? 50)
+        .all<{ id: string; tmdb_id: number }>();
+
+      let updated = 0;
+      const errors: string[] = [];
+      for (const p of people) {
+        try {
+          const gender = await fetchTmdbPersonGender(env, p.tmdb_id);
+          if (gender) {
+            await env.DB.prepare("UPDATE people SET gender = ? WHERE id = ?").bind(gender, p.id).run();
+            updated++;
+          }
+        } catch (err) {
+          errors.push(`${p.id}: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
+
+      return Response.json({ checked: people.length, updated, stillUnknown: people.length - updated - errors.length, errors });
     }
 
     if (req.method === "GET" && url.pathname === "/jobs") {

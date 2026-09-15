@@ -19,7 +19,7 @@ beforeAll(async () => {
          2023, NULL, '["US"]', '["en"]', 'Jaime Reyes finds an alien relic.', 12.0, 128)`,
     ),
     env.DB.prepare(
-      `INSERT INTO people (id, tmdb_id, name, known_for_department) VALUES ('p1', 1, 'Ángel Manuel Soto', NULL)`,
+      `INSERT INTO people (id, tmdb_id, name, known_for_department, gender) VALUES ('p1', 1, 'Ángel Manuel Soto', NULL, 'male')`,
     ),
     env.DB.prepare(
       `INSERT INTO credits (title_id, person_id, role, character, ord)
@@ -95,7 +95,7 @@ describe("GET /titles/:id", () => {
     expect(body.title).toBe("Blue Beetle");
     expect(body.country).toEqual(["US"]);
     expect(body.credits).toEqual([
-      { person: { id: "p1", tmdbId: 1, name: "Ángel Manuel Soto", knownForDepartment: null }, role: "director", character: null, order: 0 },
+      { person: { id: "p1", tmdbId: 1, name: "Ángel Manuel Soto", knownForDepartment: null, gender: "male" }, role: "director", character: null, order: 0 },
     ]);
     expect(body.tags).toEqual([
       { kind: "inclusion_type", slug: "led_by", label: "Latino-directed", confidence: 1, source: "seed" },
