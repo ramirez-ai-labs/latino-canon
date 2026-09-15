@@ -196,6 +196,10 @@
     { "ref": "Valentina (2020)", "title": "Valentina", "year": 2020, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
     { "ref": "The Edge of Democracy (2019)", "title": "The Edge of Democracy", "year": 2019, "kind": "film", "seedInclusionTypes": ["created_by", "about_community"] },
     { "ref": "At the Gates (2022)", "title": "At the Gates", "year": 2022, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
-    { "ref": "Celia (2015)", "title": "Celia", "year": 2015, "kind": "series", "seedInclusionTypes": ["created_by", "about_community", "breakthrough"] }
+    { "ref": "Celia (2015)", "title": "Celia", "year": 2015, "kind": "series", "seedInclusionTypes": ["created_by", "about_community", "breakthrough"] },
+    { "ref": "The Holy Mountain (1973)", "title": "The Holy Mountain", "year": 1973, "kind": "film", "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
+    { "ref": "The City and the Dogs (1985)", "title": "The City and the Dogs", "year": 1985, "kind": "film", "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
+    { "ref": "Four Days in September (1997)", "title": "Four Days in September", "year": 1997, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Silent Light (2007)", "title": "Silent Light", "year": 2007, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] }
   ]
 }
