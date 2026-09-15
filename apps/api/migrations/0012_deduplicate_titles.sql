@@ -26,12 +26,8 @@ WITH duplicate_groups AS (
   FROM titles t
 )
 -- Step 2: Delete all duplicates except rank 1 (the canonical entry)
+-- FTS5 virtual tables auto-update when rows are deleted, so no rebuild needed
 DELETE FROM titles
 WHERE id IN (
   SELECT id FROM duplicate_groups WHERE dup_rank > 1
 );
-
--- Step 3: Rebuild FTS index
-DELETE FROM titles_fts;
-INSERT INTO titles_fts (rowid, title, synopsis, original_title)
-SELECT id, title, synopsis, original_title FROM titles;
