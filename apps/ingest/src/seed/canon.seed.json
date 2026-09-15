@@ -148,6 +148,15 @@
     { "ref": "What Lucia Saw (2022)", "title": "What Lucia Saw", "year": 2022, "kind": "film", "tmdbId": 929453, "seedInclusionTypes": ["led_by", "about_community", "starring"] },
     { "ref": "The Tiniest Place (2012)", "title": "The Tiniest Place", "year": 2012, "kind": "film", "tmdbId": 81663, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
 
-    { "ref": "Romero (1989)", "title": "Romero", "year": 1989, "kind": "film", "tmdbId": 32767, "seedInclusionTypes": ["starring", "about_community"] }
+    { "ref": "Romero (1989)", "title": "Romero", "year": 1989, "kind": "film", "tmdbId": 32767, "seedInclusionTypes": ["starring", "about_community"] },
+
+    { "ref": "Matlatl (2017)", "title": "Matlatl", "year": 2017, "kind": "film", "tmdbId": 435496, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+    { "ref": "El Puma de Quelepa (2017)", "title": "El Puma de Quelepa", "year": 2017, "kind": "film", "tmdbId": 466936, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+    { "ref": "Exquisite Corpse (2011)", "title": "Exquisite Corpse", "year": 2011, "kind": "film", "tmdbId": 398313, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+    { "ref": "El Salvador: The People Will Win (1980)", "title": "El Salvador: The People Will Win", "year": 1980, "kind": "film", "tmdbId": 397988, "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "10 Years of Taking the Sky by Storm (1991)", "title": "10 Years of Taking the Sky by Storm", "year": 1991, "kind": "film", "tmdbId": 1637088, "seedInclusionTypes": ["created_by", "about_community"] },
+    { "ref": "Decision to Win: The First Fruits (1981)", "title": "Decision to Win: The First Fruits", "year": 1981, "kind": "film", "tmdbId": 1201309, "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "La luz que te decía (1986)", "title": "La luz que te decía", "year": 1986, "kind": "film", "tmdbId": 1637309, "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "El cuarto de los huesos (2015)", "title": "El cuarto de los huesos", "year": 2015, "kind": "film", "tmdbId": 316334, "seedInclusionTypes": ["led_by", "about_community"] }
   ]
 }
