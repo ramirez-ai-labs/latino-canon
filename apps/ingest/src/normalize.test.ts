@@ -48,23 +48,23 @@ describe("normalizeTitle", () => {
       params,
       details({
         credits: {
-          directors: [{ id: 20, name: "Gregory Nava" }],
+          directors: [{ id: 20, name: "Gregory Nava", gender: "male" }],
           writers: [
-            { id: 20, name: "Gregory Nava" },
-            { id: 21, name: "Anna Thomas" },
+            { id: 20, name: "Gregory Nava", gender: "male" },
+            { id: 21, name: "Anna Thomas", gender: "female" },
           ],
           creators: [],
-          cast: [{ id: 10, name: "Jimmy Smits", character: "Jimmy Sanchez", order: 0 }],
+          cast: [{ id: 10, name: "Jimmy Smits", gender: "male", character: "Jimmy Sanchez", order: 0 }],
         },
       }),
       null,
     );
 
     expect(t.credits).toEqual([
-      { person: { id: "p20", tmdbId: 20, name: "Gregory Nava", knownForDepartment: null }, role: "director", character: null, order: 0 },
-      { person: { id: "p20", tmdbId: 20, name: "Gregory Nava", knownForDepartment: null }, role: "writer", character: null, order: 0 },
-      { person: { id: "p21", tmdbId: 21, name: "Anna Thomas", knownForDepartment: null }, role: "writer", character: null, order: 1 },
-      { person: { id: "p10", tmdbId: 10, name: "Jimmy Smits", knownForDepartment: null }, role: "cast", character: "Jimmy Sanchez", order: 0 },
+      { person: { id: "p20", tmdbId: 20, name: "Gregory Nava", knownForDepartment: null, gender: "male" }, role: "director", character: null, order: 0 },
+      { person: { id: "p20", tmdbId: 20, name: "Gregory Nava", knownForDepartment: null, gender: "male" }, role: "writer", character: null, order: 0 },
+      { person: { id: "p21", tmdbId: 21, name: "Anna Thomas", knownForDepartment: null, gender: "female" }, role: "writer", character: null, order: 1 },
+      { person: { id: "p10", tmdbId: 10, name: "Jimmy Smits", knownForDepartment: null, gender: "male" }, role: "cast", character: "Jimmy Sanchez", order: 0 },
     ]);
   });
 
@@ -74,8 +74,8 @@ describe("normalizeTitle", () => {
       details({
         credits: {
           directors: [
-            { id: 20, name: "Gregory Nava" },
-            { id: 20, name: "Gregory Nava" },
+            { id: 20, name: "Gregory Nava", gender: "male" },
+            { id: 20, name: "Gregory Nava", gender: "male" },
           ],
           writers: [],
           creators: [],

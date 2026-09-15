@@ -54,7 +54,7 @@ function toCredits(credits: TmdbDetails["credits"]): Credit[] {
     if (seen.has(key)) return;
     seen.add(key);
     out.push({
-      person: { id: `p${person.id}`, tmdbId: person.id, name: person.name, knownForDepartment: null },
+      person: { id: `p${person.id}`, tmdbId: person.id, name: person.name, knownForDepartment: null, gender: person.gender },
       role,
       character,
       order,

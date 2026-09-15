@@ -29,10 +29,13 @@ export async function persistTitle(env: Env, t: Title): Promise<void> {
   for (const c of t.credits) {
     statements.push(
       env.DB.prepare(
-        `INSERT INTO people (id, tmdb_id, name, known_for_department)
-         VALUES (?1,?2,?3,?4)
-         ON CONFLICT(id) DO UPDATE SET name = excluded.name`,
-      ).bind(c.person.id, c.person.tmdbId, c.person.name, c.person.knownForDepartment),
+        // COALESCE on gender, not a plain overwrite: this project didn't capture gender
+        // before this column existed, and a later re-fetch that (rarely) comes back
+        // without it shouldn't clobber a value a previous ingest already captured.
+        `INSERT INTO people (id, tmdb_id, name, known_for_department, gender)
+         VALUES (?1,?2,?3,?4,?5)
+         ON CONFLICT(id) DO UPDATE SET name = excluded.name, gender = COALESCE(excluded.gender, people.gender)`,
+      ).bind(c.person.id, c.person.tmdbId, c.person.name, c.person.knownForDepartment, c.person.gender),
     );
   }
   for (const c of t.credits) {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   INCLUSION_TYPE_LABELS,
+  ledByLabel,
   REPRESENTATION_HANDLING_LABELS,
   THEME_LABELS,
   type TitleCard as TitleCardData,
@@ -33,7 +34,7 @@ export function TitleCard({ title }: { title: TitleCardData }) {
           )}
           {title.inclusionTypes.map((t) => (
             <span key={t} className="tag inclusion">
-              {INCLUSION_TYPE_LABELS[t]}
+              {t === "led_by" ? ledByLabel(title.directorGender) : INCLUSION_TYPE_LABELS[t]}
             </span>
           ))}
           {title.themes.slice(0, 2).map((t) => (

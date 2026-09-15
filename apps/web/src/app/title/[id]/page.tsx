@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import {
   CONTEXT_NOTE_CATEGORY_LABELS,
   INCLUSION_TYPE_LABELS,
+  ledByLabel,
   REPRESENTATION_HANDLING_DEFINITIONS,
   REPRESENTATION_HANDLING_LABELS,
   THEME_LABELS,
@@ -14,6 +15,10 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
   const { id } = await params;
   const title = await getTitle(id).catch(() => null);
   if (!title) notFound();
+
+  // First-ordered director credit, same "primary director" pick db/cards.ts's
+  // hydrateCards uses for TitleCard.directorGender - drives led_by's gendered label.
+  const directorGender = title.credits.find((c) => c.role === "director")?.person.gender ?? null;
 
   return (
     <article style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: "2rem" }}>
@@ -38,7 +43,9 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
             .filter((t) => t.kind === "inclusion_type")
             .map((t) => (
               <span key={t.slug} className="tag inclusion" title={`${Math.round(t.confidence * 100)}% · ${t.source}`}>
-                {INCLUSION_TYPE_LABELS[t.slug as keyof typeof INCLUSION_TYPE_LABELS] ?? t.label}
+                {t.slug === "led_by"
+                  ? ledByLabel(directorGender)
+                  : (INCLUSION_TYPE_LABELS[t.slug as keyof typeof INCLUSION_TYPE_LABELS] ?? t.label)}
               </span>
             ))}
           {title.tags

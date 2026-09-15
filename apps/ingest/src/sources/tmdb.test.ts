@@ -91,13 +91,16 @@ describe("fetchTmdbDetails", () => {
           spoken_languages: [{ iso_639_1: "en" }, { iso_639_1: "es" }],
           credits: {
             cast: [
-              { id: 10, name: "Jimmy Smits", character: "Jimmy Sanchez", order: 0 },
-              { id: 11, name: "Esai Morales", character: "Chucho Sanchez", order: 1 },
+              { id: 10, name: "Jimmy Smits", gender: 2, character: "Jimmy Sanchez", order: 0 },
+              { id: 11, name: "Esai Morales", gender: 2, character: "Chucho Sanchez", order: 1 },
             ],
             crew: [
-              { id: 20, name: "Gregory Nava", job: "Director", department: "Directing" },
-              { id: 20, name: "Gregory Nava", job: "Writer", department: "Writing" },
-              { id: 21, name: "Anna Thomas", job: "Screenplay", department: "Writing" },
+              { id: 20, name: "Gregory Nava", gender: 2, job: "Director", department: "Directing" },
+              { id: 20, name: "Gregory Nava", gender: 2, job: "Writer", department: "Writing" },
+              { id: 21, name: "Anna Thomas", gender: 1, job: "Screenplay", department: "Writing" },
+              // TMDB's gender field is self-reported and frequently unset (0) - the
+              // person's row should still map, just with a null gender.
+              { id: 22, name: "Unspecified Person", gender: 0, job: "Producer", department: "Production" },
             ],
           },
         }),
@@ -112,14 +115,40 @@ describe("fetchTmdbDetails", () => {
     expect(details.lastYear).toBeNull();
     expect(details.countries).toEqual(["US"]);
     expect(details.languages).toEqual(["en", "es"]);
-    expect(details.credits.directors).toEqual([{ id: 20, name: "Gregory Nava" }]);
+    expect(details.credits.directors).toEqual([{ id: 20, name: "Gregory Nava", gender: "male" }]);
     // Gregory Nava directed AND wrote — appears once per role, not duplicated within a role.
     expect(details.credits.writers).toEqual([
-      { id: 20, name: "Gregory Nava" },
-      { id: 21, name: "Anna Thomas" },
+      { id: 20, name: "Gregory Nava", gender: "male" },
+      { id: 21, name: "Anna Thomas", gender: "female" },
     ]);
     expect(details.credits.creators).toEqual([]);
     expect(details.credits.cast).toHaveLength(2);
+  });
+
+  it("maps TMDB's gender enum (0/1/2/3), defaulting anything but 1/2/3 to null", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          id: 1,
+          title: "Untitled",
+          release_date: "2020-01-01",
+          credits: {
+            cast: [],
+            crew: [
+              { id: 1, name: "Not Specified", gender: 0, job: "Director", department: "Directing" },
+              { id: 2, name: "Female Director", gender: 1, job: "Director", department: "Directing" },
+              { id: 3, name: "Male Director", gender: 2, job: "Director", department: "Directing" },
+              { id: 4, name: "Non-Binary Director", gender: 3, job: "Director", department: "Directing" },
+              { id: 5, name: "No Gender Field", job: "Director", department: "Directing" },
+            ],
+          },
+        }),
+      ),
+    );
+
+    const { credits } = await fetchTmdbDetails(env, 1, "film");
+    expect(credits.directors.map((d) => d.gender)).toEqual([null, "female", "male", "non_binary", null]);
   });
 
   it("maps a series payload, pulling imdb_id from external_ids and creators from created_by", async () => {
@@ -137,7 +166,7 @@ describe("fetchTmdbDetails", () => {
           popularity: 12.1,
           origin_country: ["US"],
           spoken_languages: [{ iso_639_1: "en" }],
-          created_by: [{ id: 30, name: "Gloria Calderón Kellett" }, { id: 31, name: "Mike Royce" }],
+          created_by: [{ id: 30, name: "Gloria Calderón Kellett", gender: 1 }, { id: 31, name: "Mike Royce", gender: 2 }],
           credits: { cast: [], crew: [] },
           external_ids: { imdb_id: "tt5741386" },
         }),
