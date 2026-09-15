@@ -134,6 +134,8 @@
     { "ref": "Vengeance (2026)", "title": "Vengeance", "year": 2026, "kind": "film", "seedInclusionTypes": ["starring", "breakthrough"] },
 
     { "ref": "Apocalypse Z: The Beginning of the End (2024)", "title": "Apocalypse Z: The Beginning of the End", "year": 2024, "kind": "film", "seedInclusionTypes": ["led_by", "starring"] },
-    { "ref": "Agent Zeta (2026)", "title": "Agent Zeta", "year": 2026, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "starring"] }
+    { "ref": "Agent Zeta (2026)", "title": "Agent Zeta", "year": 2026, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "starring"] },
+
+    { "ref": "Valley of the Dead (2020)", "title": "Valley of the Dead", "year": 2020, "kind": "film", "tmdbId": 613093, "seedInclusionTypes": ["led_by"] }
   ]
 }
