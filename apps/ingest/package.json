@@ -8,7 +8,8 @@
     "deploy": "wrangler deploy",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "seed:only": "tsx scripts/seed-only.ts"
   },
   "dependencies": {
     "@latino-canon/core": "workspace:*",
