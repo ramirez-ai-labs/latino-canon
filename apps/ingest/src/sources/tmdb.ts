@@ -65,13 +65,29 @@ export async function resolveTmdbId(
   if (res.results.length === 0) throw new Error(`TMDB: no match for "${title}" (${year})`);
 
   const best = res.results.reduce((a, b) => (scoreCandidate(title, year, b) > scoreCandidate(title, year, a) ? b : a));
+  // Real incident: seed title "No" (2012, dir. Pablo Larraín) is too short/common a
+  // query for TMDB's search to return it at all - every candidate scored a 0 title
+  // match, so the reduce above fell back to pure year-proximity and confidently picked
+  // "No Strings Attached" (2011, year penalty 1) instead. That got persisted,
+  // classified, and blurbed as a Latino-canon title before anyone noticed - a title
+  // this ambiguous needs a pinned tmdbId in the seed entry, not a guess this function
+  // has no real basis for making.
+  if (!isExactTitleMatch(title, best)) {
+    throw new Error(
+      `TMDB: no exact title match for "${title}" (${year}) among ${res.results.length} results - pin tmdbId in canon.seed.json`,
+    );
+  }
   return best.id;
+}
+
+function isExactTitleMatch(title: string, c: TmdbSearchResult): boolean {
+  const candidateTitle = c.title ?? c.name ?? "";
+  return candidateTitle.toLowerCase() === title.toLowerCase();
 }
 
 /** Higher is better: exact title match dominates; closer release year breaks ties. */
 function scoreCandidate(title: string, year: number, c: TmdbSearchResult): number {
-  const candidateTitle = c.title ?? c.name ?? "";
-  const titleMatch = candidateTitle.toLowerCase() === title.toLowerCase() ? 100 : 0;
+  const titleMatch = isExactTitleMatch(title, c) ? 100 : 0;
   const dateStr = c.release_date || c.first_air_date || "";
   const candidateYear = dateStr ? Number(dateStr.slice(0, 4)) : NaN;
   const yearPenalty = Number.isNaN(candidateYear) ? 10 : Math.abs(candidateYear - year);
