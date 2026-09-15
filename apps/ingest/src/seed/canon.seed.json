@@ -50,6 +50,7 @@
     { "ref": "In the Time of the Butterflies (2001)", "title": "In the Time of the Butterflies", "year": 2001, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
     { "ref": "Ugly Betty (2006)", "title": "Ugly Betty", "year": 2006, "kind": "series", "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
     { "ref": "Machete (2010)", "title": "Machete", "year": 2010, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
+    { "ref": "Even the Rain (2010)", "title": "Even the Rain", "year": 2010, "kind": "film", "seedInclusionTypes": ["about_community"], "note": "Exception: Spanish director (Icíar Bollaín), but powerfully centers Bolivian indigenous community fight for water rights during 2000 Cochabamba Water War" },
     { "ref": "No (2012)", "title": "No", "year": 2012, "kind": "film", "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
     { "ref": "Mosquita y Mari (2012)", "title": "Mosquita y Mari", "year": 2012, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
     { "ref": "Filly Brown (2013)", "title": "Filly Brown", "year": 2013, "kind": "film", "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
