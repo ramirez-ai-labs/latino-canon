@@ -80,6 +80,13 @@ beforeAll(async () => {
         `INSERT INTO titles_fts (rowid, title, original_title, synopsis, people, tags)
          SELECT rowid, ?2, '', ?3, ?4, '' FROM titles WHERE id = ?1`,
       ).bind(f.id, f.title, f.synopsis, f.people),
+      // lexicalSearch now always applies the inclusion_type visibility gate - without a
+      // qualifying tag here, every query below would silently return zero hits, not a
+      // BM25/tokenizer regression.
+      env.DB.prepare(
+        `INSERT INTO title_tags (title_id, tag_id, confidence, source)
+         SELECT ?1, id, 1.0, 'seed' FROM tags WHERE kind = 'inclusion_type' AND slug = 'led_by'`,
+      ).bind(f.id),
     ]);
   }
 });

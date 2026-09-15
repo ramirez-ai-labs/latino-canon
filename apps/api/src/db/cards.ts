@@ -9,6 +9,7 @@ import {
   type TitleCard,
 } from "@latino-canon/core";
 import type { Env } from "../bindings.js";
+import { visibilityGateSql } from "../search/filters.js";
 
 interface CardRow {
   id: string;
@@ -33,7 +34,7 @@ export async function hydrateCards(env: Env, hits: RankedHit[]): Promise<TitleCa
   if (hits.length === 0) return [];
   const ids = hits.map((h) => h.titleId);
   const placeholders = ids.map((_, i) => `?${i + 1}`).join(",");
-  const thresholdPlaceholder = `?${ids.length + 1}`;
+  const gate = visibilityGateSql("t", ids.length);
 
   const sql = `
     SELECT
@@ -53,20 +54,10 @@ export async function hydrateCards(env: Env, hits: RankedHit[]): Promise<TitleCa
     FROM titles t
     LEFT JOIN blurbs b ON b.title_id = t.id AND b.approved = 1
     WHERE t.id IN (${placeholders})
-      -- taxonomy.ts: "a title qualifies for the canon iff it carries >= 1 inclusion_type
-      -- tag" - this is that rule actually enforced. Without it, a title with zero
-      -- qualifying tags (never classified, or classified with nothing above the display
-      -- threshold) is still fully browsable/searchable. A model tag below
-      -- MODEL_TAG_DISPLAY_THRESHOLD doesn't count here either - if it's not trusted
-      -- enough to show as a tag, it's not trusted enough to justify listing the title.
-      AND EXISTS (
-        SELECT 1 FROM title_tags tt JOIN tags g ON g.id = tt.tag_id
-        WHERE tt.title_id = t.id AND g.kind = 'inclusion_type'
-          AND (tt.source != 'model' OR tt.confidence >= ${thresholdPlaceholder})
-      )
+      AND ${gate.clause}
   `;
 
-  const { results } = await env.DB.prepare(sql).bind(...ids, MODEL_TAG_DISPLAY_THRESHOLD).all<CardRow>();
+  const { results } = await env.DB.prepare(sql).bind(...ids, ...gate.params).all<CardRow>();
   const byId = new Map(results.map((r) => [r.id, r]));
   const scoreById = new Map(hits.map((h) => [h.titleId, h.score]));
 

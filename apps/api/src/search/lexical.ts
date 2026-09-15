@@ -1,6 +1,6 @@
 import type { RankedHit, SearchFilters } from "@latino-canon/core";
 import type { Env } from "../bindings.js";
-import { filterToSql } from "./filters.js";
+import { filterToSql, visibilityGateSql } from "./filters.js";
 
 /**
  * BM25 lexical search over the FTS5 index. Returns title ids ranked by relevance.
@@ -16,6 +16,7 @@ export async function lexicalSearch(
   if (!match) return [];
 
   const { where, params } = filterToSql(filters, "t", 1); // ?1 is already MATCH below
+  const gate = visibilityGateSql("t", 1 + params.length);
 
   const sql = `
     SELECT t.id AS titleId, -bm25(titles_fts, 4.0, 2.0, 1.0, 2.0, 1.5) AS score
@@ -23,12 +24,13 @@ export async function lexicalSearch(
     JOIN titles t ON t.rowid = titles_fts.rowid
     WHERE titles_fts MATCH ?1
       ${where ? `AND ${where}` : ""}
+      AND ${gate.clause}
     ORDER BY score DESC
-    LIMIT ?${params.length + 2}
+    LIMIT ?${params.length + 3}
   `;
 
   const { results } = await env.DB.prepare(sql)
-    .bind(match, ...params, limit)
+    .bind(match, ...params, ...gate.params, limit)
     .all<{ titleId: string; score: number }>();
 
   return results.map((r) => ({ titleId: r.titleId, score: r.score }));

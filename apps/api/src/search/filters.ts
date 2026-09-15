@@ -1,4 +1,4 @@
-import type { SearchFilters } from "@latino-canon/core";
+import { MODEL_TAG_DISPLAY_THRESHOLD, type SearchFilters } from "@latino-canon/core";
 import type { VectorizeVectorMetadataFilter } from "@cloudflare/workers-types";
 
 /**
@@ -58,6 +58,33 @@ export function filterToSql(
       WHERE tt.title_id = ${titleAlias}.id AND g.kind = '${kind}' AND g.slug = ${placeholder}
     )`;
   }
+}
+
+/**
+ * taxonomy.ts: "a title qualifies for the canon iff it carries >= 1 inclusion_type
+ * tag" - this is that rule as a WHERE fragment. Must be applied inside every
+ * LIMIT-bearing candidate query (browseByPopularity, lexicalSearch, semanticSearch's
+ * D1 re-check), never only as a post-filter on an already-limited result set - a
+ * post-filter can shrink a page below what was requested without the caller knowing
+ * there's more to fetch. Found live: browseByPopularity's top-51-by-popularity window
+ * included titles that hadn't earned a tag yet, hydrateCards' downstream filter
+ * silently returned 49, and pagination's "is there a next page" check
+ * (`results.length > 50`) broke because 49 is not greater than 50.
+ *
+ * Same bar as MODEL_TAG_DISPLAY_THRESHOLD gates on for whether a model tag is even
+ * shown - if it's not trusted enough to display, it's not trusted enough to justify
+ * listing the title at all.
+ */
+export function visibilityGateSql(titleAlias: string, paramOffset = 0): { clause: string; params: [number] } {
+  const ph = `?${paramOffset + 1}`;
+  return {
+    clause: `EXISTS (
+      SELECT 1 FROM title_tags tt JOIN tags g ON g.id = tt.tag_id
+      WHERE tt.title_id = ${titleAlias}.id AND g.kind = 'inclusion_type'
+        AND (tt.source != 'model' OR tt.confidence >= ${ph})
+    )`,
+    params: [MODEL_TAG_DISPLAY_THRESHOLD],
+  };
 }
 
 /**

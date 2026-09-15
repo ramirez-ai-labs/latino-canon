@@ -29,6 +29,30 @@ beforeAll(async () => {
       `INSERT INTO title_tags (title_id, tag_id, confidence, source)
        SELECT 'my-family-1995', id, 1.0, 'seed' FROM tags WHERE kind = 'theme' AND slug = 'family'`,
     ),
+    // keepMatchingD1 now always applies the inclusion_type visibility gate (not just
+    // when country/theme/inclusionType filters are set) - both fixtures need a
+    // qualifying tag or every test below would silently see an empty candidate set.
+    env.DB.prepare(
+      `INSERT INTO title_tags (title_id, tag_id, confidence, source)
+       SELECT 'under-the-same-moon-2007', id, 1.0, 'seed' FROM tags WHERE kind = 'inclusion_type' AND slug = 'led_by'`,
+    ),
+    env.DB.prepare(
+      `INSERT INTO title_tags (title_id, tag_id, confidence, source)
+       SELECT 'my-family-1995', id, 1.0, 'seed' FROM tags WHERE kind = 'inclusion_type' AND slug = 'led_by'`,
+    ),
+    // score-floor fixtures below (title-0..title-3) - fakeEnv mocks AI/VECTORIZE but
+    // keeps the real DB binding, and keepMatchingD1 now always re-checks against it.
+    ...["title-0", "title-1", "title-2", "title-3"].map((id) =>
+      env.DB.prepare(
+        `INSERT INTO titles (id, kind, title, year_start, countries) VALUES ('${id}', 'film', '${id}', 2020, '[]')`,
+      ),
+    ),
+    ...["title-0", "title-1", "title-2", "title-3"].map((id) =>
+      env.DB.prepare(
+        `INSERT INTO title_tags (title_id, tag_id, confidence, source)
+         SELECT '${id}', id, 1.0, 'seed' FROM tags WHERE kind = 'inclusion_type' AND slug = 'led_by'`,
+      ),
+    ),
   ]);
 });
 
