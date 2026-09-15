@@ -1,6 +1,7 @@
 import type { Env, IngestParams } from "./bindings.js";
 import { retryErroredJobs, refreshPopularity } from "./maintenance.js";
 import { fetchTmdbPersonGender } from "./sources/tmdb.js";
+import { slugId } from "./normalize.js";
 
 export { IngestWorkflow } from "./workflow.js";
 
@@ -38,7 +39,10 @@ export default {
       const skipped: string[] = [];
 
       for (const st of titles) {
-        const id = st.ref.replace(/\W+/g, "-").toLowerCase();
+        // Must match normalizeTitle()'s id (slugId(details.title, releaseYear)) in
+        // workflow.ts, or a later full ingest can't recognize this row as the same
+        // title and inserts a duplicate instead of skipping it.
+        const id = slugId(st.title, st.year);
         const exists = await env.DB.prepare("SELECT id FROM titles WHERE id = ?").bind(id).first();
         if (exists) {
           skipped.push(st.ref);
