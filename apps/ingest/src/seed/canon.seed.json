@@ -159,6 +159,20 @@
     { "ref": "La luz que te decía (1986)", "title": "La luz que te decía", "year": 1986, "kind": "film", "tmdbId": 1637309, "seedInclusionTypes": ["led_by", "about_community"] },
     { "ref": "El cuarto de los huesos (2015)", "title": "El cuarto de los huesos", "year": 2015, "kind": "film", "tmdbId": 316334, "seedInclusionTypes": ["led_by", "about_community"] },
 
-    { "ref": "A Day Without a Mexican (2004)", "title": "A Day Without a Mexican", "year": 2004, "kind": "film", "tmdbId": 16427, "seedInclusionTypes": ["led_by", "created_by", "about_community"] }
+    { "ref": "A Day Without a Mexican (2004)", "title": "A Day Without a Mexican", "year": 2004, "kind": "film", "tmdbId": 16427, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+
+    { "ref": "The Hustlers (1962)", "title": "The Hustlers", "year": 1962, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "A Queda (1978)", "title": "A Queda", "year": 1978, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Martín (Hache) (1997)", "title": "Martín (Hache)", "year": 1997, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Linha de Passe (2008)", "title": "Linha de Passe", "year": 2008, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Behind the Sun (2001)", "title": "Behind the Sun", "year": 2001, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Common Ground (2002)", "title": "Common Ground", "year": 2002, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "On Probation (2005)", "title": "On Probation", "year": 2005, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "The Aura (2005)", "title": "The Aura", "year": 2005, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "The Wind Journeys (2009)", "title": "The Wind Journeys", "year": 2009, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "The Maid (2009)", "title": "The Maid", "year": 2009, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Nostalgia for the Light (2010)", "title": "Nostalgia for the Light", "year": 2010, "kind": "film", "seedInclusionTypes": ["created_by", "about_community"] },
+    { "ref": "Neighboring Sounds (2012)", "title": "Neighboring Sounds", "year": 2012, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "The Pearl Button (2015)", "title": "The Pearl Button", "year": 2015, "kind": "film", "seedInclusionTypes": ["created_by", "about_community"] }
   ]
 }
