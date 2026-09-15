@@ -13,7 +13,7 @@ const titles: Title[] = [
 const collections: Collection[] = [
   collection("core-canon", "Core Canon", "Essential works for an evolving Latino screen canon."),
   collection("border-stories", "Border Stories", "Migration, belonging, and borderlands narratives."),
-  collection("latina-directors", "Latina Directors", "Films and series shaped by Latina filmmakers."),
+  collection("latina-directors", "Latino Directors", "Films and series shaped by Latino filmmakers."),
   collection("breakthrough-firsts", "Breakthrough Firsts", "Projects that opened new space in U.S. screen culture."),
 ];
 
