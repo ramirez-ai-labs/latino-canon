@@ -1,7 +1,7 @@
 import type { RankedHit, SearchFilters } from "@latino-canon/core";
 import type { Env } from "../bindings.js";
 import { embed } from "../ai/embed.js";
-import { filterToSql, filterToVectorize, needsD1PostFilter } from "./filters.js";
+import { filterToSql, filterToVectorize, needsD1PostFilter, visibilityGateSql } from "./filters.js";
 
 /**
  * Below this cosine score, Vectorize's nearest neighbors aren't actually relevant -
@@ -36,11 +36,13 @@ export async function semanticSearch(
   if (!vector) return [];
 
   // country/theme/inclusionType can't be pushed down to Vectorize (see filterToVectorize) -
-  // over-fetch so there's still something left after the D1 post-filter narrows it.
+  // over-fetch so there's still something left after the D1 re-check narrows it. The
+  // inclusion_type visibility gate always needs that re-check now (below), not just
+  // when country/theme/inclusionType are set, so always over-fetch at least a little.
   const postFilter = needsD1PostFilter(filters);
   const filter = filterToVectorize(filters);
   const res = await env.VECTORIZE.query(vector, {
-    topK: postFilter ? Math.min(limit * 4, 100) : Math.min(limit, 100),
+    topK: Math.min(postFilter ? limit * 4 : limit * 2, 100),
     returnValues: false,
     returnMetadata: "none",
     ...(Object.keys(filter).length ? { filter } : {}),
@@ -49,24 +51,28 @@ export async function semanticSearch(
   const hits = res.matches
     .filter((m) => m.score >= MIN_SEMANTIC_SCORE)
     .map((m) => ({ titleId: m.id, score: m.score }));
-  if (!postFilter || hits.length === 0) return hits.slice(0, limit);
+  if (hits.length === 0) return hits;
   return (await keepMatchingD1(env, hits, filters)).slice(0, limit);
 }
 
 /**
- * Re-check Vectorize candidates against D1 for the filters it can't apply itself.
- * Reuses `filterToSql` (the same WHERE `lexicalSearch` already filters correctly by),
- * scoped to just this candidate set via an `id IN (...)` clause.
+ * Re-check Vectorize candidates against D1: the filters Vectorize can't apply itself
+ * (reuses `filterToSql`, the same WHERE `lexicalSearch` already filters correctly by),
+ * plus the inclusion_type visibility gate, which every path needs regardless of
+ * filters - a title with an embedded vector but no qualifying tag yet (e.g. classified
+ * with low confidence) must never surface here either. Scoped to just this candidate
+ * set via an `id IN (...)` clause.
  */
 export async function keepMatchingD1(env: Env, hits: RankedHit[], filters: SearchFilters): Promise<RankedHit[]> {
   const ids = hits.map((h) => h.titleId);
   const idPlaceholders = ids.map((_, i) => `?${i + 1}`).join(",");
   const { where, params } = filterToSql(filters, "t", ids.length);
+  const gate = visibilityGateSql("t", ids.length + params.length);
 
   const { results } = await env.DB.prepare(
-    `SELECT t.id AS id FROM titles t WHERE t.id IN (${idPlaceholders}) ${where ? `AND ${where}` : ""}`,
+    `SELECT t.id AS id FROM titles t WHERE t.id IN (${idPlaceholders}) ${where ? `AND ${where}` : ""} AND ${gate.clause}`,
   )
-    .bind(...ids, ...params)
+    .bind(...ids, ...params, ...gate.params)
     .all<{ id: string }>();
 
   const keep = new Set(results.map((r) => r.id));
