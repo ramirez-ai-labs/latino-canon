@@ -195,6 +195,7 @@
     { "ref": "Good Manners (2017)", "title": "Good Manners", "year": 2017, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
     { "ref": "Valentina (2020)", "title": "Valentina", "year": 2020, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
     { "ref": "The Edge of Democracy (2019)", "title": "The Edge of Democracy", "year": 2019, "kind": "film", "seedInclusionTypes": ["created_by", "about_community"] },
-    { "ref": "At the Gates (2022)", "title": "At the Gates", "year": 2022, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] }
+    { "ref": "At the Gates (2022)", "title": "At the Gates", "year": 2022, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Celia (2015)", "title": "Celia", "year": 2015, "kind": "series", "seedInclusionTypes": ["created_by", "about_community", "breakthrough"] }
   ]
 }
