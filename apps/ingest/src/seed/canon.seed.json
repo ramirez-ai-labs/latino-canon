@@ -181,6 +181,10 @@
     { "ref": "Intimate Stories (2002)", "title": "Intimate Stories", "year": 2002, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
     { "ref": "Valentín (2002)", "title": "Valentín", "year": 2002, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
     { "ref": "Burnt Money (2000)", "title": "Burnt Money", "year": 2000, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
-    { "ref": "Foolish Heart (1998)", "title": "Foolish Heart", "year": 1998, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] }
+    { "ref": "Foolish Heart (1998)", "title": "Foolish Heart", "year": 1998, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "São Paulo, Incorporated (1965)", "title": "São Paulo, Incorporated", "year": 1965, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "A Dog's Will (2000)", "title": "A Dog's Will", "year": 2000, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Brainstorm (2000)", "title": "Brainstorm", "year": 2000, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+    { "ref": "Estômago (2007)", "title": "Estômago", "year": 2007, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] }
   ]
 }
