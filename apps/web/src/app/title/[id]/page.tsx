@@ -25,7 +25,14 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={posterUrl(title.posterKey)} alt="" style={{ width: "100%", borderRadius: 10 }} />
       <div>
-        <h1 style={{ marginBottom: 0 }}>{title.title}</h1>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <h1 style={{ marginBottom: 0 }}>{title.title}</h1>
+          {(!title.runtime || title.yearStart >= 2025) && (
+            <span className="tag" style={{ background: "var(--accent)", fontSize: "0.75rem", padding: "0.25rem 0.5rem" }}>
+              ✨ New to Canon
+            </span>
+          )}
+        </div>
         <p style={{ color: "var(--muted)" }}>
           {title.yearStart}
           {title.yearEnd ? `–${title.yearEnd}` : ""} · {title.kind} · {title.country.join(", ")}
