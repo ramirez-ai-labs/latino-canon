@@ -57,6 +57,28 @@ describe("resolveTmdbId", () => {
     expect(fetchMock.mock.calls[0]?.[0]).toContain("/search/movie?");
   });
 
+  it("throws rather than picking an unrelated title by year-proximity alone", async () => {
+    // Real incident: "No" (2012, Pablo Larraín) is too short/common for TMDB's search
+    // to return an exact match at all - every real candidate here is a different film
+    // that merely contains "No" as a word. Before this guard, the algorithm picked
+    // "No Strings Attached" (2011) purely because its year was closest to 2012, and
+    // that wrong film got fully ingested, classified, and blurbed as a Latino-canon
+    // title in production.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          results: [
+            { id: 634649, title: "Spider-Man: No Way Home", release_date: "2021-12-15" },
+            { id: 41630, title: "No Strings Attached", release_date: "2011-01-21" },
+            { id: 370172, title: "No Time to Die", release_date: "2021-09-29" },
+          ],
+        }),
+      ),
+    );
+    await expect(resolveTmdbId(env, "No", 2012, "film")).rejects.toThrow(/no exact title match/);
+  });
+
   it("never sends &year= - TMDB's server-side year filter excludes undated candidates entirely", async () => {
     // Real bug: "20 Pounds to Happiness" exists on TMDB with no release_date. A plain
     // title search found it; adding &year=2025 made TMDB return zero results, even
