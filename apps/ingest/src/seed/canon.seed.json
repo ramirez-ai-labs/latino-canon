@@ -157,6 +157,8 @@
     { "ref": "10 Years of Taking the Sky by Storm (1991)", "title": "10 Years of Taking the Sky by Storm", "year": 1991, "kind": "film", "tmdbId": 1637088, "seedInclusionTypes": ["created_by", "about_community"] },
     { "ref": "Decision to Win: The First Fruits (1981)", "title": "Decision to Win: The First Fruits", "year": 1981, "kind": "film", "tmdbId": 1201309, "seedInclusionTypes": ["led_by", "about_community"] },
     { "ref": "La luz que te decía (1986)", "title": "La luz que te decía", "year": 1986, "kind": "film", "tmdbId": 1637309, "seedInclusionTypes": ["led_by", "about_community"] },
-    { "ref": "El cuarto de los huesos (2015)", "title": "El cuarto de los huesos", "year": 2015, "kind": "film", "tmdbId": 316334, "seedInclusionTypes": ["led_by", "about_community"] }
+    { "ref": "El cuarto de los huesos (2015)", "title": "El cuarto de los huesos", "year": 2015, "kind": "film", "tmdbId": 316334, "seedInclusionTypes": ["led_by", "about_community"] },
+
+    { "ref": "A Day Without a Mexican (2004)", "title": "A Day Without a Mexican", "year": 2004, "kind": "film", "tmdbId": 16427, "seedInclusionTypes": ["led_by", "created_by", "about_community"] }
   ]
 }
