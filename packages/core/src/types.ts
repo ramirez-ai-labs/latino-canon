@@ -149,3 +149,16 @@ export interface RankedHit {
   titleId: string;
   score: number;
 }
+
+export type EvalType = "groundedness" | "retrieval";
+
+export interface EvalRun {
+  id: number;
+  evalType: EvalType;
+  runAt: string;
+  n: number;
+  failed: number;
+  meanScore: number | null;
+  metrics: Record<string, number>;
+  details: unknown;
+}

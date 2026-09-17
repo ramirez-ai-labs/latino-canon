@@ -60,20 +60,13 @@ jobs:
       - name: Run groundedness eval
         run: pnpm --filter @latino-canon/eval run groundedness $(cat /tmp/ids.txt)
 
-      # Debug: the last real run (see PR history) printed real results to this
-      # step's own log but actions/upload-artifact@v4 warned "No files were
-      # found with the provided path: packages/eval/.eval-out/" right after -
-      # pnpm --filter's cwd for the script is confirmed correct locally, so
-      # this checks what's actually on disk at that point before guessing further.
-      - name: Debug - locate eval output on disk
-        if: always()
-        run: |
-          echo "--- looking for .eval-out anywhere under the workspace ---"
-          find . -maxdepth 4 -iname ".eval-out" -not -path "*/node_modules/*" 2>&1 || true
-          echo "--- packages/eval/.eval-out/ directly ---"
-          ls -la packages/eval/.eval-out/ 2>&1 || echo "does not exist"
-          echo "--- pwd at this step ---"
-          pwd
+      # run-groundedness.ts writes a ready-to-run INSERT (packages/eval/src/record-run.ts,
+      # SQL-escaped in JS - not shell-interpolated) alongside its JSON output, so the
+      # dashboard at apps/web's /eval page has something durable to read instead of only
+      # this run's log/artifact. See apps/api/migrations/0016_eval_runs.sql.
+      - name: Record eval run in D1
+        working-directory: apps/api
+        run: npx wrangler d1 execute latino-canon --remote --file=../../packages/eval/.eval-out/insert.sql
 
       - name: Upload eval output
         if: always()

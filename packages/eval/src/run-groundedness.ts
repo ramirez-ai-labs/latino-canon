@@ -11,6 +11,7 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { coerceLlmText, extractJson, GROUNDEDNESS_JUDGE_SYSTEM, MODELS } from "@latino-canon/core";
+import { writeEvalRunSql } from "./record-run.js";
 
 const API_URL = process.env.API_URL ?? "http://localhost:8787";
 const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
@@ -86,6 +87,17 @@ async function main() {
 
   mkdirSync(".eval-out", { recursive: true });
   writeFileSync(`.eval-out/groundedness-${Date.now()}.json`, JSON.stringify({ mean, results, failures }, null, 2));
+
+  const worst = results.filter((r) => r.score < 0.9).sort((a, b) => a.score - b.score);
+  writeEvalRunSql(".eval-out/insert.sql", {
+    evalType: "groundedness",
+    runAt: new Date().toISOString(),
+    n: results.length,
+    failed: failures.length,
+    meanScore: results.length > 0 ? mean : null,
+    metrics: { mean },
+    details: { worst, failures },
+  });
 }
 
 main().catch((e) => {

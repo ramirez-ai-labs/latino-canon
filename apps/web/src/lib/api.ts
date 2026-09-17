@@ -1,5 +1,5 @@
 import "server-only";
-import type { Collection, SearchResponse, Title } from "@latino-canon/core";
+import type { Collection, EvalRun, SearchResponse, Title } from "@latino-canon/core";
 import { localCollection, localCollections, localSearch, localTitle } from "./local-data";
 
 /**
@@ -27,6 +27,9 @@ function localFetch<T>(path: string): T {
   if (url.pathname === "/collections") return localCollections() as T;
   if (url.pathname.startsWith("/collections/")) return localCollection(url.pathname.slice("/collections/".length)) as T;
   if (url.pathname.startsWith("/titles/")) return localTitle(url.pathname.slice("/titles/".length)) as T;
+  // eval_runs is CI-written only (see apps/api/src/routes/eval-runs.ts) - nothing
+  // to show against local mock data, so LOCAL_DEV just renders an empty history.
+  if (url.pathname === "/eval-runs") return { runs: [] } as T;
   return localSearch({
     q: url.searchParams.get("q") ?? undefined,
     kind: url.searchParams.get("kind") ?? undefined,
@@ -54,6 +57,7 @@ export function search(params: {
 export const getTitle = (id: string) => apiFetch<Title>(`/titles/${id}`);
 export const listCollections = () => apiFetch<{ collections: Collection[] }>(`/collections`);
 export const getCollection = (slug: string) => apiFetch<Collection>(`/collections/${slug}`);
+export const listEvalRuns = (limit = 20) => apiFetch<{ runs: EvalRun[] }>(`/eval-runs?limit=${limit}`);
 
 export function posterUrl(key: string | null): string {
   if (!key) return "/poster-placeholder.svg";
