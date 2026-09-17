@@ -60,6 +60,14 @@ jobs:
       - name: Run groundedness eval
         run: pnpm --filter @latino-canon/eval run groundedness $(cat /tmp/ids.txt)
 
+      # run-groundedness.ts writes a ready-to-run INSERT (packages/eval/src/record-run.ts,
+      # SQL-escaped in JS - not shell-interpolated) alongside its JSON output, so the
+      # dashboard at apps/web's /eval page has something durable to read instead of only
+      # this run's log/artifact. See apps/api/migrations/0016_eval_runs.sql.
+      - name: Record eval run in D1
+        working-directory: apps/api
+        run: npx wrangler d1 execute latino-canon --remote --file=../../packages/eval/.eval-out/insert.sql
+
       - name: Upload eval output
         if: always()
         uses: actions/upload-artifact@v4
