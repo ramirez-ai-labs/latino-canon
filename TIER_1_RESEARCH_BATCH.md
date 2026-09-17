@@ -31,7 +31,7 @@
 | # | Title | Year | Director | Country | Key Attributes | Decision | Notes |
 |---|-------|------|----------|---------|-----------------|----------|-------|
 | 12 | Martín (Hache) | 1997 | Adolfo Aristarain | Argentina | Drug, father-son, Madrid | ⏳ | By *Son of the Bride* director — **likely ADD** |
-| 13 | Foolish Heart | 1998 | Hector Babenco | Argentina | Return to Buenos Aires | ⏳ | Babenco: major figure (Kiss of Spider Woman director) |
+| 13 | Foolish Heart | 1998 | Hector Babenco | Argentina | Return to Buenos Aires | ✅ | **ALREADY IN CANON** |
 | 14 | Captain Pantoja and the Special Services | 1999 | Francisco J. Lombardi | Peru | Army, sexuality, absurdist | ⏳ | Unique comedic tone |
 | 15 | A Dog's Will | 2000 | Guel Arraes | Brazil | Trickster folklore, João Grilo | ⏳ | Brazilian cultural icon (adapted from play) |
 | 16 | Brainstorm | 2000 | Laís Bodansky | Brazil | Mental illness, teenager | ⏳ | Coming-of-age + mental health narrative |
@@ -68,7 +68,7 @@
 | 40 | The Maid | 2009 | Sebastián Silva | Chile | 23-year servant, class dynamics | ⏳ | **Strong candidate** — class narrative |
 | 41 | Neighboring Sounds | 2012 | Kleber Mendonça Filho | Brazil | Apartment building, surveillance | ⏳ | By *Aquarius* director — **likely ADD** |
 | 42 | Linha de Passe | 2008 | Walter Salles, Daniela Thomas | Brazil | Four brothers, dreams, poverty | ⏳ | Co-directed; family epic |
-| 43 | Smoke Gets in Your Eyes | 2009 | Anna Muylaert | Brazil | Guitar teacher, love, cigarettes | ⏳ | By *The Second Mother* director |
+| 43 | Smoke Gets in Your Eyes | 2009 | Anna Muylaert | Brazil | Guitar teacher, love, cigarettes | ✅ | Wrote+directed solo (led_by+created_by); about_community not established |
 | 44 | A Wolf at the Door | 2013 | Fernando Coimbra | Brazil | Love triangle, kidnapped child | ⏳ | Crime + relationship drama |
 | 45 | Violeta Went to Heaven | 2011 | Andrés Wood | Chile | Violeta Parra, singer/folklorist | ⏳ | **Likely ADD** — cultural icon + biopic |
 | 46 | Gloria | 2013 | Sebastián Lelio | Chile | Free-spirited woman, Santiago | ⏳ | Female protagonist; aging + independence |
@@ -106,7 +106,7 @@
 | 71 | A Place in the World | 1992 | Adolfo Aristarain | Argentina | Exile family, dam conflict | ✅ | **ALREADY IN CANON** |
 | 72 | Good Manners | 2017 | Marco Dutra, Juliana Rojas | Brazil | Nurse, mysterious wealthy woman | ⏳ | Genre-bending; surreal horror-drama |
 | 73 | The Heiresses | 2018 | Marcelo Martinessi | Paraguay | Privileged women, quiet crisis | ⏳ | Female leads; intimate character study |
-| 74 | Retablo | 2017 | Alvaro Delgado Aparicio | Peru | Story-box maker legacy | ⏳ | Indigenous-centered; oral tradition |
+| 74 | Retablo | 2017 | Alvaro Delgado Aparicio | Peru | Story-box maker legacy | ✅ | Sole director; Quechua-language; Teddy Award at Berlinale |
 | 75 | A Twelve-Year Night | 2018 | Álvaro Brechner | Uruguay | Tupamaro prisoners, torture | ⏳ | **Likely ADD** — political imprisonment |
 | 76 | Nostalgia for the Light | 2010 | Patricio Guzmán | Chile | Documentary, astronomy + memory | ⏳ | By Guzmán (major Chilean documentarian) |
 | 77 | The Pearl Button | 2015 | Patricio Guzmán | Chile | Water significance, Pinochet coup | ⏳ | By Guzmán; poetic environmental essay |
@@ -120,12 +120,12 @@
 | # | Title | Year | Director | Country | Key Attributes | Decision | Notes |
 |---|-------|------|----------|---------|-----------------|----------|-------|
 | 80 | Bingo: The King of the Mornings | 2017 | Daniel Rezende | Brazil | Actor, anonymous celebrity | ⏳ | Entertainment industry critique |
-| 81 | Neruda | 2016 | Pablo Larraín | Chile | Pablo Neruda, poet fugitive | ⏳ | By Larraín; biographical + political |
+| 81 | Neruda | 2016 | Pablo Larraín | Chile | Pablo Neruda, poet fugitive | ✅ | **ALREADY IN CANON** |
 | 82 | The Movie of My Life | 2017 | Selton Mello | Brazil | Tony returns, teacher/father | ⏳ | Male coming-of-age + identity |
 | 83 | Magallanes | 2015 | Salvador del Solar | Peru | Taxi driver, army past | ⏳ | Military trauma + reconciliation |
 | 84 | Sin Nombre | 2009 | Cary Joji Fukunaga | Honduras | Indigenous girl, gangster, border | ⏳ | Migration narrative (non-Latino director) |
 | 85 | Ixcanul | 2015 | Jayro Bustamante | Guatemala | Kaqchikel girl, arranged marriage | ✅ | **ALREADY IN CANON** |
-| 86 | Eternity | 2017 | Óscar Catacora | Peru | Elderly couple, Andes | ⏳ | Indigenous perspective; intimate |
+| 86 | Eternity | 2017 | Óscar Catacora | Peru | Elderly couple, Andes | ✅ | First film entirely in Aymara language; sole director/writer/cinematographer |
 | 87 | Umbrella | 2020 | Helena Hilario, Mario Pece | Brazil | Animated short, yellow umbrella | ⏳ | Animated; emotional; brief |
 | 88 | Museo | 2018 | Alonso Ruizpalacios | Mexico | Museum heist, 1985 Mexico City | ⏳ | **Likely ADD** — crime caper; cultural theft |
 | 89 | The Line | 2019 | Ricardo Laganaro | Brazil | Animated short, miniature dolls | ⏳ | Animated short; experimental |
