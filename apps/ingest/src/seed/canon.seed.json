@@ -203,6 +203,11 @@
     { "ref": "Silent Light (2007)", "title": "Silent Light", "year": 2007, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
     { "ref": "Smoke Gets in Your Eyes (2009)", "title": "Smoke Gets in Your Eyes", "year": 2009, "kind": "film", "tmdbId": 81055, "seedInclusionTypes": ["led_by", "created_by"] },
     { "ref": "Eternity (2018)", "title": "Eternity", "year": 2018, "kind": "film", "tmdbId": 511425, "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
-    { "ref": "Retablo (2018)", "title": "Retablo", "year": 2018, "kind": "film", "tmdbId": 499394, "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] }
+    { "ref": "Retablo (2018)", "title": "Retablo", "year": 2018, "kind": "film", "tmdbId": 499394, "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
+    { "ref": "Men and Women (1964)", "title": "Men and Women", "year": 1964, "kind": "film", "tmdbId": 195450, "seedInclusionTypes": ["led_by", "created_by"] },
+    { "ref": "The Truce (1974)", "title": "The Truce", "year": 1974, "kind": "film", "tmdbId": 127449, "seedInclusionTypes": ["led_by", "created_by", "breakthrough"] },
+    { "ref": "Captain Pantoja and the Special Services (1999)", "title": "Captain Pantoja and the Special Services", "year": 1999, "kind": "film", "tmdbId": 19822, "seedInclusionTypes": ["led_by"] },
+    { "ref": "Whisky (2004)", "title": "Whisky", "year": 2004, "kind": "film", "tmdbId": 36971, "seedInclusionTypes": ["led_by", "created_by", "breakthrough"] },
+    { "ref": "Cinema, Aspirins and Vultures (2005)", "title": "Cinema, Aspirins and Vultures", "year": 2005, "kind": "film", "tmdbId": 43420, "seedInclusionTypes": ["led_by", "created_by", "about_community"] }
   ]
 }
