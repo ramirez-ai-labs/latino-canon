@@ -45,6 +45,14 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
         return { details, ratings };
       });
 
+      // VALIDATION GATE: Skip adult content
+      if (raw.details.adult) {
+        await step.do("skip adult content", () =>
+          setJob(this.env, jobId, p.ref, "validate", "error", "Content flagged as adult (TMDB adult=true); excluded per curation policy")
+        );
+        return;
+      }
+
       const title = await step.do("normalize", async () => normalizeTitle(p, raw.details, raw.ratings));
 
       const exists = await step.do("check exists", async () => {

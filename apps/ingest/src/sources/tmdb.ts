@@ -27,6 +27,7 @@ export interface TmdbDetails {
   languages: string[]; // ISO 639-1
   runtime: number | null;
   popularity: number;
+  adult: boolean; // TMDB adult content flag - exclude if true
   credits: {
     directors: TmdbPerson[];
     writers: TmdbPerson[];
@@ -138,6 +139,7 @@ interface TmdbRaw {
   runtime?: number | null;
   episode_run_time?: number[];
   popularity?: number;
+  adult?: boolean; // TMDB adult content flag
   production_countries?: TmdbCountryRaw[];
   origin_country?: string[];
   spoken_languages?: TmdbLanguageRaw[];
@@ -171,6 +173,7 @@ export async function fetchTmdbDetails(env: Env, id: number, kind: "film" | "ser
     languages: (raw.spoken_languages ?? []).map((l) => l.iso_639_1),
     runtime: raw.runtime ?? raw.episode_run_time?.[0] ?? null,
     popularity: raw.popularity ?? 0,
+    adult: raw.adult ?? false, // TMDB adult content flag
     credits: mapCredits(raw),
   };
 }
