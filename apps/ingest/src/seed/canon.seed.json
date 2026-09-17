@@ -250,6 +250,7 @@
         { "ref": "Loveling (2018)", "title": "Loveling", "year": 2018, "kind": "film", "tmdbId": 513138, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
         { "ref": "Umbrella (2020)", "title": "Umbrella", "year": 2020, "kind": "film", "tmdbId": 663903, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
         { "ref": "The Line (2019)", "title": "The Line", "year": 2019, "kind": "film", "tmdbId": 673397, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
-        { "ref": "The Offended (2016)", "title": "The Offended", "year": 2016, "kind": "film", "tmdbId": 404068, "seedInclusionTypes": ["led_by", "created_by", "about_community"] }
+        { "ref": "The Offended (2016)", "title": "The Offended", "year": 2016, "kind": "film", "tmdbId": 404068, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+        { "ref": "Money Heist (2017)", "title": "Money Heist", "year": 2017, "kind": "series", "tmdbId": 71446, "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] }
     ]
 }
