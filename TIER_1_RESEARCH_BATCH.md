@@ -13,16 +13,16 @@
 | # | Title | Year | Director | Country | Key Attributes | Decision | Notes |
 |---|-------|------|----------|---------|-----------------|----------|-------|
 | 1 | The Hustlers | 1962 | Ruy Guerra | Brazil | Urban crime, Copacabana | ⏳ | Guerra is major Cinema Novo figure — verify |
-| 2 | Tlayucan | 1962 | Luis Alcoriza | Mexico | Social realism, thief | ⏳ | Alcoriza major Mexican director — strong candidate |
+| 2 | Tlayucan | 1962 | Luis Alcoriza | Mexico | Social realism, thief | ✅ | **ALREADY IN CANON** |
 | 3 | Men and Women | 1964 | Walter Hugo Khouri | Brazil | Urban, prostitution | ⏳ | Khouri: Brazilian modernist — verify about_community fit |
-| 4 | São Paulo Sociedade Anônima | 1965 | Luiz Sérgio Person | Brazil | Urban crisis, São Paulo | ⏳ | Person: Cinema Novo figure — likely ADD |
+| 4 | São Paulo Sociedade Anônima | 1965 | Luiz Sérgio Person | Brazil | Urban crisis, São Paulo | ✅ | **ALREADY IN CANON** (as "São Paulo, Incorporated") |
 | 5 | The Holy Mountain | 1973 | Alejandro Jodorowsky | Chile | Experimental, esoteric | ⏳ | High prestige but surreal; "about_community" ambiguous |
 | 6 | The Truce | 1974 | Sergio Renán | Argentina | Family, youth alienation | ⏳ | Renán: Argentine master — check if add |
 | 7 | A Queda | 1978 | Ruy Guerra, Nelson Xavier | Brazil | Work accident, justice | ⏳ | Co-directed by Cinema Novo pioneers |
 | 8 | Bye Bye Brazil | 1980 | Carlos Diegues | Brazil | Traveling artists, Amazon | ✅ | **ALREADY IN CANON** |
 | 9 | They Don't Wear Black Tie | 1981 | Leon Hirszman | Brazil | Union, strike, working class | ✅ | **ALREADY IN CANON** |
-| 10 | The City and the Dogs | 1985 | Francisco J. Lombardi | Peru | Military academy, cadet rebellion | ⏳ | Lombardi: respected director — verify |
-| 11 | Four Days in September | 1997 | Bruno Barreto | Brazil | Urban guerrilla, 1960s | ⏳ | Political thriller, strong fit |
+| 10 | The City and the Dogs | 1985 | Francisco J. Lombardi | Peru | Military academy, cadet rebellion | ✅ | **ALREADY IN CANON** |
+| 11 | Four Days in September | 1997 | Bruno Barreto | Brazil | Urban guerrilla, 1960s | ✅ | **ALREADY IN CANON** |
 
 ---
 
@@ -33,14 +33,14 @@
 | 12 | Martín (Hache) | 1997 | Adolfo Aristarain | Argentina | Drug, father-son, Madrid | ⏳ | By *Son of the Bride* director — **likely ADD** |
 | 13 | Foolish Heart | 1998 | Hector Babenco | Argentina | Return to Buenos Aires | ✅ | **ALREADY IN CANON** |
 | 14 | Captain Pantoja and the Special Services | 1999 | Francisco J. Lombardi | Peru | Army, sexuality, absurdist | ⏳ | Unique comedic tone |
-| 15 | A Dog's Will | 2000 | Guel Arraes | Brazil | Trickster folklore, João Grilo | ⏳ | Brazilian cultural icon (adapted from play) |
-| 16 | Brainstorm | 2000 | Laís Bodansky | Brazil | Mental illness, teenager | ⏳ | Coming-of-age + mental health narrative |
-| 17 | Burnt Money | 2000 | Marcelo Piñeyro | Argentina | Bank robbery, Buenos Aires | ⏳ | Crime + character study |
+| 15 | A Dog's Will | 2000 | Guel Arraes | Brazil | Trickster folklore, João Grilo | ✅ | **ALREADY IN CANON** |
+| 16 | Brainstorm | 2000 | Laís Bodansky | Brazil | Mental illness, teenager | ✅ | **ALREADY IN CANON** |
+| 17 | Burnt Money | 2000 | Marcelo Piñeyro | Argentina | Bank robbery, Buenos Aires | ✅ | **ALREADY IN CANON** |
 | 18 | Behind the Sun | 2001 | Walter Salles | Brazil | Feuding families, violence cycle | ⏳ | By *Central Station* director — **likely ADD** |
-| 19 | The Swamp | 2001 | Lucrecia Martel | Argentina | Intimate drama, provincial | ⏳ | Female director; abstract style |
+| 19 | The Swamp | 2001 | Lucrecia Martel | Argentina | Intimate drama, provincial | ✅ | **ALREADY IN CANON** (as "La Ciénaga") |
 | 20 | Common Ground | 2002 | Adolfo Aristarain | Argentina | Aging, retirement crisis | ⏳ | Explores elder life (underrepresented) |
-| 21 | Intimate Stories | 2002 | Carlos Sorin | Argentina | Three narratives, Patagonia | ⏳ | Ensemble structure; regional character |
-| 22 | Valentin | 2002 | Alejandro Agresti | Argentina | Child protagonist, family | ⏳ | Coming-of-age through 8-year-old perspective |
+| 21 | Intimate Stories | 2002 | Carlos Sorin | Argentina | Three narratives, Patagonia | ✅ | **ALREADY IN CANON** |
+| 22 | Valentin | 2002 | Alejandro Agresti | Argentina | Child protagonist, family | ✅ | Fixed: was live under a wrong TMDB match |
 | 23 | Whisky | 2004 | Juan Pablo Rebella, Pablo Stoll | Uruguay | Minimalist, bachelor life | ⏳ | Uruguayan cinema; dry humor |
 | 24 | Cinema Aspirins and Vultures | 2005 | Marcelo Gomes | Brazil | 1942, backlands, hybrid identity | ⏳ | German-Brazilian cultural encounter |
 | 25 | On Probation | 2005 | Damián Szifron | Argentina | Psychologist, social work | ⏳ | By *Wild Tales* director — **likely ADD** |
@@ -104,7 +104,7 @@
 | 69 | 7 Boxes | 2012 | Juan Carlos Maneglia, Tana Schémbori | Paraguay | Market smuggling, unknown contents | ⏳ | Paraguayan neo-noir; genre-hybrid |
 | 70 | Bear Story | 2014 | Gabriel Osorio Vargas | Chile | Animated short, bear's life diorama | ⏳ | **Likely ADD** — animated; emotional depth |
 | 71 | A Place in the World | 1992 | Adolfo Aristarain | Argentina | Exile family, dam conflict | ✅ | **ALREADY IN CANON** |
-| 72 | Good Manners | 2017 | Marco Dutra, Juliana Rojas | Brazil | Nurse, mysterious wealthy woman | ⏳ | Genre-bending; surreal horror-drama |
+| 72 | Good Manners | 2017 | Marco Dutra, Juliana Rojas | Brazil | Nurse, mysterious wealthy woman | ✅ | **ALREADY IN CANON** |
 | 73 | The Heiresses | 2018 | Marcelo Martinessi | Paraguay | Privileged women, quiet crisis | ⏳ | Female leads; intimate character study |
 | 74 | Retablo | 2017 | Alvaro Delgado Aparicio | Peru | Story-box maker legacy | ✅ | Sole director; Quechua-language; Teddy Award at Berlinale |
 | 75 | A Twelve-Year Night | 2018 | Álvaro Brechner | Uruguay | Tupamaro prisoners, torture | ⏳ | **Likely ADD** — political imprisonment |
