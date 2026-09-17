@@ -56,24 +56,36 @@ async function main() {
   }
 
   const results: JudgeResult[] = [];
+  const failures: { titleId: string; error: string }[] = [];
   for (const id of titleIds) {
     const t = (await fetch(`${API_URL}/titles/${id}`).then((r) => r.json())) as {
       blurb?: { text: string; sources: { id?: string; ref: string; quote: string | null }[] };
     };
     if (!t.blurb) continue;
     const sources = t.blurb.sources.map((s, i) => ({ id: s.id ?? `s${i}`, text: s.quote ?? s.ref }));
-    const j = await judge(t.blurb.text, sources);
-    results.push({ titleId: id, ...j });
+    try {
+      const j = await judge(t.blurb.text, sources);
+      results.push({ titleId: id, ...j });
+    } catch (e) {
+      // The judge model (a small 8B instruct model) occasionally ignores the
+      // "return JSON only" instruction and free-writes its reasoning instead -
+      // one bad completion shouldn't discard every score already computed in
+      // this run, so skip and keep going rather than letting main() throw.
+      failures.push({ titleId: id, error: e instanceof Error ? e.message : String(e) });
+    }
   }
 
   const mean = results.reduce((s, r) => s + r.score, 0) / (results.length || 1);
-  console.log(`groundedness mean: ${mean.toFixed(3)}  (n=${results.length})`);
+  console.log(`groundedness mean: ${mean.toFixed(3)}  (n=${results.length}, failed=${failures.length})`);
+  for (const f of failures) {
+    console.log(`  FAILED  ${f.titleId}  ${f.error.slice(0, 120)}`);
+  }
   for (const r of results.filter((r) => r.score < 0.9).sort((a, b) => a.score - b.score)) {
     console.log(`  ${r.titleId}  ${r.score.toFixed(2)}  unsupported: ${r.unsupported.join(" | ")}`);
   }
 
   mkdirSync(".eval-out", { recursive: true });
-  writeFileSync(`.eval-out/groundedness-${Date.now()}.json`, JSON.stringify({ mean, results }, null, 2));
+  writeFileSync(`.eval-out/groundedness-${Date.now()}.json`, JSON.stringify({ mean, results, failures }, null, 2));
 }
 
 main().catch((e) => {

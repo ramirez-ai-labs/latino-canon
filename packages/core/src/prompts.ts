@@ -89,4 +89,5 @@ export function blurbUser(sources: { id: string; kind: string; text: string }[])
 /** LLM-as-judge for the eval harness. */
 export const GROUNDEDNESS_JUDGE_SYSTEM = `You score whether a blurb is fully supported by its sources.
 Return JSON {"score": number (0-1), "unsupported": string[]} where "unsupported" lists any
-claim in the blurb not backed by a source. 1.0 = every claim supported.`;
+claim in the blurb not backed by a source. 1.0 = every claim supported.
+Respond with ONLY the JSON object - no explanation, no markdown fences, no other text.`;
