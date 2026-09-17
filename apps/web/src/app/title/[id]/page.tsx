@@ -28,7 +28,7 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           <h1 style={{ marginBottom: 0 }}>{title.title}</h1>
           {(!title.runtime || title.yearStart >= 2025) && (
-            <span className="tag" style={{ background: "var(--accent)", fontSize: "0.75rem", padding: "0.25rem 0.5rem" }}>
+            <span className="tag new-to-canon" style={{ fontSize: "0.75rem", padding: "0.25rem 0.5rem" }}>
               ✨ New to Canon
             </span>
           )}
@@ -64,7 +64,7 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
             ))}
         </div>
 
-        {(title.credits.length > 0 || title.runtime) && (
+        {(title.credits.length > 0 || Boolean(title.runtime)) && (
           <section style={{ marginTop: "1.5rem", fontSize: "0.9rem" }}>
             {title.credits.filter((c) => c.role === "creator" || c.role === "director").length > 0 && (
               <p>
@@ -85,7 +85,11 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
                   .join(", ")}
               </p>
             )}
-            {title.runtime && <p><strong>Runtime:</strong> {title.runtime} min</p>}
+            {title.runtime ? (
+              <p>
+                <strong>Runtime:</strong> {title.runtime} min
+              </p>
+            ) : null}
           </section>
         )}
 
