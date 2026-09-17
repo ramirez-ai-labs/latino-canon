@@ -26,6 +26,11 @@ export function TitleCard({ title }: { title: TitleCardData }) {
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <h3 style={{ margin: 0 }}>{title.title}</h3>
           {(!title.runtime || title.yearStart >= 2025) && <span className="tag new-to-canon">✨ New</span>}
+          {title.oscarWin && (
+            <span className="tag oscar" title={title.oscarWin}>
+              🏆 Oscar
+            </span>
+          )}
         </div>
         <div className="meta">
           {years} · {title.director ?? "—"}
