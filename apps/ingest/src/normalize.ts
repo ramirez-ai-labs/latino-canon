@@ -39,6 +39,7 @@ export function normalizeTitle(
     blurb: null,
     representationHandling: null,
     contextNotes: [],
+    oscarWin: null,
   };
 }
 
