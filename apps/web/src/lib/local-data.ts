@@ -73,7 +73,7 @@ function toCard(item: Title): TitleCard {
     directorGender: item.credits.find((credit) => credit.role === "director")?.person.gender ?? null,
     posterKey: null, blurbTeaser: item.blurb?.text ?? null, inclusionTypes: [],
     themes: item.tags.filter((tag) => tag.kind === "theme").map((tag) => tag.slug as never), score: item.popularity,
-    representationHandling: item.representationHandling,
+    representationHandling: item.representationHandling, runtime: item.runtime,
   };
 }
 

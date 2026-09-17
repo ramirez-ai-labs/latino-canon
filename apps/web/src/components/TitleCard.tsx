@@ -23,7 +23,10 @@ export function TitleCard({ title }: { title: TitleCardData }) {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={posterUrl(title.posterKey)} alt={`${title.title} poster`} />
       <div className="card-body">
-        <h3>{title.title}</h3>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <h3 style={{ margin: 0 }}>{title.title}</h3>
+          {(!title.runtime || title.yearStart >= 2025) && <span className="tag new-to-canon">✨ New</span>}
+        </div>
         <div className="meta">
           {years} · {title.director ?? "—"}
         </div>

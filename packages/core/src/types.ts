@@ -103,6 +103,7 @@ export interface TitleCard {
   themes: Theme[];
   score: number;
   representationHandling: RepresentationHandling | null;
+  runtime: number | null;
 }
 
 export interface SearchFilters {
