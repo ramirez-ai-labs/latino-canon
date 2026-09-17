@@ -60,6 +60,22 @@ jobs:
       - name: Run groundedness eval
         run: pnpm --filter @latino-canon/eval run groundedness $(cat /tmp/ids.txt)
 
+      # A prior run finished clean (187/187, mean 0.512) yet the artifact upload
+      # step still warned "No files were found with the provided path:
+      # packages/eval/.eval-out/" - pnpm --filter's cwd for the script is
+      # confirmed correct locally (packages/eval), so this checks what's
+      # actually on disk right after generation, before either consumer step
+      # (D1 record, artifact upload) tries to read it, instead of guessing again.
+      - name: Debug - locate eval output on disk
+        if: always()
+        run: |
+          echo "--- looking for .eval-out anywhere under the workspace ---"
+          find . -maxdepth 4 -iname ".eval-out" -not -path "*/node_modules/*" 2>&1 || true
+          echo "--- packages/eval/.eval-out/ directly ---"
+          ls -la packages/eval/.eval-out/ 2>&1 || echo "does not exist"
+          echo "--- pwd at this step ---"
+          pwd
+
       # run-groundedness.ts writes a ready-to-run INSERT (packages/eval/src/record-run.ts,
       # SQL-escaped in JS - not shell-interpolated) alongside its JSON output, so the
       # dashboard at apps/web's /eval page has something durable to read instead of only
