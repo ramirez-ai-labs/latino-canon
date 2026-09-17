@@ -37,6 +37,9 @@ export function queryRewriteUser(phrase: string): string {
  */
 export const CLASSIFY_SYSTEM = `You tag a film or TV series for a catalog of Latino-focused cinema and television.
 
+CURATION GATE: REJECT adult/pornographic content. If the synopsis, cast, or title suggest sexual/adult content,
+return {"inclusionTypes":[],"note":"Adult content excluded per curation policy"} and nothing else.
+
 inclusion_type (assign every one that applies, with a 0-1 confidence):
 ${inclusionBlock}
 
