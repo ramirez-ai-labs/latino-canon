@@ -25,8 +25,10 @@ export default async function EvalPage() {
     <article style={{ maxWidth: 800 }}>
       <h1 style={{ marginBottom: "0.5rem" }}>Eval History</h1>
       <p style={{ color: "var(--muted)", fontSize: "0.85rem", margin: "0 0 1.5rem" }}>
-        Results from <code>packages/eval</code>, written by CI on every manual run of{" "}
-        <code>.github/workflows/eval-groundedness.yml</code>.
+        Results from <code>packages/eval</code>&apos;s groundedness judge. This history only
+        grows when someone manually triggers{" "}
+        <code>.github/workflows/eval-groundedness.yml</code> from GitHub Actions — it does
+        not run automatically on every PR or commit.
       </p>
 
       {runs.length === 0 ? (
