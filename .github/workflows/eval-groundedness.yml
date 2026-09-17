@@ -91,3 +91,8 @@ jobs:
           name: groundedness-eval-output
           path: packages/eval/.eval-out/
           if-no-files-found: warn
+          # .eval-out is a dot-directory - actions/upload-artifact@v4 excludes
+          # hidden files/dirs by default, which is the entire reason every run
+          # so far warned "No files were found" even when the debug step right
+          # before this one confirmed the file was genuinely there.
+          include-hidden-files: true
