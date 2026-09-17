@@ -20,6 +20,7 @@ interface CardRow {
   poster_key: string | null;
   popularity: number;
   runtime: number | null;
+  oscar_win: string | null;
   director: string | null;
   director_gender: PersonGender | null;
   blurb: string | null;
@@ -39,7 +40,7 @@ export async function hydrateCards(env: Env, hits: RankedHit[]): Promise<TitleCa
 
   const sql = `
     SELECT
-      t.id, t.kind, t.title, t.year_start, t.year_end, t.poster_key, t.popularity, t.runtime,
+      t.id, t.kind, t.title, t.year_start, t.year_end, t.poster_key, t.popularity, t.runtime, t.oscar_win,
       t.representation_handling,
       (SELECT p.name FROM credits c JOIN people p ON p.id = c.person_id
         WHERE c.title_id = t.id AND c.role = 'director' ORDER BY c.ord LIMIT 1) AS director,
@@ -80,6 +81,7 @@ export async function hydrateCards(env: Env, hits: RankedHit[]): Promise<TitleCa
       score: scoreById.get(r.id) ?? 0,
       representationHandling: r.representation_handling,
       runtime: r.runtime,
+      oscarWin: r.oscar_win,
     }));
 }
 

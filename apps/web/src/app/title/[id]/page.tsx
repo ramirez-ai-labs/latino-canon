@@ -32,6 +32,11 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
               ✨ New to Canon
             </span>
           )}
+          {title.oscarWin && (
+            <span className="tag oscar" style={{ fontSize: "0.75rem", padding: "0.25rem 0.5rem" }} title={title.oscarWin}>
+              🏆 {title.oscarWin}
+            </span>
+          )}
         </div>
         <p style={{ color: "var(--muted)" }}>
           {title.yearStart}

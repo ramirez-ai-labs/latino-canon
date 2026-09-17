@@ -85,6 +85,8 @@ export interface Title {
   /** null = standard entry, no known representation concern. */
   representationHandling: RepresentationHandling | null;
   contextNotes: ContextNote[];
+  /** e.g. "Best International Feature (2019)". null = no Oscar win on record. */
+  oscarWin: string | null;
 }
 
 /** Compact shape returned by /search — enough to render a card. */
@@ -104,6 +106,7 @@ export interface TitleCard {
   score: number;
   representationHandling: RepresentationHandling | null;
   runtime: number | null;
+  oscarWin: string | null;
 }
 
 export interface SearchFilters {

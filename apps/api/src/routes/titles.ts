@@ -32,6 +32,7 @@ interface TitleRow {
   popularity: number;
   runtime: number | null;
   representation_handling: RepresentationHandling | null;
+  oscar_win: string | null;
 }
 interface CreditRow {
   person_id: string;
@@ -160,6 +161,7 @@ titlesRoute.get("/:id", async (c) => {
         }
       : null,
     representationHandling: title.representation_handling,
+    oscarWin: title.oscar_win,
     contextNotes: contextNotes.results.map(
       (n): ContextNote => ({
         category: n.category,
