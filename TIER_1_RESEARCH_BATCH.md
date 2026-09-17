@@ -32,7 +32,7 @@
 |---|-------|------|----------|---------|-----------------|----------|-------|
 | 12 | Martín (Hache) | 1997 | Adolfo Aristarain | Argentina | Drug, father-son, Madrid | ⏳ | By *Son of the Bride* director — **likely ADD** |
 | 13 | Foolish Heart | 1998 | Hector Babenco | Argentina | Return to Buenos Aires | ✅ | **ALREADY IN CANON** |
-| 14 | Captain Pantoja and the Special Services | 1999 | Francisco J. Lombardi | Peru | Army, sexuality, absurdist | ⏳ | Unique comedic tone |
+| 14 | Captain Pantoja and the Special Services | 1999 | Francisco J. Lombardi | Peru | Army, sexuality, absurdist | ✅ | Directed solo (led_by only) |
 | 15 | A Dog's Will | 2000 | Guel Arraes | Brazil | Trickster folklore, João Grilo | ✅ | **ALREADY IN CANON** |
 | 16 | Brainstorm | 2000 | Laís Bodansky | Brazil | Mental illness, teenager | ✅ | **ALREADY IN CANON** |
 | 17 | Burnt Money | 2000 | Marcelo Piñeyro | Argentina | Bank robbery, Buenos Aires | ✅ | **ALREADY IN CANON** |
@@ -41,8 +41,8 @@
 | 20 | Common Ground | 2002 | Adolfo Aristarain | Argentina | Aging, retirement crisis | ⏳ | Explores elder life (underrepresented) |
 | 21 | Intimate Stories | 2002 | Carlos Sorin | Argentina | Three narratives, Patagonia | ✅ | **ALREADY IN CANON** |
 | 22 | Valentin | 2002 | Alejandro Agresti | Argentina | Child protagonist, family | ✅ | Fixed: was live under a wrong TMDB match |
-| 23 | Whisky | 2004 | Juan Pablo Rebella, Pablo Stoll | Uruguay | Minimalist, bachelor life | ⏳ | Uruguayan cinema; dry humor |
-| 24 | Cinema Aspirins and Vultures | 2005 | Marcelo Gomes | Brazil | 1942, backlands, hybrid identity | ⏳ | German-Brazilian cultural encounter |
+| 23 | Whisky | 2004 | Juan Pablo Rebella, Pablo Stoll | Uruguay | Minimalist, bachelor life | ✅ | Cannes Un Certain Regard + FIPRESCI |
+| 24 | Cinema Aspirins and Vultures | 2005 | Marcelo Gomes | Brazil | 1942, backlands, hybrid identity | ✅ | Centers Brazilian WWII-era history |
 | 25 | On Probation | 2005 | Damián Szifron | Argentina | Psychologist, social work | ⏳ | By *Wild Tales* director — **likely ADD** |
 | 26 | The Aura | 2005 | Fabián Bielinsky | Argentina | Taxidermist, crime obsession | ⏳ | By *Nine Queens* director — **likely ADD** |
 | 27 | The House of Sand | 2005 | Andrucha Waddington | Brazil | Women in desert, 1910 | ⏳ | Female protagonist; experimental narrative |
