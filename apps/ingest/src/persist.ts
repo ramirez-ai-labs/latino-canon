@@ -81,12 +81,24 @@ export async function upsertVector(env: Env, t: Title, themes: string[]): Promis
  * a later re-classification can only refresh a tag *it* previously wrote, never
  * downgrade a seed or editor call. Themes have no seed concept, so they're
  * always source='model'.
+ *
+ * VALIDATION: Require at least one valid inclusion_type (led_by, created_by, about_community, or breakthrough).
+ * This prevents misclassified non-Latino films from entering the canon.
  */
 export async function writeTags(
   env: Env,
   titleId: string,
   input: { classification: ClassificationResult; seedInclusionTypes: string[] },
 ): Promise<void> {
+  // Validate: title must have at least one inclusion_type from seed or classifier
+  const hasValidInclusionType =
+    input.seedInclusionTypes.length > 0 ||
+    input.classification.inclusionTypes.length > 0;
+
+  if (!hasValidInclusionType) {
+    console.warn(`[writeTags] Skipping ${titleId}: no valid inclusion_type found. Title does not meet Latino Canon criteria.`);
+    return;
+  }
   const { results: tagRows } = await env.DB.prepare(`SELECT id, kind, slug FROM tags`).all<{
     id: number;
     kind: "inclusion_type" | "theme";
