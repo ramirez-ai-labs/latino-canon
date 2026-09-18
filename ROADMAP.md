@@ -34,6 +34,102 @@ against that same framework, is the rest of this document.
 
 ---
 
+## Presentation Readiness (Latino AI Summit 2026)
+
+**Context:** Comprehensive codebase audit (2026-09-18) identified portfolio-polish items + robustness gaps. Summit talk scheduled; project live in production. Three-week plan to presentation-grade maturity.
+
+### Week 1: Portfolio Polish (3.5 hours) — START HERE
+
+These unlock presentation credibility and OSS legitimacy:
+
+- [ ] **Add LICENSE file** (10 min)
+  - Use MIT or Apache-2.0 (GitHub repo should default to MIT)
+  - Legal clarity for portfolio/open-source consumption
+  - Add to repo root, commit
+
+- [ ] **Archive tactical phase documentation** (30 min)
+  - Create `docs/archive/phases/` directory
+  - Move: `PHASE_C_*.md`, `PHASE_D_*.md`, `FIX_SCHEMA_REBUILD.md`, `CLEANUP_*.md`, `PROJECT_COMPLETION_SUMMARY.md`, `SESSION_6_*.md`
+  - Keep as history; link from README: "See [Phase Documentation](docs/archive/phases/) for detailed development logs"
+  - Permanent docs remain: README, ROADMAP, CRITERIA, INGEST, infra/README
+
+- [ ] **Add .dev.vars.example files** (15 min)
+  - `apps/api/.dev.vars.example` (list required vars)
+  - `apps/web/.dev.vars.example` (list required vars)
+  - Ingest already has one; verify completeness
+  - Document in README setup instructions
+
+- [ ] **Add .dependabot.yml** (20 min)
+  - Enable automated security updates
+  - Set schedule to weekly, max 5 open PRs
+  - Reduces manual dependency management
+
+- [ ] **Create docs/operations/monitoring.md** (120 min) — HIGHEST IMPACT
+  - **AI Gateway access**: How to read logs, cache hit rates, neuron budget
+  - **Cloudflare Analytics Engine**: Query patterns for error tracking, request patterns
+  - **Neuron budget tracking**: 10k/day limit, reset at midnight UTC, account-wide cap
+  - **Alert thresholds**: "Page on" rules for outages or quota exhaustion
+  - **Incident response runbook**: What to do if search degrades, workers AI down, D1 issues
+  - **Performance SLAs**: Latency targets, cache hit rate goals, uptime targets
+  - Reference: neuron budget incident from Sept 2026 (11.18k burn story in README)
+
+### Week 2: Robustness (9 hours) — Recommended
+
+Hardens untested critical paths (8 bugs caught in recent phases, all in untested areas):
+
+- [ ] **Add tests for workflow.ts** (90 min)
+  - Step orchestration, retry behavior, error tracking
+  - Mock TMDB/OMDb responses
+  - Verify low-confidence→review_queue routing
+
+- [ ] **Add tests for persist.ts** (60 min)
+  - D1 insert/update, tag insertion, people dedup
+  - Verify FTS5 denormalization
+
+- [ ] **Add tests for hybrid.ts** (60 min)
+  - RRF rank merging math, score normalization
+  - Filter push-down behavior
+
+- [ ] **Implement maintenance.ts retry logic** (120 min)
+  - `retryErroredJobs()`: reconstruct IngestParams from job_ref, re-POST to workflow
+  - `refreshPopularity()`: TMDB-fetch popularity scores for existing titles
+  - Verify cron trigger (8 AM UTC) actually runs
+
+- [ ] **Complete groundedness evaluation** (120 min)
+  - `run-groundedness.ts` currently requires manual title IDs
+  - Modify to enumerate all titles (or all with blurbs)
+  - Publish results to `.eval-out/groundedness-*.json`
+  - Add to README evaluation section
+
+- [ ] **Add ESLint configuration** (60 min)
+  - Remove dead `lint` task scaffolding
+  - Add `.eslintrc.json` (recommend `eslint-config-next` for consistency)
+  - Add `pnpm lint` script to all packages
+  - Enable in CI (`validate-pr.yml`)
+
+### Week 3: Evaluation & Tuning (13 hours) — Optional but Recommended
+
+Optimizes retrieval quality and tunes thresholds responsibly:
+
+- [ ] **Expand golden query set** (480 min)
+  - Grow from 15 → 50+ real queries
+  - Collect relevance judgments (5-point scale or binary relevant/not)
+  - Document in `packages/eval/src/datasets/queries.jsonl`
+
+- [ ] **Tune RRF weights + thresholds** (120 min)
+  - Re-run `pnpm eval:retrieval` with expanded query set
+  - Optimize `hybrid.ts` RRF weights (currently [1,1], hand-picked)
+  - Tune `semantic.ts` `MIN_SEMANTIC_SCORE` (currently 0.35, heuristic)
+  - Document tuning decisions and trade-offs in ROADMAP
+
+- [ ] **Generate OpenAPI spec** (120 min)
+  - Use Hono OpenAPI middleware
+  - Auto-generate `/openapi.json` on deployment
+  - Deploy Swagger UI at `/docs` for integrators
+  - Include in README API documentation section
+
+---
+
 ## Immediate (do first — small, high-visibility)
 
 1. ~~**Fix the two empty homepage collections.**~~ **Done.** Core Canon populated
