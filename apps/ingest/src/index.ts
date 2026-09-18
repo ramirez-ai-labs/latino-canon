@@ -107,6 +107,22 @@ export default {
       return Response.json({ jobs: results });
     }
 
+    if (req.method === "POST" && url.pathname === "/approve-jobs") {
+      const { jobIds } = (await req.json()) as { jobIds: string[] };
+      if (!Array.isArray(jobIds) || jobIds.length === 0) {
+        return new Response("jobIds must be a non-empty array", { status: 400 });
+      }
+      const placeholders = jobIds.map(() => "?").join(",");
+      const stmt = env.DB.prepare(
+        `UPDATE ingest_jobs SET status = 'done', updated_at = datetime('now') WHERE id IN (${placeholders}) AND status = 'needs_review'`,
+      ).bind(...jobIds);
+      const result = await stmt.run();
+      return Response.json({
+        approved: result.meta.changes,
+        message: `${result.meta.changes} job(s) approved`,
+      });
+    }
+
     return new Response("not found", { status: 404 });
   },
 
