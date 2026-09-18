@@ -250,6 +250,16 @@
         { "ref": "Loveling (2018)", "title": "Loveling", "year": 2018, "kind": "film", "tmdbId": 513138, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
         { "ref": "Umbrella (2020)", "title": "Umbrella", "year": 2020, "kind": "film", "tmdbId": 663903, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
         { "ref": "The Line (2019)", "title": "The Line", "year": 2019, "kind": "film", "tmdbId": 673397, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
-        { "ref": "The Offended (2016)", "title": "The Offended", "year": 2016, "kind": "film", "tmdbId": 404068, "seedInclusionTypes": ["led_by", "created_by", "about_community"] }
+        { "ref": "The Offended (2016)", "title": "The Offended", "year": 2016, "kind": "film", "tmdbId": 404068, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+        { "ref": "Money Heist (2017)", "title": "Money Heist", "year": 2017, "kind": "series", "tmdbId": 71446, "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
+        { "ref": "The Gringo Hunters (2025)", "title": "The Gringo Hunters", "year": 2025, "kind": "series", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+        { "ref": "Cable Girls (2017)", "title": "Cable Girls", "year": 2017, "kind": "series", "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
+        { "ref": "Sin Nombre (2009)", "title": "Sin Nombre", "year": 2009, "kind": "film", "tmdbId": 21947, "seedInclusionTypes": ["about_community", "breakthrough"], "note": "Exception: Non-Latino director (Cary Joji Fukunaga), but executive producers Diego Luna and Gael García Bernal (Mexican); authentic, critically acclaimed debut; praised for insightful portrayal of Central American migration and gang violence" },
+        { "ref": "The Dead Girls (2025)", "title": "The Dead Girls", "year": 2025, "kind": "series", "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
+        { "ref": "John Leguizamo's Latin History for Morons (2018)", "title": "John Leguizamo's Latin History for Morons", "year": 2018, "kind": "special", "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
+        { "ref": "La Reina del Sur (2011)", "title": "La Reina del Sur", "year": 2011, "kind": "series", "seedInclusionTypes": ["created_by", "about_community", "breakthrough"] },
+        { "ref": "Taco Chronicles (2019)", "title": "Taco Chronicles", "year": 2019, "kind": "special", "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
+        { "ref": "El Chavo del 8 (1973)", "title": "El Chavo del 8", "year": 1973, "kind": "series", "tmdbId": 1437, "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
+        { "ref": "Monarca (2019)", "title": "Monarca", "year": 2019, "kind": "series", "tmdbId": 80059, "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] }
     ]
 }
