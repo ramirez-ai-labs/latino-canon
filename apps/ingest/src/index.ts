@@ -2,6 +2,7 @@ import type { Env, IngestParams } from "./bindings.js";
 import { retryErroredJobs, refreshPopularity } from "./maintenance.js";
 import { fetchTmdbPersonGender } from "./sources/tmdb.js";
 import { slugId } from "./normalize.js";
+import { removeInvalidTmdbEntries } from "./cleanup/index.js";
 
 export { IngestWorkflow } from "./workflow.js";
 
@@ -105,6 +106,24 @@ export default {
         "SELECT * FROM ingest_jobs WHERE status IN ('needs_review','error') ORDER BY updated_at DESC LIMIT 200",
       ).all();
       return Response.json({ jobs: results });
+    }
+
+    if (req.method === "POST" && url.pathname === "/cleanup/remove-invalid-tmdb") {
+      try {
+        const result = await removeInvalidTmdbEntries(env);
+        return Response.json({
+          status: "success",
+          deleted: result.deleted,
+          verified: result.verified,
+          message: "All 13 invalid TMDB entries cleaned from database",
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        return Response.json(
+          { status: "error", message },
+          { status: 500 },
+        );
+      }
     }
 
     return new Response("not found", { status: 404 });
