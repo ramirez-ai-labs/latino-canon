@@ -125,7 +125,7 @@ export async function writeTags(
     const id = tagId("inclusion_type", t.type);
     if (id) statements.push(upsert(id, t.confidence, "model", "= 'model'"));
   }
-  for (const t of input.classification.themes) {
+  for (const t of input.classification.themes ?? []) {
     const id = tagId("theme", t.theme);
     if (id) statements.push(upsert(id, t.confidence, "model", "= 'model'"));
   }

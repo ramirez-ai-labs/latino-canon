@@ -88,7 +88,7 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
 
       stage = "embed";
       await step.do("embed + upsert vector", { retries: { limit: 3, delay: "10 seconds" } }, () =>
-        upsertVector(this.env, title, classification.themes.map((t) => t.theme)),
+        upsertVector(this.env, title, (classification.themes ?? []).map((t) => t.theme)),
       );
 
       stage = "blurb";

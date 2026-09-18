@@ -61,7 +61,8 @@ export const classificationSchema = z.object({
     .max(6), // = INCLUSION_TYPES.length; this was max(4) when there were only 4 possible values
   themes: z
     .array(z.object({ theme: themeSchema, confidence: z.number().min(0).max(1) }))
-    .max(6),
+    .max(6)
+    .optional(),
   note: z.string().max(280).optional(),
 });
 
