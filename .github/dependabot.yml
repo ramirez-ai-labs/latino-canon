@@ -1,0 +1,36 @@
+version: 2
+updates:
+  # Monitor npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "vhr1975"
+    labels:
+      - "dependencies"
+      - "github_actions"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "devdeps"
+      include: "scope"
+
+  # Monitor GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "10:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "vhr1975"
+    labels:
+      - "infrastructure"
+      - "github_actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
