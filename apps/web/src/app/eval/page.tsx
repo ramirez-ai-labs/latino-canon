@@ -65,7 +65,7 @@ export default async function EvalPage() {
                 A low score usually flags a claim the judge couldn&apos;t match to a cited
                 source — not necessarily a factual error. See{" "}
                 <a
-                  href="https://github.com/ramirez-ai-labs/latino-canon/blob/main/ROADMAP.md"
+                  href="https://github.com/ramirez-ai-labs/latino-canon/blob/main/docs/ROADMAP.md"
                   style={{ color: "var(--accent)" }}
                 >
                   ROADMAP.md
