@@ -287,7 +287,7 @@ canon hasn't been run yet.
 
 ## Status
 
-See [ROADMAP.md](ROADMAP.md) for the design philosophy behind what's built vs. what's
+See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind what's built vs. what's
 next, and a prioritized backlog.
 
 The ingest resolve → fetch → normalize → persist → classify → embed → blurb path
@@ -317,9 +317,10 @@ calling Workers AI directly.
 ## Documentation
 
 **Primary reference:**
-- [ROADMAP.md](ROADMAP.md) — design philosophy, backlog, ongoing work
-- [CRITERIA.md](apps/ingest/src/seed/CRITERIA.md) — Latino-focused inclusion rules (the actual policy)
-- [INGEST.md](INGEST.md) — detailed ingest pipeline walkthrough
+- [docs/ROADMAP.md](docs/ROADMAP.md) — design philosophy, backlog, ongoing work
+- [apps/ingest/src/seed/CRITERIA.md](apps/ingest/src/seed/CRITERIA.md) — Latino-focused inclusion rules (the actual policy)
+- [docs/INGEST.md](docs/INGEST.md) — detailed ingest pipeline walkthrough
+- [docs/ADULT_CONTENT_POLICY.md](docs/ADULT_CONTENT_POLICY.md) — content moderation policy
 - [.github/WORKFLOWS.md](.github/WORKFLOWS.md) — GitHub Actions organization and trigger conditions
 - [infra/README.md](infra/README.md) — resource creation, secrets, deployment
 
