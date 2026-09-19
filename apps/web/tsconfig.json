@@ -28,10 +28,12 @@
       ]
     },
     "allowJs": true,
-    "incremental": true
+    "incremental": true,
+    "skipLibCheck": true
   },
   "include": [
     "src",
+    "src/**/*.d.ts",
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "*.ts"
