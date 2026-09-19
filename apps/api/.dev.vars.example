@@ -1,0 +1,8 @@
+# Copy to apps/api/.dev.vars (gitignored) and fill in real values.
+# wrangler dev loads this file automatically; never commit the filled-in version.
+
+# Optional: override cache TTL for development (seconds)
+# SEARCH_CACHE_TTL_SECONDS=300
+
+# Optional: for local testing with migrations
+# TEST_MIGRATIONS=true

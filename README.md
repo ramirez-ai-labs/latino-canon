@@ -110,7 +110,8 @@ infra/
 ```bash
 pnpm install
 cp apps/ingest/.dev.vars.example apps/ingest/.dev.vars   # fill TMDB_API_KEY, OMDB_API_KEY
-cp apps/api/.dev.vars.example apps/api/.dev.vars
+cp apps/api/.dev.vars.example apps/api/.dev.vars         # optional: local development overrides
+cp apps/web/.dev.vars.example apps/web/.dev.vars         # optional: local development overrides
 ```
 
 `TMDB_API_KEY` (free, [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api)) and
@@ -310,3 +311,17 @@ workaround), and `refreshPopularity` is a no-op. `apps/api/src/ai/classify.ts` a
 `blurb.ts` (plus the `LlmClient` provider abstraction under them) are unused
 dead code — the real classify/blurb calls live in `apps/ingest/src/ai.ts` instead,
 calling Workers AI directly.
+
+---
+
+## Documentation
+
+**Primary reference:**
+- [ROADMAP.md](ROADMAP.md) — design philosophy, backlog, ongoing work
+- [CRITERIA.md](apps/ingest/src/seed/CRITERIA.md) — Latino-focused inclusion rules (the actual policy)
+- [INGEST.md](INGEST.md) — detailed ingest pipeline walkthrough
+- [.github/WORKFLOWS.md](.github/WORKFLOWS.md) — GitHub Actions organization and trigger conditions
+- [infra/README.md](infra/README.md) — resource creation, secrets, deployment
+
+**Archived development logs:**
+For detailed Phase documentation, see [docs/archive/phases/](docs/archive/phases/). These documents track the evolution and specific decisions made during development but are not needed for ongoing work.
