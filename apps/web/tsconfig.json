@@ -28,6 +28,7 @@
       ]
     },
     "allowJs": true,
+    "allowSyntheticDefaultImports": true,
     "incremental": true
   },
   "include": [
