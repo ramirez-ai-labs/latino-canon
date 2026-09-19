@@ -18,7 +18,7 @@ importers:
         specifier: ^4.19.2
         version: 4.23.13
       turbo:
-        specifier: ^2.10.13
+        specifier: ^2.3.3
         version: 2.10.13
       typescript:
         specifier: ^7.0.2
@@ -117,7 +117,7 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
       wrangler:
-        specifier: ^4.132.0
+        specifier: ^4.20.0
         version: 4.132.0(@cloudflare/workers-types@4.20260702.1)(@types/node@22.20.2)
 
   packages/core:
