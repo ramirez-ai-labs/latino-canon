@@ -43,22 +43,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Enumerate title ids with a stored blurb
-        id: ids
-        working-directory: apps/api
-        run: |
-          npx wrangler d1 execute latino-canon --remote --json \
-            --command "SELECT id FROM titles WHERE id IN (SELECT title_id FROM blurbs);" \
-            > /tmp/blurb-ids.json
-          node -e '
-            const data = require("/tmp/blurb-ids.json");
-            const ids = data[0].results.map(r => r.id);
-            require("fs").writeFileSync("/tmp/ids.txt", ids.join(" "));
-            console.log(`found ${ids.length} titles with a stored blurb`);
-          '
-
       - name: Run groundedness eval
-        run: pnpm --filter @latino-canon/eval run groundedness $(cat /tmp/ids.txt)
+        run: pnpm --filter @latino-canon/eval run groundedness
 
       # A prior run finished clean (187/187, mean 0.512) yet the artifact upload
       # step still warned "No files were found with the provided path:
