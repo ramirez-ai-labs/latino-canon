@@ -1,6 +1,5 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import("next").NextConfig} */
+const nextConfig = {
   images: {
     // Posters are served from our R2 bucket via the api worker.
     remotePatterns: [{ protocol: "https", hostname: "*.workers.dev" }],
