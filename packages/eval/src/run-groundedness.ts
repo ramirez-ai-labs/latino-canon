@@ -2,12 +2,16 @@
  * Blurb groundedness eval: for each stored blurb, ask an LLM judge whether every
  * claim is supported by the blurb's sources. Reports mean score + the worst offenders.
  *
- *   API_URL=... CF_ACCOUNT_ID=... CLOUDFLARE_API_TOKEN=... pnpm eval:groundedness <titleId> [titleId ...]
+ * Usage (enumerate all titles with blurbs):
+ *   API_URL=http://localhost:8787 CF_ACCOUNT_ID=... CLOUDFLARE_API_TOKEN=... pnpm eval:groundedness
  *
- * Uses the api's /titles endpoint to pull blurb + sources. The judge call goes to
- * Workers AI's REST API directly (this script runs standalone via tsx, outside a
- * Worker, so there's no `env.AI` binding to use) - Workers AI only, by design, no
- * closed-model provider in this project.
+ * Or specify title IDs manually:
+ *   API_URL=http://localhost:8787 CF_ACCOUNT_ID=... CLOUDFLARE_API_TOKEN=... pnpm eval:groundedness <titleId> [titleId ...]
+ *
+ * Uses the API's /titles endpoint to pull blurb + sources (with ?hasBlurb=1 to enumerate).
+ * The judge call goes to Workers AI's REST API directly (this script runs standalone via tsx,
+ * outside a Worker, so there's no `env.AI` binding to use) - Workers AI only, by design,
+ * no closed-model provider in this project.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { coerceLlmText, extractJson, GROUNDEDNESS_JUDGE_SYSTEM, MODELS } from "@latino-canon/core";
@@ -49,11 +53,28 @@ async function judge(blurb: string, sources: { id: string; text: string }[]): Pr
 }
 
 async function main() {
-  // TODO: add GET /titles?hasBlurb=1 to the api to enumerate; for now read ids from argv.
-  const titleIds = process.argv.slice(2);
+  let titleIds = process.argv.slice(2);
+
+  // If no title IDs provided, enumerate from API
   if (titleIds.length === 0) {
-    console.log("usage: pnpm eval:groundedness <titleId> [titleId ...]");
-    process.exit(1);
+    console.log("Enumerating titles with approved blurbs from API...");
+    try {
+      const r = await fetch(`${API_URL}/titles?hasBlurb=1&limit=10000`);
+      if (!r.ok) throw new Error(`GET /titles failed: ${r.status}`);
+      const data = (await r.json()) as { titleIds: string[]; count: number };
+      titleIds = data.titleIds;
+      console.log(`Found ${data.count} titles with approved blurbs`);
+      if (titleIds.length === 0) {
+        console.log("No titles with approved blurbs found. Nothing to evaluate.");
+        process.exit(0);
+      }
+    } catch (e) {
+      console.error(`Failed to enumerate titles from ${API_URL}:`);
+      console.error(e instanceof Error ? e.message : String(e));
+      console.log(`usage: pnpm eval:groundedness [<titleId> ...]`);
+      console.log(`  or set API_URL to enumerate automatically from API`);
+      process.exit(1);
+    }
   }
 
   const results: JudgeResult[] = [];
