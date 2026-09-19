@@ -1,0 +1,8 @@
+# Copy to apps/web/.dev.vars (gitignored) and fill in real values.
+# For local development with wrangler types / Cloudflare integration.
+
+# Optional: enable local-only development mode (bypasses remote API)
+# LOCAL_DEV=1
+
+# Optional: override API URL for development (default: http://localhost:8787)
+# NEXT_PUBLIC_API_URL=http://localhost:8787
