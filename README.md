@@ -286,7 +286,7 @@ canon hasn't been run yet.
 
 ## Status
 
-See [ROADMAP.md](ROADMAP.md) for the design philosophy behind what's built vs. what's
+See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind what's built vs. what's
 next, and a prioritized backlog.
 
 The ingest resolve → fetch → normalize → persist → classify → embed → blurb path
@@ -310,3 +310,18 @@ workaround), and `refreshPopularity` is a no-op. `apps/api/src/ai/classify.ts` a
 `blurb.ts` (plus the `LlmClient` provider abstraction under them) are unused
 dead code — the real classify/blurb calls live in `apps/ingest/src/ai.ts` instead,
 calling Workers AI directly.
+
+---
+
+## Documentation
+
+**Primary reference:**
+- [docs/ROADMAP.md](docs/ROADMAP.md) — design philosophy, backlog, ongoing work
+- [apps/ingest/src/seed/CRITERIA.md](apps/ingest/src/seed/CRITERIA.md) — Latino-focused inclusion rules (the actual policy)
+- [docs/INGEST.md](docs/INGEST.md) — detailed ingest pipeline walkthrough
+- [docs/ADULT_CONTENT_POLICY.md](docs/ADULT_CONTENT_POLICY.md) — content moderation policy
+- [.github/WORKFLOWS.md](.github/WORKFLOWS.md) — GitHub Actions organization and trigger conditions
+- [infra/README.md](infra/README.md) — resource creation, secrets, deployment
+
+**Archived development logs:**
+For detailed Phase documentation, see [docs/archive/phases/](docs/archive/phases/). These documents track the evolution and specific decisions made during development but are not needed for ongoing work.
