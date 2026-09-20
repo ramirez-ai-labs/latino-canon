@@ -13,3 +13,50 @@
 {"id": "q13", "query": "Pinochet coup childhood friendship", "relevant": ["machuca-2004"], "note": "historical context, Chilean"}
 {"id": "q14", "query": "breakthrough first Latina lead network drama", "relevant": ["jane-the-virgin-2014", "vida-2018"], "note": "inclusion_type=breakthrough filter"}
 {"id": "q15", "query": "undocumented gardener Los Angeles father", "relevant": ["a-better-life-2011"], "note": "plot description"}
+{"id": "q16", "query": "narco drama limited series produced by its own star", "relevant": ["griselda-2024"], "note": "inclusion_type=produced_by + starring; recently added title"}
+{"id": "q17", "query": "two Chicana sisters inherit their mother's East LA bar", "relevant": ["vida-2018"], "note": "plot description, queer_latino + breakthrough"}
+{"id": "q18", "query": "family taco shop cousins fight gentrification Boyle Heights", "relevant": ["gentefied-2020"], "note": "plot; distinct phrasing from q08's broader gentrification cluster"}
+{"id": "q19", "query": "seven thousand dollar budget mistaken identity mariachi guitar case gun", "relevant": ["el-mariachi-1993"], "note": "famous production trivia; disambiguation vs Desperado (q20), same character/director"}
+{"id": "q20", "query": "Antonio Banderas Salma Hayek guitar case revenge bigger budget sequel", "relevant": ["desperado-1995"], "note": "disambiguation vs El Mariachi (q19) - same character, later studio remake"}
+{"id": "q21", "query": "Robert Rodriguez Mexico trilogy finale Johnny Depp CIA agent", "relevant": ["once-upon-a-time-in-mexico-2003"], "note": "disambiguation vs q19/q20 - third film in the same trilogy"}
+{"id": "q22", "query": "ex-Federale turned vigilante grindhouse revenge", "relevant": ["machete-2010"], "note": "plot description"}
+{"id": "q23", "query": "Colombian family magical house each member has a gift", "relevant": ["encanto-2021"], "note": "semantic; no shared keywords with title, very well-known film"}
+{"id": "q24", "query": "Lin-Manuel Miranda animated kinkajou Havana to Miami journey", "relevant": ["vivo-2021"], "note": "plot + person"}
+{"id": "q25", "query": "Day of the Dead animated bullfighter torn between two loves", "relevant": ["the-book-of-life-2014"], "note": "deliberate near-miss test alongside q09 (Coco) - both Day of the Dead animated films in catalog"}
+{"id": "q26", "query": "magical realism cooking recipes forbidden love Mexican Revolution", "relevant": ["like-water-for-chocolate-1992"], "note": "plot, semantic"}
+{"id": "q27", "query": "anthology six revenge short stories Argentina", "relevant": ["wild-tales-2014"], "note": "plot, genre"}
+{"id": "q28", "query": "poet fugitive pursued by a detective across Chile", "relevant": ["neruda-2016"], "note": "plot + person (Neruda)"}
+{"id": "q29", "query": "prosecutors put the military junta on trial courtroom Argentina", "relevant": ["argentina-1985-2022"], "note": "plot, historical (Trial of the Juntas)"}
+{"id": "q30", "query": "unsolved decades-old murder retired investigator writes a novel about it", "relevant": ["the-secret-in-their-eyes-2009"], "note": "plot"}
+{"id": "q31", "query": "orphan boy letter writer bus journey to find his father Brazil", "relevant": ["central-station-1998"], "note": "plot"}
+{"id": "q32", "query": "Amazon shaman guides two explorers decades apart black and white", "relevant": ["embrace-of-the-serpent-2015"], "note": "plot"}
+{"id": "q33", "query": "Guatemalan volcano Kaqchikel coffee plantation indigenous family", "relevant": ["ixcanul-2015"], "note": "plot + indigenous theme"}
+{"id": "q34", "query": "teacher discovers her adopted daughter may be a child of the disappeared", "relevant": ["the-official-story-1985"], "note": "plot, historical (Argentina's Dirty War)"}
+{"id": "q35", "query": "intersex teenager coming of age Uruguay coast", "relevant": ["xxy-2007"], "note": "plot"}
+{"id": "q36", "query": "gay intellectual and communist student friendship Havana ice cream", "relevant": ["strawberry-and-chocolate-1993"], "note": "plot, queer_latino"}
+{"id": "q37", "query": "trans woman navigates grief after her older boyfriend's sudden death", "relevant": ["a-fantastic-woman-2017"], "note": "plot, queer_latino"}
+{"id": "q38", "query": "closeted fisherman haunted by his drowned lover's ghost Peru", "relevant": ["undertow-2009"], "note": "plot, queer_latino"}
+{"id": "q39", "query": "brothel owner's effeminate son rural Mexico", "relevant": ["the-place-without-limits-1978"], "note": "plot, queer_latino"}
+{"id": "q40", "query": "two teenage girls next door falling for each other East LA", "relevant": ["mosquita-y-mari-2012"], "note": "plot, queer_latino; distinct phrasing from q08/q10 cluster"}
+{"id": "q41", "query": "ex-con father and his closeted gay son San Francisco lowrider culture", "relevant": ["la-mission-2009"], "note": "plot, queer_latino"}
+{"id": "q42", "query": "kids discover their parents are secret agents family action comedy", "relevant": ["spy-kids-2001"], "note": "plot, family genre"}
+{"id": "q43", "query": "single father comedy raises his daughter alone after being abandoned", "relevant": ["instructions-not-included-2013"], "note": "plot"}
+{"id": "q44", "query": "zinc miners strike wives take over the picket line blacklisted film", "relevant": ["salt-of-the-earth-1954"], "note": "plot, labor theme, historical (blacklist era)"}
+{"id": "q45", "query": "East LA gang leader's rise in prison Mexican Mafia origin story", "relevant": ["american-me-1992"], "note": "plot"}
+{"id": "q46", "query": "American citizen mistakenly deported to Mexico comedy", "relevant": ["born-in-east-la-1987"], "note": "plot"}
+{"id": "q47", "query": "Ritchie Valens rock and roll biopic ends in a plane crash", "relevant": ["la-bamba-1987"], "note": "plot, music"}
+{"id": "q48", "query": "1940s Los Angeles pachuco riots stage musical", "relevant": ["zoot-suit-1981"], "note": "plot, historical, music"}
+{"id": "q49", "query": "Alfonso Cuaron black and white memoir of a childhood housekeeper", "relevant": ["roma-2018"], "note": "plot + person (director)"}
+{"id": "q50", "query": "Alejandro Gonzalez Inarritu directorial debut three stories car crash dogs", "relevant": ["amores-perros-2000"], "note": "plot + person (director)"}
+{"id": "q51", "query": "Rio favela crime saga spanning three decades", "relevant": ["city-of-god-2002"], "note": "plot"}
+{"id": "q52", "query": "Guillermo del Toro fascist Spain fairy tale girl", "relevant": ["pans-labyrinth-2006"], "note": "plot + person (director)"}
+{"id": "q53", "query": "Salma Hayek plays the painter Frida Kahlo", "relevant": ["frida-2002"], "note": "plot + person (actor)"}
+{"id": "q54", "query": "Spanish heist crew red jumpsuits Dali masks", "relevant": ["money-heist-2017"], "note": "plot, genre, globally famous show"}
+{"id": "q55", "query": "young boy glasses dreams of astronauts 1960s Buenos Aires", "relevant": ["valentin-2002"], "note": "plot, semantic; disambiguation vs valentina-2020/valentina-2025 (same first name, unrelated stories)"}
+{"id": "q56", "query": "Selena Quintanilla biographical drama series two seasons", "relevant": ["selena-the-series-2020"], "note": "disambiguation vs the 1997 film (q02) - same subject, different kind"}
+{"id": "q57", "query": "Salvadoran archbishop assassinated civil war activist priest", "relevant": ["romero-1989"], "note": "plot, faith + activism, historical"}
+{"id": "q58", "query": "live-in housekeeper's psychological unraveling wealthy family Chile", "relevant": ["the-maid-2009"], "note": "plot, labor theme"}
+{"id": "q59", "query": "surrealist alchemist and a thief seek immortality on a mountain", "relevant": ["the-holy-mountain-1973"], "note": "plot, faith theme, cult classic"}
+{"id": "q60", "query": "Mennonite community northern Mexico marital infidelity miracle ending", "relevant": ["silent-light-2007"], "note": "plot, faith theme"}
+{"id": "q61", "query": "documentary about water indigenous Patagonia political disappearances", "relevant": ["the-pearl-button-2015"], "note": "plot, indigenous theme, documentary"}
+{"id": "q62", "query": "stand-up comedy special about being Latino in America", "relevant": ["cristela-alonzo-lower-classy-2017", "cristela-alonzo-upper-classy-2025", "john-leguizamos-latin-history-for-morons-2018", "marcello-hernandez-american-boy-2026", "george-lopez-well-do-it-for-half-2020"], "note": "kind=special + identity theme cluster; tests filter behavior at scale"}
