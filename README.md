@@ -266,24 +266,51 @@ by accident.
 
 ## Evaluation results
 
-`pnpm eval:retrieval` run for real against the deployed `api` worker, all 16 seed
-titles ingested through the live Workflow (real TMDB/OMDb data, real `bge-m3`
-embeddings, real classify/blurb output) — not a fixture:
+*(Last refreshed 2026-09-20, against the live catalog of 219 titles. See below for
+what changed since the original 16-title numbers — the scores moved, and the reason
+why is itself part of the story.)*
+
+`pnpm eval:retrieval` run for real against the deployed `api` worker, all 219 titles
+ingested through the live Workflow (real TMDB/OMDb data, real `bge-m3` embeddings,
+real classify/blurb output) — not a fixture, and now a 62-query golden set
+(`packages/eval/src/datasets/queries.jsonl`, grown from the original 15):
 
 | mode | recall@5 | recall@10 | P@5 | MRR | nDCG@10 |
 |---|---|---|---|---|---|
-| lexical | 0.856 | 0.878 | 0.227 | 0.706 | 0.737 |
-| semantic | 0.889 | 0.944 | 0.240 | 0.897 | 0.885 |
-| **hybrid** | **0.889** | **0.967** | 0.240 | 0.839 | 0.864 |
+| lexical | 0.808 | 0.832 | 0.174 | 0.721 | 0.740 |
+| semantic | 0.768 | 0.833 | 0.171 | 0.758 | 0.766 |
+| **hybrid** | **0.816** | **0.856** | 0.177 | 0.773 | 0.782 |
 
-All 15 golden queries (`packages/eval/src/datasets/queries.jsonl`) hit in hybrid's
-top 5. Honest caveats: it's a 16-title catalog and a 15-query golden set — real
-signal, not yet enough to responsibly tune `hybrid.ts`'s fixed `[1, 1]` RRF weights
-or `semantic.ts`'s `MIN_SEMANTIC_SCORE` floor against; both are still hand-picked
-heuristics pending a larger golden set. `pnpm eval:groundedness` (LLM-as-judge over
-generated blurbs) is implemented but still takes title ids as manual CLI args rather
-than enumerating the catalog itself — a real groundedness number for the whole
-canon hasn't been run yet.
+**This is honestly lower than the numbers this section used to show** (hybrid
+recall@5 was 0.889, recall@10 was 0.967) — and that's not a regression, it's the
+eval catching up to reality. Those numbers were measured against the original
+16-title catalog and 15-query set; re-running the *same* 15 queries against today's
+219-title catalog alone drops hybrid recall@5 to 0.744, because there's now real
+room for a plausible-but-wrong title to outrank the true match. A 16-title corpus is
+an easy test. A 219-title one is a real one.
+
+`hybrid.ts`'s RRF weights are tuned against the 62-query set — `[2, 1]` (favor
+lexical), found by replaying the golden set offline against the live API's raw
+per-retriever rank order rather than redeploying repeatedly to sweep. It's a clean
+win over the previous `[1, 1]`: better recall@5/MRR/nDCG@10, recall@10 unchanged,
+zero newly-broken queries. `semantic.ts`'s `MIN_SEMANTIC_SCORE` was tested at a
+stricter 0.45 (better recall@5, worse recall@10 — a real trade-off, not a clean win)
+and deliberately left at 0.35, since this project's discovery-oriented use case
+weighs recall@10 higher. 10 of 62 queries still miss in hybrid's top 5 — one is a
+genuine query-interpretation bug (a decade mentioned in the query gets read as a hard
+filter on release year, not story setting — see `docs/ROADMAP.md` item #16), the
+rest are real ranking misses to keep tuning against as the golden set grows further.
+
+`pnpm eval:groundedness` (LLM-as-judge over generated blurbs) has now actually been
+run against the whole canon: **mean score 0.486 across all 216 blurbs, 0 failures.**
+Getting a real number required fixing a real bug first: every blurb in the catalog
+was sitting at `approved: false` — a `writeBlurb` upsert was unconditionally
+resetting a blurb's approval on *any* re-ingest of that title, even an unrelated
+metadata fix, which meant the live site was showing zero editorial blurbs to real
+users despite them existing in the database. Fixed (approval now only resets when
+the blurb's actual text/sources change) and the existing backlog was reviewed and
+approved. 0.486 is a moderate score, not a high one — an honest one, and the
+starting point for the next round of blurb-quality work, not a number to hide.
 
 ## Status
 
