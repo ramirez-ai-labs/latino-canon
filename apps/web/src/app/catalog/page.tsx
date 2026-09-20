@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { TitleCard } from "@/components/TitleCard";
 import { SearchFilters } from "@/components/SearchFilters";
+import { buttonVariants } from "@/components/ui/button";
 import { search } from "@/lib/api";
 import Link from "next/link";
 
@@ -34,30 +35,28 @@ export default async function CatalogPage({
 
   return (
     <>
-      <h1 style={{ marginBottom: "0.5rem" }}>Full Catalog</h1>
-      <p style={{ color: "var(--muted)", fontSize: "0.85rem", margin: "0 0 1.5rem" }}>
-        All titles in the canon · Page {page}
-      </p>
+      <h1 className="mb-1 text-2xl font-bold tracking-tight">Full Catalog</h1>
+      <p className="mb-6 text-sm text-muted">All titles in the canon · Page {page}</p>
 
       <Suspense>
         <SearchFilters />
       </Suspense>
 
-      <div className="card-grid">
+      <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {results.map((t) => (
           <TitleCard key={t.id} title={t} />
         ))}
       </div>
 
-      <div style={{ display: "flex", gap: "1rem", justifyContent: "center", alignItems: "center", margin: "2rem 0" }}>
+      <div className="my-10 flex items-center justify-center gap-4">
         {hasPrev && (
-          <Link href={`/catalog?page=${page - 1}`} style={{ padding: "0.5rem 1rem", background: "var(--surface)", borderRadius: 6 }}>
+          <Link href={`/catalog?page=${page - 1}`} className={buttonVariants({ variant: "secondary" })}>
             ← Previous
           </Link>
         )}
-        <span style={{ color: "var(--muted)", fontSize: "0.9rem" }}>Page {page}</span>
+        <span className="text-sm text-muted">Page {page}</span>
         {hasNext && (
-          <Link href={`/catalog?page=${page + 1}`} style={{ padding: "0.5rem 1rem", background: "var(--surface)", borderRadius: 6 }}>
+          <Link href={`/catalog?page=${page + 1}`} className={buttonVariants({ variant: "secondary" })}>
             Next →
           </Link>
         )}

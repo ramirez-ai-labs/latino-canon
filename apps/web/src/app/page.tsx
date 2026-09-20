@@ -2,60 +2,68 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { TitleCard } from "@/components/TitleCard";
-import { listCollections, search } from "@/lib/api";
+import { Rail, RailItem } from "@/components/ui/Rail";
+import { buttonVariants } from "@/components/ui/button";
+import { getCollection, listCollections } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  // Landing feed = popularity browse (empty query).
-  const [featured, collections] = await Promise.all([
-    search({ limit: 12 }),
-    listCollections().then((r) => r.collections).catch(() => []),
-  ]);
+  const { collections } = await listCollections().catch(() => ({ collections: [] }));
+  const rails = await Promise.all(
+    collections.map((c) => getCollection(c.slug).catch(() => null)),
+  );
 
   return (
-    <>
-      <section style={{ textAlign: "center", padding: "2rem 0 0" }}>
-        <h1 style={{ fontSize: "1.8rem", margin: 0 }}>The Latino film canon, searchable.</h1>
-        <p style={{ color: "var(--muted)" }}>
-          Search by plot, theme, era, or filmmaker — in English or Spanish.
-        </p>
-        <Suspense>
-          <SearchBar />
-        </Suspense>
-      </section>
-
-      <section id="collections" style={{ margin: "2rem 0" }}>
-        <h2>Collections</h2>
-        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-          {collections.map((c) => (
-            <Link
-              key={c.slug}
-              href={`/collections/${c.slug}`}
-              style={{ padding: "1rem 1.25rem", background: "var(--surface)", borderRadius: 8, minWidth: 180 }}
-            >
-              <strong>{c.title}</strong>
-              <div style={{ color: "var(--muted)", fontSize: "0.82rem" }}>{c.description}</div>
-            </Link>
-          ))}
-          <Link
-            href="/catalog"
-            style={{ padding: "1rem 1.25rem", background: "var(--surface)", borderRadius: 8, minWidth: 180 }}
-          >
-            <strong>Browse All</strong>
-            <div style={{ color: "var(--muted)", fontSize: "0.82rem" }}>Full paginated catalog</div>
-          </Link>
+    <div className="flex flex-col gap-14">
+      <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-b from-surface to-bg px-6 py-16 text-center sm:px-12">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--color-accent-muted),_transparent_60%)]"
+        />
+        <div className="relative mx-auto max-w-2xl">
+          <h1 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">
+            The Latino film canon, <span className="text-accent">searchable.</span>
+          </h1>
+          <p className="mx-auto mt-3 max-w-md text-balance text-muted">
+            Search by plot, theme, era, or filmmaker — in English or Spanish.
+          </p>
+          <div className="mt-6">
+            <Suspense>
+              <SearchBar />
+            </Suspense>
+          </div>
         </div>
       </section>
 
-      <section>
-        <h2>Featured</h2>
-        <div className="card-grid">
-          {featured.results.map((t) => (
-            <TitleCard key={t.id} title={t} />
-          ))}
-        </div>
-      </section>
-    </>
+      {rails
+        .filter((c) => c && c.items.length > 0)
+        .map((c) => (
+          <section key={c!.slug} id={c!.slug === "core-canon" ? "collections" : undefined}>
+            <div className="mb-3 flex items-end justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">{c!.title}</h2>
+                <p className="text-sm text-muted">{c!.description}</p>
+              </div>
+              <Link href={`/collections/${c!.slug}`} className="shrink-0 text-sm text-muted transition-colors hover:text-accent">
+                See all →
+              </Link>
+            </div>
+            <Rail>
+              {c!.items.map((t) => (
+                <RailItem key={t.id} className="w-[42vw] sm:w-[220px]">
+                  <TitleCard title={t} />
+                </RailItem>
+              ))}
+            </Rail>
+          </section>
+        ))}
+
+      <div className="text-center">
+        <Link href="/catalog" className={buttonVariants({ variant: "secondary", size: "lg" })}>
+          Browse the full catalog
+        </Link>
+      </div>
+    </div>
   );
 }

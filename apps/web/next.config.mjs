@@ -3,6 +3,10 @@ const nextConfig = {
   images: {
     // Posters are served from our R2 bucket via the api worker.
     remotePatterns: [{ protocol: "https", hostname: "*.workers.dev" }],
+    // OpenNext's Cloudflare adapter doesn't run Next's /_next/image resize proxy
+    // (that's Vercel-specific infra) - unoptimized still gets next/image's
+    // lazy-loading and layout-shift prevention without a broken optimizer endpoint.
+    unoptimized: true,
   },
   webpack(config) {
     config.resolve.extensionAlias = {

@@ -3,7 +3,9 @@ import Link from "next/link";
 import { SearchBar } from "@/components/SearchBar";
 import { SearchFilters } from "@/components/SearchFilters";
 import { TitleCard } from "@/components/TitleCard";
+import { buttonVariants } from "@/components/ui/button";
 import { search } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Explore" };
 export const dynamic = "force-dynamic";
@@ -35,55 +37,52 @@ export default async function SearchPage({
   const results = res.results.slice(0, PER_PAGE);
   const hasPrev = page > 1;
 
+  const pageHref = (p: number) =>
+    `/search?page=${p}${Object.entries(sp)
+      .filter(([k, v]) => k !== "page" && k !== "q" && v != null)
+      .map(([k, v]) => `&${k}=${encodeURIComponent(String(v))}`)
+      .join("")}`;
+
   return (
     <>
       <Suspense>
         <SearchBar autoFocus />
-        <SearchFilters />
+        <div className="mt-6">
+          <SearchFilters />
+        </div>
       </Suspense>
 
-      {res.interpretation && (
-        <p style={{ color: "var(--muted)", fontSize: "0.85rem" }}>
-          Interpreting as <code>{res.interpretation.cleanedQuery || "(browse)"}</code>
-          {Object.entries(res.interpretation.filters).length > 0 && (
-            <> · {Object.entries(res.interpretation.filters).map(([k, v]) => `${k}:${v}`).join(" · ")}</>
-          )}
-          <span style={{ opacity: 0.6 }}> ({res.interpretation.source})</span>
+      <div className="mb-5 flex flex-wrap items-center gap-x-2 text-sm text-muted">
+        {res.interpretation && (
+          <p>
+            Interpreting as <code className="rounded bg-surface-raised px-1.5 py-0.5 text-text">{res.interpretation.cleanedQuery || "(browse)"}</code>
+            {Object.entries(res.interpretation.filters).length > 0 && (
+              <> · {Object.entries(res.interpretation.filters).map(([k, v]) => `${k}:${v}`).join(" · ")}</>
+            )}
+            <span className="opacity-60"> ({res.interpretation.source})</span>
+          </p>
+        )}
+        <p>
+          {results.length} results · {res.mode} · {res.tookMs}ms {isBrowse && `· Page ${page}`}
         </p>
-      )}
+      </div>
 
-      <p style={{ color: "var(--muted)", fontSize: "0.85rem" }}>
-        {results.length} results · {res.mode} · {res.tookMs}ms {isBrowse && `· Page ${page}`}
-      </p>
-
-      <div className="card-grid">
+      <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {results.map((t) => (
           <TitleCard key={t.id} title={t} />
         ))}
       </div>
 
       {isBrowse && (
-        <div style={{ display: "flex", gap: "1rem", justifyContent: "center", alignItems: "center", margin: "2rem 0" }}>
+        <div className="my-10 flex items-center justify-center gap-4">
           {hasPrev && (
-            <Link
-              href={`/search?page=${page - 1}${Object.entries(sp)
-                .filter(([k, v]) => k !== "page" && k !== "q" && v != null)
-                .map(([k, v]) => `&${k}=${encodeURIComponent(String(v))}`)
-                .join("")}`}
-              style={{ padding: "0.5rem 1rem", background: "var(--surface)", borderRadius: 6 }}
-            >
+            <Link href={pageHref(page - 1)} className={buttonVariants({ variant: "secondary" })}>
               ← Previous
             </Link>
           )}
-          <span style={{ color: "var(--muted)", fontSize: "0.9rem" }}>Page {page}</span>
+          <span className={cn("text-sm text-muted", !hasPrev && !hasNext && "hidden")}>Page {page}</span>
           {hasNext && (
-            <Link
-              href={`/search?page=${page + 1}${Object.entries(sp)
-                .filter(([k, v]) => k !== "page" && k !== "q" && v != null)
-                .map(([k, v]) => `&${k}=${encodeURIComponent(String(v))}`)
-                .join("")}`}
-              style={{ padding: "0.5rem 1rem", background: "var(--surface)", borderRadius: 6 }}
-            >
+            <Link href={pageHref(page + 1)} className={buttonVariants({ variant: "secondary" })}>
               Next →
             </Link>
           )}

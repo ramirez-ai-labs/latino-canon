@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" width="400" height="600">
+  <rect width="400" height="600" fill="#1e1e23"/>
+  <g fill="none" stroke="#3a3a42" stroke-width="2.5">
+    <rect x="90" y="220" width="220" height="160" rx="10"/>
+    <circle cx="150" cy="270" r="16"/>
+    <path d="M90 350 L160 300 L220 340 L260 300 L310 350 L310 370 L90 370 Z" fill="#3a3a42" stroke="none"/>
+  </g>
+  <text x="200" y="440" font-family="system-ui, sans-serif" font-size="15" fill="#6b6b75" text-anchor="middle">No poster yet</text>
+</svg>

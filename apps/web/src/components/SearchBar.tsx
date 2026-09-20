@@ -1,5 +1,6 @@
 "use client";
 
+import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
@@ -19,25 +20,21 @@ export function SearchBar({ autoFocus = false }: { autoFocus?: boolean }) {
         else next.delete("q");
         router.push(`/search?${next.toString()}`);
       }}
-      style={{ display: "flex", gap: "0.5rem", margin: "2rem 0" }}
+      className="flex items-center gap-2 rounded-full border border-border bg-surface-raised px-4 py-1 shadow-card transition-colors focus-within:border-accent/60"
     >
+      <Search className="size-4 shrink-0 text-muted" aria-hidden />
       <input
         autoFocus={autoFocus}
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Try: Mexican family stories from the 90s"
         aria-label="Search Latino films and series"
-        style={{
-          flex: 1,
-          padding: "0.85rem 1.1rem",
-          borderRadius: 999,
-          border: "1px solid #33333a",
-          background: "#1c1c20",
-          color: "inherit",
-          fontSize: "1rem",
-        }}
+        className="w-full bg-transparent py-2.5 text-[0.95rem] text-text placeholder:text-muted focus:outline-none"
       />
-      <button type="submit" style={{ padding: "0 1.4rem", borderRadius: 999, border: 0, background: "var(--accent)", fontWeight: 600 }}>
+      <button
+        type="submit"
+        className="shrink-0 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-bg transition-colors hover:bg-accent/90"
+      >
         Search
       </button>
     </form>
