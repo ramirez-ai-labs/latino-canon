@@ -179,9 +179,19 @@ once this was confirmed working end-to-end.
    of "editorial significance should be able to outrank raw relevance, and an obscure
    title shouldn't disappear just because fewer people searched for it" — needs a
    larger golden query set first (see #6) to tune responsibly rather than guessing.
-6. **Grow the golden eval set past 15 queries** and re-tune `hybrid.ts`'s RRF weights
+6. ~~**Grow the golden eval set past 15 queries** and re-tune `hybrid.ts`'s RRF weights
    and `semantic.ts`'s `MIN_SEMANTIC_SCORE` floor against it — both are currently
-   hand-picked heuristics, explicitly commented as such in the code.
+   hand-picked heuristics, explicitly commented as such in the code.~~ **Done.** Grown
+   to 62 queries (`packages/eval/src/datasets/queries.jsonl`), each verified against
+   the live catalog before writing. `hybrid.ts`'s RRF weights retuned `[1,1]` →
+   `[2,1]` (favor lexical) — a clean win (better recall@5/MRR/nDCG@10, recall@10
+   unchanged, zero newly-broken queries), found by replaying the golden set offline
+   against the live API's raw per-retriever rank order rather than redeploying
+   repeatedly to sweep. `MIN_SEMANTIC_SCORE` tested at 0.45 but left at 0.35 — a real
+   recall@5-vs-recall@10 trade-off, not a clean win, documented in place. Still worth
+   growing further as the catalog grows past 219 titles — re-running the *original*
+   15 queries at current scale (recall@5 0.889→0.744) is what turned this from
+   optional into urgent; see the README's evaluation results section.
 7. **Netflix-style hero + carousel layout for collection/title pages.** Prompted by
    comparing our `TitleCard`/`/collections/[slug]` grid against an actual Netflix
    collection page: Netflix's card shows the full synopsis inline (not a truncated
@@ -268,6 +278,15 @@ deferred rather than bundled in:
     runs in a day, and the cap is shared with any other Workers AI usage on the same
     Cloudflare account. Worth either a lightweight neuron-spend tracker before a large
     batch, or just a standing discipline of checking current usage first.
+16. **Decade filter matches release year, not story setting — found via the golden-set
+    expansion above.** A query mentioning a decade the story is *set in* ("1940s Los
+    Angeles pachuco riots stage musical" → *Zoot Suit*, released 1981) gets that decade
+    extracted as a hard filter on `yearStart`, zeroing every result before ranking ever
+    runs — confirmed by re-running the same query without "1940s" and getting a correct
+    #1 hit. Not fixable by RRF/threshold tuning; the fix belongs in the query
+    interpretation layer, either by treating an extracted decade as a soft ranking boost
+    rather than a hard filter, or by not extracting one at all absent other release-year
+    signal.
 
 ## Deliberately deferred (Netflix's Stage 4, not needed yet)
 
