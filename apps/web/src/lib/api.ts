@@ -45,6 +45,7 @@ export function search(params: {
   theme?: string;
   decade?: number;
   kind?: string;
+  country?: string;
   inclusionType?: string;
   limit?: number;
   offset?: number;

@@ -27,6 +27,7 @@ export default async function SearchPage({
     mode: sp.mode ?? "hybrid",
     theme: sp.theme,
     kind: sp.kind,
+    country: sp.country,
     decade: sp.decade ? Number(sp.decade) : undefined,
     inclusionType: sp.inclusionType,
     limit: PER_PAGE + 1,

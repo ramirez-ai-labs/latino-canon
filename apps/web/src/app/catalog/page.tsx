@@ -25,6 +25,7 @@ export default async function CatalogPage({
     mode: "hybrid",
     theme: sp.theme,
     kind: sp.kind,
+    country: sp.country,
     decade: sp.decade ? Number(sp.decade) : undefined,
     inclusionType: sp.inclusionType,
   });
