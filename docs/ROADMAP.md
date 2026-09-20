@@ -64,14 +64,14 @@ These unlock presentation credibility and OSS legitimacy:
   - Set schedule to weekly, max 5 open PRs
   - Reduces manual dependency management
 
-- [ ] **Create docs/operations/monitoring.md** (120 min) — HIGHEST IMPACT
-  - **AI Gateway access**: How to read logs, cache hit rates, neuron budget
-  - **Cloudflare Analytics Engine**: Query patterns for error tracking, request patterns
-  - **Neuron budget tracking**: 10k/day limit, reset at midnight UTC, account-wide cap
-  - **Alert thresholds**: "Page on" rules for outages or quota exhaustion
-  - **Incident response runbook**: What to do if search degrades, workers AI down, D1 issues
-  - **Performance SLAs**: Latency targets, cache hit rate goals, uptime targets
-  - Reference: neuron budget incident from Sept 2026 (11.18k burn story in README)
+- [x] **Create docs/operations/monitoring.md** — **Done.** Built around three real
+  incidents rather than written generically: the blurb-approval silent-reset bug
+  (#138), the stuck-jobs-behind-a-non-functional-retry pattern (#143/#144), and the
+  Sept 2026 neuron budget burn (11.18k/10k, already in README). Covers AI Gateway
+  access, neuron budget tracking, an incident response runbook, and informal
+  performance targets. Explicitly documents what's *not* there yet (no Analytics
+  Engine, no real alerting, no uptime monitoring) rather than implying more
+  observability exists than actually does.
 
 ### Week 2: Robustness (9 hours) — Recommended
 
