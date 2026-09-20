@@ -134,10 +134,22 @@ export async function writeTags(
 }
 
 export async function writeBlurb(env: Env, titleId: string, blurb: BlurbGroundingResult): Promise<void> {
+  // Re-ingesting a title (e.g. a metadata fix unrelated to the blurb) must not silently
+  // discard an editor's prior approval - only reset it when the text or its grounding
+  // sources actually changed. Found the hard way: every re-ingest was resetting
+  // approved -> 0 unconditionally, which combined with a run of metadata-fix PRs wiped
+  // out the whole catalog's approval state without anyone noticing.
   await env.DB.prepare(
     `INSERT INTO blurbs (title_id, text, sources, model, approved)
      VALUES (?1, ?2, ?3, ?4, 0)
-     ON CONFLICT(title_id) DO UPDATE SET text=excluded.text, sources=excluded.sources, model=excluded.model, approved=0`,
+     ON CONFLICT(title_id) DO UPDATE SET
+       text=excluded.text,
+       sources=excluded.sources,
+       model=excluded.model,
+       approved = CASE
+         WHEN blurbs.text = excluded.text AND blurbs.sources = excluded.sources THEN blurbs.approved
+         ELSE 0
+       END`,
   )
     .bind(titleId, blurb.result.text, JSON.stringify(blurb.sources), blurb.model)
     .run();
