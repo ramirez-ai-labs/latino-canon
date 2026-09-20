@@ -277,9 +277,9 @@ real classify/blurb output) — not a fixture, and now a 62-query golden set
 
 | mode | recall@5 | recall@10 | P@5 | MRR | nDCG@10 |
 |---|---|---|---|---|---|
-| lexical | 0.808 | 0.832 | 0.174 | 0.721 | 0.740 |
-| semantic | 0.768 | 0.833 | 0.171 | 0.758 | 0.766 |
-| **hybrid** | **0.816** | **0.856** | 0.177 | 0.773 | 0.782 |
+| lexical | 0.824 | 0.848 | 0.177 | 0.737 | 0.756 |
+| semantic | 0.784 | 0.849 | 0.174 | 0.774 | 0.782 |
+| **hybrid** | **0.832** | **0.872** | 0.181 | 0.789 | 0.799 |
 
 **This is honestly lower than the numbers this section used to show** (hybrid
 recall@5 was 0.889, recall@10 was 0.967) — and that's not a regression, it's the
@@ -296,10 +296,13 @@ win over the previous `[1, 1]`: better recall@5/MRR/nDCG@10, recall@10 unchanged
 zero newly-broken queries. `semantic.ts`'s `MIN_SEMANTIC_SCORE` was tested at a
 stricter 0.45 (better recall@5, worse recall@10 — a real trade-off, not a clean win)
 and deliberately left at 0.35, since this project's discovery-oriented use case
-weighs recall@10 higher. 10 of 62 queries still miss in hybrid's top 5 — one is a
-genuine query-interpretation bug (a decade mentioned in the query gets read as a hard
-filter on release year, not story setting — see `docs/ROADMAP.md` item #16), the
-rest are real ranking misses to keep tuning against as the golden set grows further.
+weighs recall@10 higher. A separate bug also found via the golden set — a decade
+mentioned in the query ("1940s Los Angeles pachuco riots stage musical") was read as
+a hard filter on release year rather than story setting, zeroing every result for a
+film released in 1981 but set in the 1940s — is fixed: an inferred filter (not one
+the caller explicitly asked for) is now retried without it when it zeroes results
+(`docs/ROADMAP.md` item #16). 9 of 62 queries still miss in hybrid's top 5 — real
+ranking misses to keep tuning against as the golden set grows further.
 
 `pnpm eval:groundedness` (LLM-as-judge over generated blurbs) has now actually been
 run against the whole canon: **mean score 0.486 across all 216 blurbs, 0 failures.**

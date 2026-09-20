@@ -278,15 +278,18 @@ deferred rather than bundled in:
     runs in a day, and the cap is shared with any other Workers AI usage on the same
     Cloudflare account. Worth either a lightweight neuron-spend tracker before a large
     batch, or just a standing discipline of checking current usage first.
-16. **Decade filter matches release year, not story setting — found via the golden-set
-    expansion above.** A query mentioning a decade the story is *set in* ("1940s Los
-    Angeles pachuco riots stage musical" → *Zoot Suit*, released 1981) gets that decade
-    extracted as a hard filter on `yearStart`, zeroing every result before ranking ever
-    runs — confirmed by re-running the same query without "1940s" and getting a correct
-    #1 hit. Not fixable by RRF/threshold tuning; the fix belongs in the query
-    interpretation layer, either by treating an extracted decade as a soft ranking boost
-    rather than a hard filter, or by not extracting one at all absent other release-year
-    signal.
+16. ~~**Decade filter matches release year, not story setting — found via the golden-set
+    expansion above.**~~ **Done.** A query mentioning a decade the story is *set in*
+    ("1940s Los Angeles pachuco riots stage musical" → *Zoot Suit*, released 1981) got
+    that decade extracted as a hard filter on `yearStart`, zeroing every result before
+    ranking ever ran. Rather than trying to reliably distinguish "story setting" from
+    "release year" in free text, `apps/api/src/routes/search.ts` now retries without a
+    filter if it came from free-text interpretation (not an explicit query param) and
+    produced zero results — the same "return something over nothing" logic `hybrid.ts`
+    already used for an empty browse query. Verified live: the query above now returns
+    *Zoot Suit* at #1. Re-running the full 62-query eval after this fix improved every
+    metric with zero new regressions (hybrid recall@5 0.816→0.832, recall@10
+    0.856→0.872).
 
 ## Deliberately deferred (Netflix's Stage 4, not needed yet)
 
