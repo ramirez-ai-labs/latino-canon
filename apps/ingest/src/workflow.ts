@@ -100,9 +100,17 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
       await step.do("write blurb (unapproved)", () => writeBlurb(this.env, title.id, blurb));
 
       // --- Route to human review when the model isn't confident ---------------
+      // A title with a seed-sourced inclusion_type doesn't need the model's own
+      // confidence to justify inclusion - that's the entire point of seed trust
+      // outranking model output (packages/core/src/taxonomy.ts). Found live: two
+      // titles with real seedInclusionTypes (El Chavo del 8, The Dead Girls) sat in
+      // needs_review indefinitely because this only ever looked at the model's raw
+      // classification, even after their seed tags were correctly written to
+      // title_tags with confidence 1.0 - the review queue disagreed with the data.
       const lowConfidence =
-        classification.inclusionTypes.length === 0 ||
-        classification.inclusionTypes.every((t) => t.confidence < MODEL_TAG_DISPLAY_THRESHOLD);
+        (p.seedInclusionTypes ?? []).length === 0 &&
+        (classification.inclusionTypes.length === 0 ||
+          classification.inclusionTypes.every((t) => t.confidence < MODEL_TAG_DISPLAY_THRESHOLD));
 
       await step.do("finalize job", () =>
         setJob(this.env, jobId, p.ref, "review", lowConfidence ? "needs_review" : "done"),
