@@ -1,5 +1,6 @@
 import type { EvalRun } from "@latino-canon/core";
 import { listEvalRuns } from "@/lib/api";
+import { Badge } from "@/components/ui/Badge";
 
 export const metadata = { title: "Eval" };
 export const dynamic = "force-dynamic";
@@ -22,66 +23,66 @@ export default async function EvalPage() {
   const details = latest?.details as GroundednessDetails | null;
 
   return (
-    <article style={{ maxWidth: 800 }}>
-      <h1 style={{ marginBottom: "0.5rem" }}>Eval History</h1>
-      <p style={{ color: "var(--muted)", fontSize: "0.85rem", margin: "0 0 1.5rem" }}>
-        Results from <code>packages/eval</code>&apos;s groundedness judge. This history only
+    <article className="max-w-3xl">
+      <h1 className="mb-1 text-2xl font-bold tracking-tight">Eval History</h1>
+      <p className="mb-6 text-sm text-muted">
+        Results from <code className="rounded bg-surface-raised px-1.5 py-0.5">packages/eval</code>&apos;s groundedness judge. This history only
         grows when someone manually triggers{" "}
-        <code>.github/workflows/eval-groundedness.yml</code> from GitHub Actions — it does
+        <code className="rounded bg-surface-raised px-1.5 py-0.5">.github/workflows/eval-groundedness.yml</code> from GitHub Actions — it does
         not run automatically on every PR or commit.
       </p>
 
       {runs.length === 0 ? (
-        <p style={{ color: "var(--muted)" }}>No eval runs recorded yet.</p>
+        <p className="text-muted">No eval runs recorded yet.</p>
       ) : (
         <>
-          <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "2rem" }}>
-            <thead>
-              <tr style={{ textAlign: "left", borderBottom: "1px solid var(--surface)" }}>
-                <th style={{ padding: "0.5rem" }}>Run</th>
-                <th style={{ padding: "0.5rem" }}>Type</th>
-                <th style={{ padding: "0.5rem" }}>n</th>
-                <th style={{ padding: "0.5rem" }}>Failed</th>
-                <th style={{ padding: "0.5rem" }}>Mean score</th>
-              </tr>
-            </thead>
-            <tbody>
-              {runs.map((r: EvalRun) => (
-                <tr key={r.id} style={{ borderBottom: "1px solid var(--surface)" }}>
-                  <td style={{ padding: "0.5rem" }}>{formatDate(r.runAt)}</td>
-                  <td style={{ padding: "0.5rem" }}>{r.evalType}</td>
-                  <td style={{ padding: "0.5rem" }}>{r.n}</td>
-                  <td style={{ padding: "0.5rem", color: r.failed > 0 ? "var(--accent)" : undefined }}>{r.failed}</td>
-                  <td style={{ padding: "0.5rem" }}>{r.meanScore?.toFixed(3) ?? "—"}</td>
+          <div className="mb-10 overflow-hidden rounded-xl border border-border">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-border bg-surface text-left text-muted">
+                  <th className="px-4 py-2.5 font-medium">Run</th>
+                  <th className="px-4 py-2.5 font-medium">Type</th>
+                  <th className="px-4 py-2.5 font-medium">n</th>
+                  <th className="px-4 py-2.5 font-medium">Failed</th>
+                  <th className="px-4 py-2.5 font-medium">Mean score</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {runs.map((r: EvalRun) => (
+                  <tr key={r.id} className="border-b border-border last:border-0 odd:bg-surface/40">
+                    <td className="px-4 py-2.5">{formatDate(r.runAt)}</td>
+                    <td className="px-4 py-2.5">{r.evalType}</td>
+                    <td className="px-4 py-2.5">{r.n}</td>
+                    <td className={`px-4 py-2.5 ${r.failed > 0 ? "text-accent" : ""}`}>{r.failed}</td>
+                    <td className="px-4 py-2.5 font-medium">{r.meanScore?.toFixed(3) ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {latest && details?.worst && details.worst.length > 0 && (
             <>
-              <h2 style={{ marginBottom: "0.5rem" }}>Lowest-scoring titles (latest run)</h2>
-              <p style={{ color: "var(--muted)", fontSize: "0.85rem", margin: "0 0 1rem" }}>
+              <h2 className="mb-1.5 text-lg font-semibold">Lowest-scoring titles (latest run)</h2>
+              <p className="mb-3 text-sm text-muted">
                 A low score usually flags a claim the judge couldn&apos;t match to a cited
                 source — not necessarily a factual error. See{" "}
                 <a
                   href="https://github.com/ramirez-ai-labs/latino-canon/blob/main/docs/ROADMAP.md"
-                  style={{ color: "var(--accent)" }}
+                  className="text-accent hover:underline"
                 >
                   ROADMAP.md
                 </a>{" "}
                 for the open question on separating factual claims from editorial framing.
               </p>
-              <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: "0.75rem" }}>
+              <ul className="grid gap-2.5">
                 {details.worst.slice(0, 15).map((w) => (
-                  <li key={w.titleId} style={{ background: "var(--surface)", borderRadius: 8, padding: "0.75rem 1rem" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <strong>{w.titleId}</strong>
-                      <span style={{ color: "var(--muted)" }}>{w.score.toFixed(2)}</span>
+                  <li key={w.titleId} className="rounded-lg bg-surface px-4 py-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <strong className="truncate text-[0.9rem]">{w.titleId}</strong>
+                      <Badge>{w.score.toFixed(2)}</Badge>
                     </div>
-                    <div style={{ color: "var(--muted)", fontSize: "0.85rem", marginTop: "0.25rem" }}>
-                      {w.unsupported.join(" · ")}
-                    </div>
+                    <div className="mt-1 text-sm text-muted">{w.unsupported.join(" · ")}</div>
                   </li>
                 ))}
               </ul>
@@ -90,12 +91,12 @@ export default async function EvalPage() {
 
           {latest && details?.failures && details.failures.length > 0 && (
             <>
-              <h2 style={{ margin: "2rem 0 0.5rem" }}>Failed judge calls (latest run)</h2>
-              <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: "0.5rem" }}>
+              <h2 className="mb-2 mt-8 text-lg font-semibold">Failed judge calls (latest run)</h2>
+              <ul className="grid gap-1.5">
                 {details.failures.map((f) => (
-                  <li key={f.titleId} style={{ fontSize: "0.85rem" }}>
+                  <li key={f.titleId} className="text-sm">
                     <strong>{f.titleId}</strong>
-                    <span style={{ color: "var(--muted)" }}> — {f.error}</span>
+                    <span className="text-muted"> — {f.error}</span>
                   </li>
                 ))}
               </ul>

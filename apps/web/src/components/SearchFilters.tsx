@@ -26,14 +26,8 @@ const KINDS: { value: TitleKind; label: string }[] = [
 
 const DECADES = [1980, 1990, 2000, 2010, 2020];
 
-const selectStyle: React.CSSProperties = {
-  padding: "0.5rem 0.7rem",
-  borderRadius: 8,
-  border: "1px solid #33333a",
-  background: "#1c1c20",
-  color: "inherit",
-  fontSize: "0.85rem",
-};
+const selectClass =
+  "rounded-lg border border-border bg-surface-raised px-3 py-1.5 text-[0.85rem] text-text transition-colors hover:border-muted focus:outline-none focus:ring-2 focus:ring-accent/50";
 
 /**
  * Exposes the same mode/kind/theme/decade/inclusionType filters the search API has
@@ -51,19 +45,12 @@ export function SearchFilters() {
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: "0.6rem",
-        margin: "0 0 1.5rem",
-      }}
-    >
+    <div className="mb-6 flex flex-wrap gap-2.5">
       <select
         aria-label="Search mode"
         value={params.get("mode") ?? "hybrid"}
         onChange={(e) => setParam("mode", e.target.value)}
-        style={selectStyle}
+        className={selectClass}
       >
         {MODES.map((m) => (
           <option key={m.value} value={m.value}>
@@ -76,7 +63,7 @@ export function SearchFilters() {
         aria-label="Kind"
         value={params.get("kind") ?? ""}
         onChange={(e) => setParam("kind", e.target.value)}
-        style={selectStyle}
+        className={selectClass}
       >
         <option value="">Film or series</option>
         {KINDS.map((k) => (
@@ -90,7 +77,7 @@ export function SearchFilters() {
         aria-label="Decade"
         value={params.get("decade") ?? ""}
         onChange={(e) => setParam("decade", e.target.value)}
-        style={selectStyle}
+        className={selectClass}
       >
         <option value="">Any decade</option>
         {DECADES.map((d) => (
@@ -104,7 +91,7 @@ export function SearchFilters() {
         aria-label="Theme"
         value={params.get("theme") ?? ""}
         onChange={(e) => setParam("theme", e.target.value)}
-        style={selectStyle}
+        className={selectClass}
       >
         <option value="">Any theme</option>
         {(THEMES as readonly Theme[]).map((t) => (
@@ -118,7 +105,7 @@ export function SearchFilters() {
         aria-label="Inclusion type"
         value={params.get("inclusionType") ?? ""}
         onChange={(e) => setParam("inclusionType", e.target.value)}
-        style={selectStyle}
+        className={selectClass}
       >
         <option value="">Any inclusion type</option>
         {(INCLUSION_TYPES as readonly InclusionType[]).map((t) => (

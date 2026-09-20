@@ -11,12 +11,12 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
 
   return (
     <>
-      <section style={{ margin: "1rem 0 2rem" }}>
-        <h1 style={{ marginBottom: "0.25rem" }}>{collection.title}</h1>
-        <p style={{ color: "var(--muted)" }}>{collection.description}</p>
+      <section className="mb-8">
+        <h1 className="mb-1 text-2xl font-bold tracking-tight">{collection.title}</h1>
+        <p className="text-muted">{collection.description}</p>
       </section>
 
-      <div className="card-grid">
+      <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {collection.items.map((t) => (
           <TitleCard key={t.id} title={t} />
         ))}
