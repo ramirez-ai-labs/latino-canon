@@ -35,7 +35,14 @@ export async function retrieve(
 
   return reciprocalRankFusion([lexical, semantic], {
     k: 60,
-    weights: [1, 1], // TODO: tune on packages/eval once we have relevance judgments
+    // Tuned against the 62-query golden set (packages/eval/src/datasets/queries.jsonl)
+    // once it grew past the original 15 queries / 16-title catalog: offline replay of
+    // [1,1] vs [2,1] (RRF only depends on rank order, so this needed no redeploy) showed
+    // [2,1] improves recall@5 (0.799→0.816), MRR, and nDCG@10 with recall@10 unchanged
+    // and zero newly-broken queries - a clean win, not a trade-off. Re-tune again once
+    // the query set grows further; [3,1] measured marginally better still but starts
+    // looking like overfitting to this specific 62-query sample.
+    weights: [2, 1],
     limit,
   });
 }

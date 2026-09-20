@@ -5,14 +5,14 @@ import { filterToSql, filterToVectorize, needsD1PostFilter, visibilityGateSql } 
 
 /**
  * Below this cosine score, Vectorize's nearest neighbors aren't actually relevant -
- * they're just whatever's least-far in a small catalog. Observed live: an off-topic
- * query ("quantum physics research lab") scored 0.19-0.33 across the whole 16-title
- * corpus, while on-topic queries ("familia", "teacher inspires students") scored
- * 0.32-0.50 - "DC comics"/"superhero" landed in between (0.30-0.43) and returned 14 of
- * 16 titles with no real cutoff. This is a heuristic picked from those three data
- * points, not a tuned value - `pnpm eval:retrieval` against real relevance judgments
- * (packages/eval) should replace it once there's a golden query set large enough to
- * tune against, the same TODO already tracked for hybrid.ts's RRF weights.
+ * they're just whatever's least-far in a small catalog. Originally a heuristic picked
+ * from three data points on the 16-title corpus (see git history); re-evaluated once
+ * the catalog and golden set grew (62 queries, 219 titles, packages/eval/src/datasets
+ * /queries.jsonl): raising it to 0.45 improves recall@5 (0.816→0.824) but costs
+ * recall@10 (0.856→0.832) - a real trade-off, not a clean win like hybrid.ts's RRF
+ * weight retune was, and this project's discovery-oriented use case (obscure/half-
+ * remembered queries, clustered multi-answer queries) weighs recall@10 higher than a
+ * small recall@5 gain. Left at 0.35 deliberately; revisit if that priority changes.
  */
 const MIN_SEMANTIC_SCORE = 0.35;
 
