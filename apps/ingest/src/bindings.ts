@@ -19,7 +19,7 @@ export interface IngestParams {
   ref: string;
   title: string;
   year: number;
-  kind: "film" | "series";
+  kind: "film" | "series" | "special";
   /** Pins the exact TMDB id, skipping search - for titles whose title+year search
    * result collides with an unrelated, same-titled, same-year work. */
   tmdbId?: number;

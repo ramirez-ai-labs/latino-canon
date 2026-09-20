@@ -245,7 +245,7 @@
         { "ref": "The Dead Girls (2025)", "title": "The Dead Girls", "year": 2025, "kind": "series", "tmdbId": 246485, "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
         { "ref": "John Leguizamo's Latin History for Morons (2018)", "title": "John Leguizamo's Latin History for Morons", "year": 2018, "kind": "special", "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
         { "ref": "La Reina del Sur (2011)", "title": "La Reina del Sur", "year": 2011, "kind": "series", "seedInclusionTypes": ["created_by", "about_community", "breakthrough"] },
-        { "ref": "Taco Chronicles (2019)", "title": "Taco Chronicles", "year": 2019, "kind": "special", "tmdbId": 91065, "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
+        { "ref": "Taco Chronicles (2019)", "title": "Taco Chronicles", "year": 2019, "kind": "series", "tmdbId": 91065, "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
         { "ref": "El Chavo del 8 (1973)", "title": "El Chavo del 8", "year": 1973, "kind": "series", "tmdbId": 1437, "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
         { "ref": "Monarca (2019)", "title": "Monarca", "year": 2019, "kind": "series", "tmdbId": 80059, "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] }
     ]
