@@ -318,7 +318,9 @@ starting point for the next round of blurb-quality work, not a number to hide.
 ## Status
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind what's built vs. what's
-next, and a prioritized backlog.
+next, and a prioritized backlog. See [docs/operations/monitoring.md](docs/operations/monitoring.md)
+for how to operate this in production — resource names, AI Gateway/neuron-budget checks, and an
+incident response runbook built around three real production incidents.
 
 The ingest resolve → fetch → normalize → persist → classify → embed → blurb path
 is implemented and has been run end-to-end against live TMDB/OMDb and a deployed
