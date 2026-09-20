@@ -22,7 +22,7 @@
         "@opennextjs/cloudflare": "^1.0.0",
         "@types/react": "^19.0.2",
         "@types/react-dom": "^19.0.2",
-        "typescript": "^7.0.2",
+        "typescript": "^5.9.3",
         "wrangler": "^4.20.0"
     }
 }
