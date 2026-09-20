@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Label by changed path
-        uses: actions/labeler@v5
+        uses: actions/labeler@v7
         with:
           sync-labels: false
           configuration-path: .github/labeler.yml
 
       - name: Label by title
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const title = (context.payload.pull_request.title || "").toLowerCase().trim();
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Require at least one label
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const { data: pullRequest } = await github.rest.pulls.get({
