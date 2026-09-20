@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Languages, ShieldCheck, Sparkles } from "lucide-react";
 import { Suspense } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { TitleCard } from "@/components/TitleCard";
@@ -7,6 +8,24 @@ import { buttonVariants } from "@/components/ui/button";
 import { getCollection, listCollections } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
+
+const PILLARS = [
+  {
+    icon: ShieldCheck,
+    title: "Verified, not guessed",
+    body: "Every tag traces to a real director, writer, or cast credit — or an editor's call when the model isn't confident enough to show on its own.",
+  },
+  {
+    icon: Languages,
+    title: "Search however you remember it",
+    body: "Plot, theme, era, or filmmaker — in English or Spanish. Half-remembered is fine.",
+  },
+  {
+    icon: Sparkles,
+    title: "AI, disclosed",
+    body: "“Why it matters” notes are model-generated and editor-approved before they appear — never hidden behind an info icon.",
+  },
+];
 
 export default async function HomePage() {
   const { collections } = await listCollections().catch(() => ({ collections: [] }));
@@ -25,8 +44,10 @@ export default async function HomePage() {
           <h1 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">
             The Latino film canon, <span className="text-accent">searchable.</span>
           </h1>
-          <p className="mx-auto mt-3 max-w-md text-balance text-muted">
-            Search by plot, theme, era, or filmmaker — in English or Spanish.
+          <p className="mx-auto mt-3 max-w-lg text-balance text-muted">
+            A curated, credit-verified index of Latino-directed, Latino-created, and
+            Latino-centered film and TV — searchable by plot, theme, era, or filmmaker,
+            in English or Spanish.
           </p>
           <div className="mt-6">
             <Suspense>
@@ -34,6 +55,18 @@ export default async function HomePage() {
             </Suspense>
           </div>
         </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+        {PILLARS.map((p) => (
+          <div key={p.title} className="flex gap-3">
+            <p.icon className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
+            <div>
+              <h3 className="text-sm font-semibold">{p.title}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-muted">{p.body}</p>
+            </div>
+          </div>
+        ))}
       </section>
 
       {rails
