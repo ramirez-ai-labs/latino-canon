@@ -247,6 +247,7 @@
         { "ref": "La Reina del Sur (2011)", "title": "La Reina del Sur", "year": 2011, "kind": "series", "seedInclusionTypes": ["created_by", "about_community", "breakthrough"] },
         { "ref": "Taco Chronicles (2019)", "title": "Taco Chronicles", "year": 2019, "kind": "series", "tmdbId": 91065, "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
         { "ref": "El Chavo del 8 (1973)", "title": "El Chavo del 8", "year": 1973, "kind": "series", "tmdbId": 47, "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
-        { "ref": "Monarca (2019)", "title": "Monarca", "year": 2019, "kind": "series", "tmdbId": 80059, "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] }
+        { "ref": "Monarca (2019)", "title": "Monarca", "year": 2019, "kind": "series", "tmdbId": 80059, "seedInclusionTypes": ["led_by", "created_by", "about_community", "breakthrough"] },
+        { "ref": "El Ministerio del Tiempo (2015)", "title": "El Ministerio del Tiempo", "year": 2015, "kind": "series", "tmdbId": 62099, "seedInclusionTypes": ["led_by", "created_by", "breakthrough", "starring"] }
     ]
 }
