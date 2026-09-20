@@ -26,6 +26,30 @@ const KINDS: { value: TitleKind; label: string }[] = [
 
 const DECADES = [1980, 1990, 2000, 2010, 2020];
 
+// Countries actually present in the catalog with meaningful volume (production
+// country, not a "region" grouping - the taxonomy's inclusion_type tags already
+// carry the creator-heritage judgment; this is plain, objective, already-in-the-
+// data filtering, not a new editorial category). Lets a "majority Latin America"
+// catalog distinguish e.g. Spain-only productions (Money Heist, The Ministry of
+// Time) from the rest without inventing a fuzzy diaspora/region bucket.
+const COUNTRIES: { value: string; label: string }[] = [
+  { value: "US", label: "United States" },
+  { value: "MX", label: "Mexico" },
+  { value: "ES", label: "Spain" },
+  { value: "AR", label: "Argentina" },
+  { value: "BR", label: "Brazil" },
+  { value: "CL", label: "Chile" },
+  { value: "CO", label: "Colombia" },
+  { value: "CU", label: "Cuba" },
+  { value: "PE", label: "Peru" },
+  { value: "UY", label: "Uruguay" },
+  { value: "VE", label: "Venezuela" },
+  { value: "GT", label: "Guatemala" },
+  { value: "SV", label: "El Salvador" },
+  { value: "DO", label: "Dominican Republic" },
+  { value: "PR", label: "Puerto Rico" },
+];
+
 const selectClass =
   "rounded-lg border border-border bg-surface-raised px-3 py-1.5 text-[0.85rem] text-text transition-colors hover:border-muted focus:outline-none focus:ring-2 focus:ring-accent/50";
 
@@ -83,6 +107,20 @@ export function SearchFilters() {
         {DECADES.map((d) => (
           <option key={d} value={d}>
             {d}s
+          </option>
+        ))}
+      </select>
+
+      <select
+        aria-label="Country"
+        value={params.get("country") ?? ""}
+        onChange={(e) => setParam("country", e.target.value)}
+        className={selectClass}
+      >
+        <option value="">Any country</option>
+        {COUNTRIES.map((c) => (
+          <option key={c.value} value={c.value}>
+            {c.label}
           </option>
         ))}
       </select>
