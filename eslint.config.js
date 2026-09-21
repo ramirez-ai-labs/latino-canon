@@ -114,6 +114,8 @@ export default [
         process: "readonly",
         fetch: "readonly",
         console: "readonly",
+        URL: "readonly",
+        URLSearchParams: "readonly",
       },
     },
     plugins: {
