@@ -70,6 +70,8 @@ export default [
         fetch: "readonly",
         process: "readonly",
         console: "readonly",
+        URL: "readonly",
+        URLSearchParams: "readonly",
       },
     },
     plugins: {

@@ -4,6 +4,7 @@ import { fetchTmdbPersonGender } from "./sources/tmdb.js";
 import { slugId } from "./normalize.js";
 import { removeInvalidTmdbEntries } from "./cleanup/index.js";
 import { writeAliases } from "./persist.js";
+import { ingestOpenApiSpec } from "./openapi.js";
 
 export { IngestWorkflow } from "./workflow.js";
 
@@ -28,7 +29,149 @@ export default {
         status: "ok",
         type: "admin-only",
         requires: "Authorization: Bearer <INGEST_ADMIN_TOKEN>",
-        docs: "https://github.com/ramirez-ai-labs/latino-canon#ingestion-api",
+        docs: "/docs",
+      });
+    }
+
+    // Public docs page (with auth form)
+    if (req.method === "GET" && url.pathname === "/docs") {
+      const apiUrl = new URL(req.url).origin;
+      const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Latino Canon Ingest Admin API - Swagger UI</title>
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css" />
+  <style>
+    html { box-sizing: border-box; overflow: -moz-scrollbars-vertical; overflow-y: scroll; }
+    *, *:before, *:after { box-sizing: inherit; }
+    body { margin: 0; padding: 0; }
+    .auth-banner {
+      background: #fef3c7;
+      border-bottom: 2px solid #f59e0b;
+      padding: 12px 20px;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .auth-banner input {
+      padding: 6px 12px;
+      border: 1px solid #d97706;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      flex: 1;
+      max-width: 300px;
+    }
+    .auth-banner button {
+      padding: 6px 16px;
+      background: #f59e0b;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .auth-banner button:hover {
+      background: #d97706;
+    }
+    .auth-banner .status {
+      font-weight: 600;
+    }
+    .auth-banner .status.authed {
+      color: #10b981;
+    }
+    .auth-banner .status.unauthed {
+      color: #ef4444;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-banner">
+    <span>🔐 Admin API (requires INGEST_ADMIN_TOKEN)</span>
+    <input type="password" id="tokenInput" placeholder="Paste INGEST_ADMIN_TOKEN here..." />
+    <button onclick="setToken()">Authenticate</button>
+    <span class="status unauthed" id="status">❌ Not authenticated</span>
+  </div>
+  <div id="swagger-ui"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.js"></script>
+  <script>
+    const tokenKey = 'ingest-admin-token';
+
+    function setToken() {
+      const token = document.getElementById('tokenInput').value.trim();
+      if (token) {
+        localStorage.setItem(tokenKey, token);
+        updateAuthStatus();
+        location.reload();
+      } else {
+        alert('Please enter a token');
+      }
+    }
+
+    function getToken() {
+      return localStorage.getItem(tokenKey);
+    }
+
+    function updateAuthStatus() {
+      const status = document.getElementById('status');
+      const token = getToken();
+      if (token) {
+        status.textContent = '✅ Authenticated';
+        status.className = 'status authed';
+      } else {
+        status.textContent = '❌ Not authenticated';
+        status.className = 'status unauthed';
+      }
+    }
+
+    function clearAuth() {
+      localStorage.removeItem(tokenKey);
+      updateAuthStatus();
+    }
+
+    window.onload = () => {
+      updateAuthStatus();
+      const token = getToken();
+
+      window.ui = SwaggerUIBundle({
+        url: '${apiUrl}/openapi.json',
+        dom_id: '#swagger-ui',
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+        layout: 'BaseLayout',
+        requestInterceptor: (request) => {
+          const token = getToken();
+          if (token) {
+            request.headers['Authorization'] = \`Bearer \${token}\`;
+          }
+          request.headers['User-Agent'] = 'Latino-Canon-Ingest-Admin-Docs';
+          return request;
+        },
+        responseInterceptor: (response) => {
+          if (response.status === 401) {
+            alert('Unauthorized. Please check your token.');
+            clearAuth();
+          }
+          return response;
+        }
+      });
+    };
+  </script>
+</body>
+</html>
+      `;
+      return new Response(html, {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
       });
     }
 
@@ -134,6 +277,10 @@ export default {
         "SELECT * FROM ingest_jobs WHERE status IN ('needs_review','error') ORDER BY updated_at DESC LIMIT 200",
       ).all();
       return Response.json({ jobs: results });
+    }
+
+    if (req.method === "GET" && url.pathname === "/openapi.json") {
+      return Response.json(ingestOpenApiSpec);
     }
 
     if (req.method === "POST" && url.pathname === "/cleanup/remove-invalid-tmdb") {
