@@ -1,5 +1,4 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
-import { MODEL_TAG_DISPLAY_THRESHOLD } from "@latino-canon/core";
 import type { Env, IngestParams } from "./bindings.js";
 import { resolveTmdbId, fetchTmdbDetails } from "./sources/tmdb.js";
 import { fetchOmdbRatings } from "./sources/omdb.js";
@@ -7,6 +6,7 @@ import { normalizeTitle } from "./normalize.js";
 import { persistTitle, upsertVector, writeTags, writeBlurb, setJob } from "./persist.js";
 import { cachePoster } from "./poster.js";
 import { classifyForIngest, blurbForIngest } from "./ai.js";
+import { jobIdFor, isYearMismatch, needsHumanReview } from "./workflow-rules.js";
 
 /**
  * Durable ingestion pipeline. Each step is independently retried; a failure in
@@ -20,8 +20,8 @@ import { classifyForIngest, blurbForIngest } from "./ai.js";
 export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
   async run(event: WorkflowEvent<IngestParams>, step: WorkflowStep): Promise<void> {
     const p = event.payload;
-    const jobId = `job_${p.ref.replace(/\W+/g, "_").toLowerCase()}`;
-    await step.do("register job", () => setJob(this.env, jobId, p.ref, "resolve", "running"));
+    const jobId = jobIdFor(p.ref);
+    await step.do("register job", () => setJob(this.env, jobId, p.ref, "resolve", "running", null, p));
 
     // Tracks which stage we're in so a caught failure can record *where* it happened -
     // ingest_jobs.status otherwise stays stuck at "running" forever (set once here, never
@@ -61,7 +61,7 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
       // seedInclusionTypes because nothing here ever compared the fetched year against
       // what the seed/caller expected. A release-year mismatch this large can only
       // mean the pinned id is wrong, not that TMDB's data is imprecise.
-      if (p.tmdbId && Math.abs(raw.details.releaseYear - p.year) > 2) {
+      if (isYearMismatch(p.tmdbId, p.year, raw.details.releaseYear)) {
         await step.do("skip year mismatch", () =>
           setJob(
             this.env,
@@ -122,17 +122,7 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
       await step.do("write blurb (unapproved)", () => writeBlurb(this.env, title.id, blurb));
 
       // --- Route to human review when the model isn't confident ---------------
-      // A title with a seed-sourced inclusion_type doesn't need the model's own
-      // confidence to justify inclusion - that's the entire point of seed trust
-      // outranking model output (packages/core/src/taxonomy.ts). Found live: two
-      // titles with real seedInclusionTypes (El Chavo del 8, The Dead Girls) sat in
-      // needs_review indefinitely because this only ever looked at the model's raw
-      // classification, even after their seed tags were correctly written to
-      // title_tags with confidence 1.0 - the review queue disagreed with the data.
-      const lowConfidence =
-        (p.seedInclusionTypes ?? []).length === 0 &&
-        (classification.inclusionTypes.length === 0 ||
-          classification.inclusionTypes.every((t) => t.confidence < MODEL_TAG_DISPLAY_THRESHOLD));
+      const lowConfidence = needsHumanReview(p.seedInclusionTypes, classification.inclusionTypes);
 
       await step.do("finalize job", () =>
         setJob(this.env, jobId, p.ref, "review", lowConfidence ? "needs_review" : "done"),
