@@ -69,23 +69,34 @@ checkboxes below just hadn't been updated when the work landed:
 
 Hardens untested critical paths (8 bugs caught in recent phases, all in untested areas):
 
-- [ ] **Add tests for workflow.ts** (90 min)
-  - Step orchestration, retry behavior, error tracking
-  - Mock TMDB/OMDb responses
-  - Verify low-confidence→review_queue routing
+- [x] **Add tests for workflow.ts, persist.ts, hybrid.ts** — **Done**
+  ([PR #152](https://github.com/ramirez-ai-labs/latino-canon/pull/152)).
+  `workflow-rules.ts` extracts the three decision points out of `workflow.ts`'s
+  `run()` (`jobIdFor`, `isYearMismatch`, `needsHumanReview`) into pure,
+  binding-free functions with direct regression tests for the two real incidents
+  that motivated this item (the Firefly `tmdbId` mismatch, the seed-tag
+  review-gate bug). `persist.ts` and `maintenance.ts` got real D1-backed test
+  infra (`apps/ingest/vitest.d1.config.ts`, mirroring `apps/api`'s existing
+  pattern), covering `persistTitle`'s upsert/credit-replace/FTS-rebuild
+  behavior, `writeTags`'s editor > seed > model precedence, and `writeBlurb`'s
+  approval-preserving logic (#138's exact regression case). `hybrid.ts` got
+  RRF fusion/candidate-pool/mode-bypass tests — which surfaced a real,
+  unrelated bug along the way: `vi.mock()` for local modules silently no-ops
+  under `@cloudflare/vitest-pool-workers` (it only mocks outbound requests),
+  so those tests had to move to a second, plain-Node vitest config
+  (`apps/api/vitest.unit.config.ts`) to actually run.
 
-- [ ] **Add tests for persist.ts** (60 min)
-  - D1 insert/update, tag insertion, people dedup
-  - Verify FTS5 denormalization
-
-- [ ] **Add tests for hybrid.ts** (60 min)
-  - RRF rank merging math, score normalization
-  - Filter push-down behavior
-
-- [ ] **Implement maintenance.ts retry logic** (120 min)
-  - `retryErroredJobs()`: reconstruct IngestParams from job_ref, re-POST to workflow
-  - `refreshPopularity()`: TMDB-fetch popularity scores for existing titles
-  - Verify cron trigger (8 AM UTC) actually runs
+- [x] **Implement maintenance.ts retry logic** — **Done**
+  ([PR #152](https://github.com/ramirez-ai-labs/latino-canon/pull/152)).
+  `retryErroredJobs()` replays the exact `IngestParams` stored on the job row
+  at creation time (new `ingest_jobs.params` column, migration `0018`) — never
+  reconstructs them from `title_ref` alone, since guessing those from scratch
+  is exactly what corrupted Firefly earlier this session. Jobs from before the
+  migration have no stored params and are deliberately left alone rather than
+  guessed at. `refreshPopularity()` pages through titles stale by 30+ days,
+  re-fetching TMDB popularity, with one bad lookup unable to abort the rest of
+  the batch. See
+  [monitoring.md](operations/monitoring.md#2-stuck-ingest-jobs-behind-a-retry-mechanism-that-doesnt-retry).
 
 - [x] **Complete groundedness evaluation** — **Done.** `run-groundedness.ts`
   auto-enumerates via `GET /titles?hasBlurb=1`. A real run against the whole
@@ -235,11 +246,10 @@ deferred rather than bundled in:
 
 ## Standing backlog (SDLC / completeness, unchanged priority)
 
-8. Wire up `apps/ingest/src/maintenance.ts` (`retryErroredJobs`/`refreshPopularity`) —
-   the nightly cron still does nothing real; every recovery from a stuck ingest job
-   this project has needed so far has been a manual `force: true` re-POST.
-9. Add tests for `workflow.ts`, `persist.ts`, `hybrid.ts` — the highest-risk,
-   currently untested code, proven risky by every real bug found this session.
+8. ~~Wire up `apps/ingest/src/maintenance.ts` (`retryErroredJobs`/`refreshPopularity`)~~
+   **Done**, see Week 2 above.
+9. ~~Add tests for `workflow.ts`, `persist.ts`, `hybrid.ts`~~ **Done**, see Week 2
+   above.
 10. Add real linting (`turbo.json`/`package.json` advertise a `lint` task with no
     ESLint/Biome config and no per-package script behind it — currently dead
     scaffolding, not run in CI).

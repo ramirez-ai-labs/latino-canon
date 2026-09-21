@@ -332,17 +332,21 @@ blurb) from D1 rather than returning a raw row, and poster images are served fro
 via a dedicated `/posters` route (`apps/api/src/routes/titles.ts`,
 `apps/api/src/routes/posters.ts`).
 
-Other open scaffold items: RRF weights are still fixed at `[1, 1]`
-(`apps/api/src/search/hybrid.ts`) and `semantic.ts`'s minimum score floor is a
-hand-picked heuristic — both pending a larger golden query set to tune against;
-`/titles/:id/similar` still returns a stub instead of Vectorize nearest-neighbors; the
-nightly cron's retry/refresh logic is unimplemented (`apps/ingest/src/maintenance.ts`)
-— `retryErroredJobs` bumps the attempt counter but doesn't reconstruct params and
-requeue the Workflow (a `force: true` re-`POST /ingest` is the current manual
-workaround), and `refreshPopularity` is a no-op. `apps/api/src/ai/classify.ts` and
-`blurb.ts` (plus the `LlmClient` provider abstraction under them) are unused
-dead code — the real classify/blurb calls live in `apps/ingest/src/ai.ts` instead,
-calling Workers AI directly.
+Other open scaffold items: `semantic.ts`'s minimum score floor (`MIN_SEMANTIC_SCORE
+= 0.35`) is still a hand-picked heuristic — tested at 0.45 against the 62-query
+golden set and deliberately kept at 0.35 (a real recall@5-vs-recall@10 trade-off,
+not a clean win); `/titles/:id/similar` still returns a stub instead of Vectorize
+nearest-neighbors. `apps/api/src/ai/classify.ts` and `blurb.ts` (plus the
+`LlmClient` provider abstraction under them) are unused dead code — the real
+classify/blurb calls live in `apps/ingest/src/ai.ts` instead, calling Workers AI
+directly.
+
+The nightly cron's retry/refresh logic (`apps/ingest/src/maintenance.ts`) is now
+implemented for real: `retryErroredJobs` replays the exact `IngestParams` stored on
+the job row at creation time (never guesses them from `title_ref`, which is
+exactly what corrupted an unrelated title once — see
+[monitoring.md](docs/operations/monitoring.md#2-stuck-ingest-jobs-behind-a-retry-mechanism-that-doesnt-retry)),
+and `refreshPopularity` re-fetches TMDB popularity for titles stale by 30+ days.
 
 ---
 

@@ -58,9 +58,13 @@ review queue was disagreeing with data sitting right next to it.
   reason.
 
 **Fix:** [PR #143](https://github.com/ramirez-ai-labs/latino-canon/pull/143) fixed
-the review gate. The retry stub is still unfixed — see
-[ROADMAP.md item #8](../ROADMAP.md). Until it's implemented, `GET /jobs` needs a
-human to look at it; nothing recovers automatically.
+the review gate. [PR #152](https://github.com/ramirez-ai-labs/latino-canon/pull/152)
+implemented `retryErroredJobs()` for real — it replays the exact `IngestParams`
+stored on the job row at creation time (a new `ingest_jobs.params` column, migration
+`0018`), never reconstructed from `title_ref` alone, since guessing those from
+scratch is exactly what caused the third incident below. Jobs created before that
+migration have no stored params and are deliberately left alone rather than
+guessed at; `GET /jobs` still needs a human for those.
 
 **A third, related incident from the same investigation:** re-ingesting El Chavo
 del 8 surfaced that its seed entry's pinned `tmdbId` (1437) actually pointed at
@@ -180,8 +184,10 @@ actually does:
   remember to run. There is no PagerDuty/email/Slack hook anywhere in this
   stack.
 - **No uptime monitoring.** Nothing pings the live endpoints on a schedule.
-- **`retryErroredJobs()` doesn't actually retry anything** (incident #2 above) —
-  don't rely on the nightly cron to self-heal a stuck ingest job. It won't.
+- **No quota alerting beyond Cloudflare's own account-level emails** (KV, D1,
+  Workers AI neurons) — the same "someone has to see the email" gap as incident
+  #3's neuron budget, just for other resources. Nothing in this codebase watches
+  usage proactively.
 
 ---
 
