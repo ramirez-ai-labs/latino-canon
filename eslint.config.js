@@ -124,6 +124,8 @@ export default [
       ...tsPlugin.configs.recommended.rules,
       ...tsPlugin.configs["recommended-requiring-type-checking"].rules,
       "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unsafe-return": "warn",
+      "@typescript-eslint/no-unsafe-assignment": "warn",
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
