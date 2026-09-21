@@ -8,6 +8,7 @@ import { collectionsRoute } from "./routes/collections.js";
 import { feedbackRoute } from "./routes/feedback.js";
 import { postersRoute } from "./routes/posters.js";
 import { evalRunsRoute } from "./routes/eval-runs.js";
+import { openapiRoute } from "./routes/openapi.js";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -15,6 +16,7 @@ app.use("*", logger());
 app.use("*", cors({ origin: "*", allowMethods: ["GET", "POST", "OPTIONS"] }));
 
 app.get("/healthz", (c) => c.json({ ok: true, service: "latino-canon-api" }));
+app.route("/openapi.json", openapiRoute);
 
 app.route("/search", searchRoute);
 app.route("/titles", titlesRoute);
