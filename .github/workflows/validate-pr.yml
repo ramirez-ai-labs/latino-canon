@@ -35,6 +35,21 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Lint web app
+        run: pnpm --filter @latino-canon/web run lint
+
+      - name: Lint API
+        run: pnpm --filter @latino-canon/api run lint
+
+      - name: Lint core
+        run: pnpm --filter @latino-canon/core run lint
+
+      - name: Lint eval
+        run: pnpm --filter @latino-canon/eval run lint
+
+      - name: Lint ingest
+        run: pnpm --filter @latino-canon/ingest run lint
+
       - name: Typecheck web app
         run: pnpm --filter @latino-canon/web run typecheck
 
