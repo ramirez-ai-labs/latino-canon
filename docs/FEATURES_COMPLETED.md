@@ -73,6 +73,34 @@ All features listed below have been implemented, tested, and deployed to product
 
 ---
 
+### 6. OpenAPI Specification (#170)
+**PR:** [feat: add OpenAPI 3.0 specification and documentation](https://github.com/ramirez-ai-labs/latino-canon/pull/170)  
+**Capability:** Machine-readable API contract for integrators  
+**Changes:**
+- Complete OpenAPI 3.0 spec covering all endpoints
+- Served at `GET /openapi.json` (zero runtime overhead)
+- Swagger UI and ReDoc integration instructions
+- Full API documentation with examples
+
+**Status:** ✅ Merged, live in production
+
+---
+
+### 7. ESLint v9 Wiring (#169)
+**PR:** [chore: wire ESLint to CI/CD pipeline](https://github.com/ramirez-ai-labs/latino-canon/pull/169)  
+**Capability:** Type-aware linting across all workspaces  
+**Changes:**
+- ESLint v9 flat config with environment-specific rule strictness
+- React/Next.js (web): relaxed rules for JSX and browser globals
+- Cloudflare Workers (api/ingest): moderate strictness with Worker globals
+- Core packages: strict TypeScript enforcement
+- Integrated into CI/CD pipeline (`validate-pr.yml`)
+- All workspace lint scripts active and enforced
+
+**Status:** ✅ Merged, live in production
+
+---
+
 ## Summary
 
 | Feature | PR | Status | Deployment |
@@ -82,8 +110,10 @@ All features listed below have been implemented, tested, and deployed to product
 | UI Redesign | #147 | ✅ Complete | v1.0.0 |
 | Homepage | #148 | ✅ Complete | v1.0.0 |
 | Validation gates | #143, #144 | ✅ Complete | v1.0.0 |
+| OpenAPI spec | #170 | ✅ Complete | v1.0.0 |
+| ESLint wiring | #169 | ✅ Complete | v1.0.0 |
 
-**All post-Week 3 features are production-ready and live.**
+**All features including the two v1.0.0 nice-to-haves (OpenAPI + ESLint) are production-ready and live.**
 
 ## Testing
 
@@ -96,4 +126,5 @@ Each feature has been:
 
 ---
 
-**As of v1.0.0 (September 21, 2026):** All major post-Week 3 features are complete and production-ready.
+**As of v1.0.0 (September 21, 2026):** All major features including post-Week 3 items and v1.0.0 nice-to-haves
+(OpenAPI specification + ESLint integration) are complete, tested, and live in production.

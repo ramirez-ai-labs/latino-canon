@@ -106,11 +106,11 @@ Hardens untested critical paths (8 bugs caught in recent phases, all in untested
   (#138) that had every blurb sitting unapproved; see
   [monitoring.md](operations/monitoring.md#1-blurb-approval-silently-reset-on-every-re-ingest).
 
-- [ ] **Add ESLint configuration** (60 min)
-  - Remove dead `lint` task scaffolding
-  - Add `.eslintrc.json` (recommend `eslint-config-next` for consistency)
-  - Add `pnpm lint` script to all packages
-  - Enable in CI (`validate-pr.yml`)
+- [x] **Add ESLint configuration** — **Done** ([PR #169](https://github.com/ramirez-ai-labs/latino-canon/pull/169)).
+  ESLint v9 flat config (`eslint.config.js`) wired across all workspaces with
+  environment-specific rule strictness: React/Next.js (relaxed), Workers (moderate),
+  core packages (strict). Linting integrated into CI (`validate-pr.yml`); all workspace
+  `lint` scripts active and enforced.
 
 ### Week 3: Evaluation & Tuning (13 hours) — Optional but Recommended
 
@@ -121,11 +121,12 @@ Optimizes retrieval quality and tunes thresholds responsibly:
 - [x] **Tune RRF weights + thresholds** — **Done**, see item #6 below
   (`[1,1]` → `[2,1]`, `MIN_SEMANTIC_SCORE` tested and deliberately left at 0.35).
 
-- [ ] **Generate OpenAPI spec** (120 min)
-  - Use Hono OpenAPI middleware
-  - Auto-generate `/openapi.json` on deployment
-  - Deploy Swagger UI at `/docs` for integrators
-  - Include in README API documentation section
+- [x] **Generate OpenAPI spec** — **Done** ([PR #170](https://github.com/ramirez-ai-labs/latino-canon/pull/170)).
+  OpenAPI 3.0 specification (`apps/api/src/openapi/spec.ts`) covers all endpoints
+  with request/response schemas and error codes. Served at `GET /openapi.json`
+  (zero runtime overhead — static JSON). Fully documented in [docs/API.md](../API.md)
+  with Swagger UI and ReDoc integration instructions; spec verified against live
+  catalog (219 titles).
 
 ---
 
