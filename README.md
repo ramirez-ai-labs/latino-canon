@@ -161,12 +161,13 @@ pnpm --filter web deploy
 
 All changes should go through a branch and pull request targeting `main`.
 `.github/workflows/validate-pr.yml` runs the web build, typechecks every workspace
-package, and runs their test suites on every pull request — including a
-fixture-backed BM25 retrieval regression test (`apps/api/src/search/lexical.eval.test.ts`)
-that exercises the real `lexicalSearch` → `titles_fts` path and the same
-`packages/eval` metrics (recall@k, MRR) used by `pnpm eval:retrieval`, entirely locally
-via `@cloudflare/vitest-pool-workers` — no Cloudflare account or deployed data needed.
-Protect `main` in GitHub and require this workflow to pass before merging.
+package, lints all code via ESLint (with environment-specific rule strictness), and runs
+their test suites on every pull request — including a fixture-backed BM25 retrieval
+regression test (`apps/api/src/search/lexical.eval.test.ts`) that exercises the real
+`lexicalSearch` → `titles_fts` path and the same `packages/eval` metrics (recall@k, MRR)
+used by `pnpm eval:retrieval`, entirely locally via `@cloudflare/vitest-pool-workers` —
+no Cloudflare account or deployed data needed. Protect `main` in GitHub and require this
+workflow to pass before merging.
 
 After a pull request is merged, `.github/workflows/deploy-web.yml`,
 `deploy-api.yml`, and `deploy-ingest.yml` each deploy their Worker from Ubuntu —
@@ -317,10 +318,12 @@ starting point for the next round of blurb-quality work, not a number to hide.
 
 ## Status
 
-See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind what's built vs. what's
-next, and a prioritized backlog. See [docs/operations/monitoring.md](docs/operations/monitoring.md)
+**v1.0.0 milestone complete.** All major features shipped; ESLint and OpenAPI wired into
+production CI/CD. See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind
+what's built vs. what's next, and a prioritized backlog. See [docs/operations/monitoring.md](docs/operations/monitoring.md)
 for how to operate this in production — resource names, AI Gateway/neuron-budget checks, and an
-incident response runbook built around three real production incidents.
+incident response runbook built around three real production incidents. See [docs/FEATURES_COMPLETED.md](docs/FEATURES_COMPLETED.md)
+for a summary of all shipped features through v1.0.0.
 
 The ingest resolve → fetch → normalize → persist → classify → embed → blurb path
 is implemented and has been run end-to-end against live TMDB/OMDb and a deployed
@@ -353,6 +356,7 @@ and `refreshPopularity` re-fetches TMDB popularity for titles stale by 30+ days.
 ## Documentation
 
 **Primary reference:**
+- [docs/API.md](docs/API.md) — OpenAPI 3.0 spec, Swagger UI, client generation
 - [docs/ROADMAP.md](docs/ROADMAP.md) — design philosophy, backlog, ongoing work
 - [apps/ingest/src/seed/CRITERIA.md](apps/ingest/src/seed/CRITERIA.md) — Latino-focused inclusion rules (the actual policy)
 - [docs/INGEST.md](docs/INGEST.md) — detailed ingest pipeline walkthrough
