@@ -9,6 +9,7 @@ import { feedbackRoute } from "./routes/feedback.js";
 import { postersRoute } from "./routes/posters.js";
 import { evalRunsRoute } from "./routes/eval-runs.js";
 import { openapiRoute } from "./routes/openapi.js";
+import { docsRoute } from "./routes/docs.js";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -19,11 +20,13 @@ app.get("/", (c) =>
   c.json({
     service: "latino-canon-api",
     status: "ok",
-    docs: "/openapi.json",
+    docs: "/docs",
+    openapi: "/openapi.json",
     health: "/healthz",
   })
 );
 app.get("/healthz", (c) => c.json({ ok: true, service: "latino-canon-api" }));
+app.route("/docs", docsRoute);
 app.route("/openapi.json", openapiRoute);
 
 app.route("/search", searchRoute);
