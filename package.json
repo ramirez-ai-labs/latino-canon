@@ -15,7 +15,7 @@
     "eval:groundedness": "pnpm --filter @latino-canon/eval run groundedness"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260101.0",
+    "@cloudflare/workers-types": "^5.20260918.1",
     "@types/node": "^22.10.2",
     "tsx": "^4.19.2",
     "turbo": "^2.10.13",
