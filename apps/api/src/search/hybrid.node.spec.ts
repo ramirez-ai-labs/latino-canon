@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Env } from "../bindings.js";
 import type { RankedHit, SearchFilters } from "@latino-canon/core";
 
@@ -18,6 +18,10 @@ const filters: SearchFilters = {};
 function hits(...titleIds: string[]): RankedHit[] {
   return titleIds.map((titleId, i) => ({ titleId, score: 1 / (i + 1) }));
 }
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
 
 describe("retrieve", () => {
   it("mode=lexical calls only lexicalSearch, with the caller's own limit (not the candidate pool size)", async () => {
