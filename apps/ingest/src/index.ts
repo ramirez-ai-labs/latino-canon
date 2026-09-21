@@ -20,6 +20,18 @@ export default {
    */
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
+
+    // Public root endpoint
+    if (req.method === "GET" && url.pathname === "/") {
+      return Response.json({
+        service: "latino-canon-ingest",
+        status: "ok",
+        type: "admin-only",
+        requires: "Authorization: Bearer <INGEST_ADMIN_TOKEN>",
+        docs: "https://github.com/ramirez-ai-labs/latino-canon#ingestion-api",
+      });
+    }
+
     if (req.headers.get("authorization") !== `Bearer ${env.INGEST_ADMIN_TOKEN}`) {
       return new Response("unauthorized", { status: 401 });
     }
