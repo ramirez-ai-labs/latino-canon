@@ -310,6 +310,17 @@ deferred rather than bundled in:
     metric with zero new regressions (hybrid recall@5 0.816→0.832, recall@10
     0.856→0.872).
 
+## Post-v1.0.0 Nice-to-Haves (Completed)
+
+- [x] **Self-hosted Swagger UI for both workers** — **Done** ([PR #174](https://github.com/ramirez-ai-labs/latino-canon/pull/174), fixed in [PR #175](https://github.com/ramirez-ai-labs/latino-canon/pull/175)).
+  - 🚀 [Public API `/docs`](https://latino-canon-api.ai-builders-studio-latinx.workers.dev/docs) — Interactive search documentation
+  - 🔐 [Admin Ingest `/docs`](https://latino-canon-ingest.ai-builders-studio-latinx.workers.dev/docs) — Authenticated API explorer with token management
+  - Zero external documentation dependencies; jsDelivr-hosted Swagger UI
+  - Browser-based token storage (localStorage) for seamless admin access
+  - Full OpenAPI specs auto-generated for both workers
+
+---
+
 ## Deliberately deferred (Netflix's Stage 4, not needed yet)
 
 Personalization — accounts, saved titles, watch/click history, per-viewer reranking

@@ -2,6 +2,18 @@
 
 The ingest worker (`https://latino-canon-ingest.ai-builders-studio-latinx.workers.dev`) manages all data ingestion and maintenance. **All endpoints require admin authentication.**
 
+## 🚀 Interactive Documentation
+
+**[Open Swagger UI with Auth →](https://latino-canon-ingest.ai-builders-studio-latinx.workers.dev/docs)**
+
+Self-hosted API explorer with:
+- 🔐 Bearer token authentication form (stored in localStorage)
+- 📋 Full endpoint documentation with schemas
+- 🧪 Live request/response testing
+- ⬇️ OpenAPI spec for client generation
+
+---
+
 ## Authentication
 
 All requests must include the admin token:
@@ -28,7 +40,7 @@ INGEST_ADMIN_TOKEN=dev-only-change-me
 
 ### `GET /` (Public)
 
-Health check — no auth required.
+Health check — no auth required. Returns service status and documentation links.
 
 **Response:**
 ```json
@@ -37,9 +49,23 @@ Health check — no auth required.
   "status": "ok",
   "type": "admin-only",
   "requires": "Authorization: Bearer <INGEST_ADMIN_TOKEN>",
-  "docs": "https://github.com/ramirez-ai-labs/latino-canon#ingestion-api"
+  "docs": "/docs"
 }
 ```
+
+### `GET /docs` (Public)
+
+Interactive Swagger UI with authentication. No auth required to view (auth form is built-in).
+
+**Response:** HTML page with Swagger UI + Bearer token input
+
+---
+
+### `GET /openapi.json` (Public)
+
+OpenAPI 3.0 specification for all admin endpoints. Useful for client generation and API documentation tools.
+
+**Response:** JSON OpenAPI spec
 
 ---
 
