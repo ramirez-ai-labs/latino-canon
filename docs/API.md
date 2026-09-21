@@ -4,7 +4,13 @@ The Latino Canon API provides hybrid semantic + lexical search over a curated ca
 
 ## OpenAPI Specification
 
-The API is documented via **OpenAPI 3.0**, accessible at:
+The API is documented via **OpenAPI 3.0**. First, verify the API is live:
+
+```bash
+curl https://latino-canon-api.ai-builders-studio-latinx.workers.dev/healthz
+```
+
+Then access the spec:
 
 ```
 https://latino-canon-api.ai-builders-studio-latinx.workers.dev/openapi.json

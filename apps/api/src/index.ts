@@ -15,6 +15,14 @@ const app = new Hono<{ Bindings: Env }>();
 app.use("*", logger());
 app.use("*", cors({ origin: "*", allowMethods: ["GET", "POST", "OPTIONS"] }));
 
+app.get("/", (c) =>
+  c.json({
+    service: "latino-canon-api",
+    status: "ok",
+    docs: "/openapi.json",
+    health: "/healthz",
+  })
+);
 app.get("/healthz", (c) => c.json({ ok: true, service: "latino-canon-api" }));
 app.route("/openapi.json", openapiRoute);
 
