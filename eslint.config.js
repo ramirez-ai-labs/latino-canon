@@ -13,7 +13,14 @@ export default [
       parserOptions: {
         ecmaVersion: 2022,
         sourceType: "module",
+        ecmaFeatures: {
+          jsx: true,
+        },
         project: ["./tsconfig.json", "./apps/*/tsconfig.json", "./packages/*/tsconfig.json"],
+      },
+      globals: {
+        process: "readonly",
+        fetch: "readonly",
       },
     },
     plugins: {
@@ -33,6 +40,14 @@ export default [
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/await-thenable": "error",
       "@typescript-eslint/no-misused-promises": "error",
+      "@typescript-eslint/restrict-template-expressions": [
+        "error",
+        {
+          allowNumber: true,
+          allowBoolean: true,
+          allowNullish: true,
+        },
+      ],
       "no-console": [
         "warn",
         {
