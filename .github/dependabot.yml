@@ -1,36 +1,9 @@
-version: 2
-updates:
-  # Monitor npm dependencies
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "vhr1975"
-    labels:
-      - "dependencies"
-      - "github_actions"
-    commit-message:
-      prefix: "deps"
-      prefix-development: "devdeps"
-      include: "scope"
+# Dependabot disabled 2026-09-21
+# Reason: Auto-PRs were creating lockfile sync cycles and breaking builds
+# Re-enable with stricter rules when ready (security updates only, no major versions)
+# See: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuring-dependabot-version-updates#enabling-dependabot-version-updates
 
-  # Monitor GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "10:00"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "vhr1975"
-    labels:
-      - "infrastructure"
-      - "github_actions"
-    commit-message:
-      prefix: "ci"
-      include: "scope"
+version: 2
+updates: []
+  # npm updates disabled - manual review only
+  # github-actions updates disabled - manual review only
