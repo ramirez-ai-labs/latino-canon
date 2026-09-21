@@ -356,8 +356,7 @@ and `refreshPopularity` re-fetches TMDB popularity for titles stale by 30+ days.
 ## Documentation
 
 **Primary reference:**
-- [docs/API.md](docs/API.md) — OpenAPI 3.0 spec, Swagger UI, client generation (public API)
-- [docs/INGEST_API.md](docs/INGEST_API.md) — Admin ingest worker API (auth-required)
+- [docs/API.md](docs/API.md) — OpenAPI 3.0 spec, Swagger UI, client generation
 - [docs/ROADMAP.md](docs/ROADMAP.md) — design philosophy, backlog, ongoing work
 - [apps/ingest/src/seed/CRITERIA.md](apps/ingest/src/seed/CRITERIA.md) — Latino-focused inclusion rules (the actual policy)
 - [docs/INGEST.md](docs/INGEST.md) — detailed ingest pipeline walkthrough
