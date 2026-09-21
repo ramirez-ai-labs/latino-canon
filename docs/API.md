@@ -1,28 +1,33 @@
 # Latino Canon API Documentation
 
-The Latino Canon API provides hybrid semantic + lexical search over a curated catalog of 232 Latino films and series.
+The Latino Canon API provides hybrid semantic + lexical search over a curated catalog of 219 Latino films and series.
+
+## Interactive Documentation
+
+**🚀 [Open Swagger UI →](https://latino-canon-api.ai-builders-studio-latinx.workers.dev/docs)**
+
+Self-hosted, interactive API explorer with request/response examples, filters, and live testing.
+
+---
 
 ## OpenAPI Specification
 
-The API is documented via **OpenAPI 3.0**. First, verify the API is live:
+The API is documented via **OpenAPI 3.0**:
 
+**Live spec:** `https://latino-canon-api.ai-builders-studio-latinx.workers.dev/openapi.json`
+
+**Health check:**
 ```bash
 curl https://latino-canon-api.ai-builders-studio-latinx.workers.dev/healthz
 ```
 
-Then access the spec:
+### Alternative Documentation Viewers
 
-```
-https://latino-canon-api.ai-builders-studio-latinx.workers.dev/openapi.json
-```
-
-### Using the Spec
-
-**View in Swagger UI:**
+**View in external Swagger UI:**
 ```
 https://swagger.io/tools/swagger-ui/
 ```
-Then paste the OpenAPI URL into the "Explore" box.
+Then paste: `https://latino-canon-api.ai-builders-studio-latinx.workers.dev/openapi.json`
 
 **View in ReDoc:**
 ```

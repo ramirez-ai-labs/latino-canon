@@ -355,8 +355,13 @@ and `refreshPopularity` re-fetches TMDB popularity for titles stale by 30+ days.
 
 ## Documentation
 
-**Primary reference:**
-- [docs/API.md](docs/API.md) — OpenAPI 3.0 spec, Swagger UI, client generation
+**Interactive API Explorers** (live Swagger UI):
+- 🚀 [Public API Swagger UI](https://latino-canon-api.ai-builders-studio-latinx.workers.dev/docs) — Search films, get details, browse collections
+- 🔐 [Admin Ingest API Swagger UI](https://latino-canon-ingest.ai-builders-studio-latinx.workers.dev/docs) — Authenticate with token, trigger ingestion
+
+**Reference:**
+- [docs/API.md](docs/API.md) — OpenAPI 3.0 spec, client generation, rate limits
+- [docs/INGEST_API.md](docs/INGEST_API.md) — Admin API reference with all endpoints
 - [docs/ROADMAP.md](docs/ROADMAP.md) — design philosophy, backlog, ongoing work
 - [apps/ingest/src/seed/CRITERIA.md](apps/ingest/src/seed/CRITERIA.md) — Latino-focused inclusion rules (the actual policy)
 - [docs/INGEST.md](docs/INGEST.md) — detailed ingest pipeline walkthrough
