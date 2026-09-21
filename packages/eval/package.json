@@ -12,6 +12,7 @@
     "retrieval": "tsx src/run-retrieval.ts",
     "groundedness": "tsx src/run-groundedness.ts",
     "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint src --ext .ts",
     "test": "vitest run"
   },
   "dependencies": {

@@ -10,6 +10,7 @@
         "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
         "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
         "typecheck": "tsc -p tsconfig.json",
+        "lint": "eslint src --ext .ts,.tsx",
         "cf-typegen": "wrangler types"
     },
     "dependencies": {

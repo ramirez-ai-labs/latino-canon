@@ -98,7 +98,7 @@ export async function blurbForIngest(
   void classification;
   return {
     result,
-    sources: sources.map(({ id, kind, ref, quote }) => ({ kind, ref, quote })),
+    sources: sources.map(({ id: _id, kind, ref, quote }) => ({ kind, ref, quote })),
     model: MODELS.blurb,
   };
 }
