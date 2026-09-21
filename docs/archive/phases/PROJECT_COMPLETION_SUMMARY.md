@@ -279,7 +279,7 @@ Project root:
 ```bash
 # Verify current deployment
 curl -X GET "https://latino-canon-ingest.ai-builders-studio-latinx.workers.dev/jobs" \
-  -H "Authorization: Bearer c8edd41ba75a0023a0d8bc6c120ef92f6e6049b20197d1f074c1f5889d5bb04e"
+  -H "Authorization: Bearer <redacted - rotated after this token was found committed in plaintext>"
 
 # Check error jobs (tomorrow after 8 AM UTC)
 # Expected: All should be 'done' or 'needs_review'
