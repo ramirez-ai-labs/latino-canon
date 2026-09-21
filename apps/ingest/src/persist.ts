@@ -1,7 +1,7 @@
 import type { ClassificationResult, Title } from "@latino-canon/core";
 import type { BlurbGroundingResult } from "./ai.js";
 import { EMBEDDING_MODEL } from "@latino-canon/core";
-import type { Env } from "./bindings.js";
+import type { AliasKind, Env } from "./bindings.js";
 import { embedText } from "./ai.js";
 
 /** Upsert the row + rebuild its FTS entry + upsert people/credits. */
@@ -17,10 +17,14 @@ export async function persistTitle(env: Env, t: Title): Promise<void> {
       t.id, t.tmdbId, t.imdbId, t.kind, t.title, t.originalTitle, t.yearStart, t.yearEnd,
       JSON.stringify(t.country), JSON.stringify(t.language), t.synopsis, t.popularity, t.runtime,
     ),
-    // contentless FTS5: delete-then-insert by rowid keyed on titles.rowid
+    // contentless FTS5: delete-then-insert by rowid keyed on titles.rowid. `aliases`
+    // is read live from title_aliases (via subquery, not the in-memory Title) so a
+    // re-persist here never clobbers aliases written separately by writeAliases.
     env.DB.prepare(
-      `INSERT INTO titles_fts (rowid, title, original_title, synopsis, people, tags)
-       SELECT rowid, ?2, ?3, ?4, ?5, ?6 FROM titles WHERE id = ?1`,
+      `INSERT INTO titles_fts (rowid, title, original_title, synopsis, people, tags, aliases)
+       SELECT rowid, ?2, ?3, ?4, ?5, ?6,
+         COALESCE((SELECT GROUP_CONCAT(a.alias, ', ') FROM title_aliases a WHERE a.title_id = ?1), '')
+       FROM titles WHERE id = ?1`,
     ).bind(t.id, t.title, t.originalTitle ?? "", t.synopsis ?? "", peopleText(t), ""),
     // re-ingest is idempotent: drop this title's credits and rebuild from the fresh fetch
     env.DB.prepare(`DELETE FROM credits WHERE title_id = ?1`).bind(t.id),
@@ -131,6 +135,42 @@ export async function writeTags(
   }
 
   if (statements.length) await env.DB.batch(statements);
+}
+
+/**
+ * Overwrite semantics, not append: re-running this with a shorter list removes
+ * aliases that are no longer current, same as persistTitle's own delete-then-insert
+ * pattern for credits. Safe to call independently of persistTitle (e.g. a one-off
+ * backfill for a title already in production) - it reads title/original_title/
+ * synopsis/people live from D1 rather than requiring the caller to have a Title
+ * object on hand.
+ */
+export async function writeAliases(
+  env: Env,
+  titleId: string,
+  aliases: { alias: string; kind: AliasKind }[],
+): Promise<void> {
+  const aliasesText = aliases.map((a) => a.alias).join(", ");
+  const statements = [
+    env.DB.prepare(`DELETE FROM title_aliases WHERE title_id = ?1`).bind(titleId),
+    ...aliases.map((a) =>
+      env.DB.prepare(`INSERT INTO title_aliases (title_id, alias, kind) VALUES (?1, ?2, ?3)`).bind(
+        titleId,
+        a.alias,
+        a.kind,
+      ),
+    ),
+    env.DB.prepare(
+      `INSERT INTO titles_fts (rowid, title, original_title, synopsis, people, tags, aliases)
+       SELECT
+         t.rowid, t.title, COALESCE(t.original_title, ''), COALESCE(t.synopsis, ''),
+         COALESCE((SELECT GROUP_CONCAT(p.name, ', ') FROM credits c JOIN people p ON p.id = c.person_id WHERE c.title_id = t.id), ''),
+         '',
+         ?2
+       FROM titles t WHERE t.id = ?1`,
+    ).bind(titleId, aliasesText),
+  ];
+  await env.DB.batch(statements);
 }
 
 export async function writeBlurb(env: Env, titleId: string, blurb: BlurbGroundingResult): Promise<void> {

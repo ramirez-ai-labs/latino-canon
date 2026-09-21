@@ -3,7 +3,7 @@ import type { Env, IngestParams } from "./bindings.js";
 import { resolveTmdbId, fetchTmdbDetails } from "./sources/tmdb.js";
 import { fetchOmdbRatings } from "./sources/omdb.js";
 import { normalizeTitle } from "./normalize.js";
-import { persistTitle, upsertVector, writeTags, writeBlurb, setJob } from "./persist.js";
+import { persistTitle, upsertVector, writeTags, writeAliases, writeBlurb, setJob } from "./persist.js";
 import { cachePoster } from "./poster.js";
 import { classifyForIngest, blurbForIngest } from "./ai.js";
 import { jobIdFor, isYearMismatch, needsHumanReview } from "./workflow-rules.js";
@@ -88,6 +88,10 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
 
       stage = "persist";
       await step.do("persist title", () => persistTitle(this.env, title));
+
+      if (p.aliases?.length) {
+        await step.do("write aliases", () => writeAliases(this.env, title.id, p.aliases!));
+      }
 
       await step.do("cache poster", () =>
         raw.details.posterPath ? cachePoster(this.env, title.id, raw.details.posterPath) : Promise.resolve(),

@@ -19,6 +19,7 @@ interface Fixture {
   title: string;
   synopsis: string;
   people: string;
+  aliases?: string;
 }
 
 const FIXTURES: Fixture[] = [
@@ -58,6 +59,13 @@ const FIXTURES: Fixture[] = [
     synopsis: "A Cuban-American single mother navigates family life in a multi-generation household sitcom.",
     people: "Justina Machado",
   },
+  {
+    id: "y-tu-mama-tambien-2001",
+    title: "Y Tu Mamá También",
+    synopsis: "Two teenage friends and an older woman take a road trip through Mexico.",
+    people: "Gael García Bernal, Diego Luna",
+    aliases: "And Your Mother Too",
+  },
 ];
 
 const GOLD: { id: string; query: string; relevant: string[] }[] = [
@@ -67,6 +75,10 @@ const GOLD: { id: string; query: string; relevant: string[] }[] = [
   { id: "g04", query: "Washington Heights bodega", relevant: ["in-the-heights-2021"] },
   { id: "g05", query: "gentrification Boyle Heights taco shop", relevant: ["gentefied-2020"] },
   { id: "g06", query: "Cuban-American sitcom family", relevant: ["one-day-at-a-time-2017"] },
+  // Matches only via the aliases column - none of these words appear in this fixture's
+  // (or any other's) title/synopsis/people. Proves the new titles_fts column and its
+  // bm25 weight actually retrieve, not just that the migration/insert doesn't error.
+  { id: "g07", query: "And Your Mother Too", relevant: ["y-tu-mama-tambien-2001"] },
 ];
 
 beforeAll(async () => {
@@ -77,9 +89,9 @@ beforeAll(async () => {
         `INSERT INTO titles (id, kind, title, year_start) VALUES (?1, 'film', ?2, ?3)`,
       ).bind(f.id, f.title, year++),
       env.DB.prepare(
-        `INSERT INTO titles_fts (rowid, title, original_title, synopsis, people, tags)
-         SELECT rowid, ?2, '', ?3, ?4, '' FROM titles WHERE id = ?1`,
-      ).bind(f.id, f.title, f.synopsis, f.people),
+        `INSERT INTO titles_fts (rowid, title, original_title, synopsis, people, tags, aliases)
+         SELECT rowid, ?2, '', ?3, ?4, '', ?5 FROM titles WHERE id = ?1`,
+      ).bind(f.id, f.title, f.synopsis, f.people, f.aliases ?? ""),
       // lexicalSearch now always applies the inclusion_type visibility gate - without a
       // qualifying tag here, every query below would silently return zero hits, not a
       // BM25/tokenizer regression.
