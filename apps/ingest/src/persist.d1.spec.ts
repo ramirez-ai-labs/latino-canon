@@ -1,7 +1,7 @@
 import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import type { Title } from "@latino-canon/core";
-import { persistTitle, setJob, writeBlurb, writeTags } from "./persist.js";
+import { persistTitle, setJob, writeAliases, writeBlurb, writeTags } from "./persist.js";
 
 function makeTitle(overrides: Partial<Title> = {}): Title {
   return {
@@ -202,6 +202,56 @@ describe("writeBlurb", () => {
       .bind("blurb-reset-2020")
       .first<{ approved: number }>();
     expect(row?.approved).toBe(0);
+  });
+});
+
+describe("writeAliases", () => {
+  it("indexes an alias into titles_fts so it becomes lexically searchable", async () => {
+    await persistTitle(env, makeTitle({ id: "alias-index-2020", title: "Original Title Here" }));
+    await writeAliases(env, "alias-index-2020", [{ alias: "Totally Different Name", kind: "translation" }]);
+
+    const row = await env.DB.prepare(
+      "SELECT rowid FROM titles_fts WHERE titles_fts MATCH 'Totally'",
+    ).first();
+    expect(row).not.toBeNull();
+  });
+
+  it("stores the alias row with its kind", async () => {
+    await persistTitle(env, makeTitle({ id: "alias-kind-2020" }));
+    await writeAliases(env, "alias-kind-2020", [{ alias: "A Common Misspelling", kind: "misspelling" }]);
+
+    const row = await env.DB.prepare("SELECT alias, kind FROM title_aliases WHERE title_id = ?")
+      .bind("alias-kind-2020")
+      .first<{ alias: string; kind: string }>();
+    expect(row).toEqual({ alias: "A Common Misspelling", kind: "misspelling" });
+  });
+
+  it("overwrites rather than appends - re-running with a shorter list drops the old aliases from title_aliases", async () => {
+    await persistTitle(env, makeTitle({ id: "alias-overwrite-2020" }));
+    await writeAliases(env, "alias-overwrite-2020", [
+      { alias: "First Alias", kind: "alt_title" },
+      { alias: "Second Alias", kind: "nickname" },
+    ]);
+    await writeAliases(env, "alias-overwrite-2020", [{ alias: "Second Alias", kind: "nickname" }]);
+
+    const { results } = await env.DB.prepare("SELECT alias FROM title_aliases WHERE title_id = ?")
+      .bind("alias-overwrite-2020")
+      .all<{ alias: string }>();
+    expect(results.map((r) => r.alias)).toEqual(["Second Alias"]);
+  });
+
+  it("a later persistTitle re-index doesn't clobber aliases written separately", async () => {
+    // Regression case: persistTitle's own FTS rebuild reads aliases live from
+    // title_aliases (not from the in-memory Title, which has no alias field) - an
+    // unrelated metadata re-ingest must not silently drop a title's aliases.
+    await persistTitle(env, makeTitle({ id: "alias-survives-reingest-2020" }));
+    await writeAliases(env, "alias-survives-reingest-2020", [{ alias: "Surviving Alias", kind: "translation" }]);
+    await persistTitle(env, makeTitle({ id: "alias-survives-reingest-2020", synopsis: "Updated synopsis." }));
+
+    const row = await env.DB.prepare(
+      "SELECT rowid FROM titles_fts WHERE titles_fts MATCH 'Surviving'",
+    ).first();
+    expect(row).not.toBeNull();
   });
 });
 

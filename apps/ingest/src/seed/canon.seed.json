@@ -11,7 +11,7 @@
         { "ref": "One Day at a Time (2017)", "title": "One Day at a Time", "year": 2017, "kind": "series", "seedInclusionTypes": ["created_by", "about_community"] },
         { "ref": "El Norte (1983)", "title": "El Norte", "year": 1983, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
         { "ref": "Stand and Deliver (1988)", "title": "Stand and Deliver", "year": 1988, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
-        { "ref": "Y Tu Mama Tambien (2001)", "title": "Y Tu Mamá También", "year": 2001, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
+        { "ref": "Y Tu Mama Tambien (2001)", "title": "Y Tu Mamá También", "year": 2001, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"], "aliases": [{ "alias": "And Your Mother Too", "kind": "translation" }] },
         { "ref": "Gentefied (2020)", "title": "Gentefied", "year": 2020, "kind": "series", "seedInclusionTypes": ["created_by", "about_community"] },
         { "ref": "Vida (2018)", "title": "Vida", "year": 2018, "kind": "series", "seedInclusionTypes": ["created_by", "about_community", "breakthrough"] },
         { "ref": "In the Heights (2021)", "title": "In the Heights", "year": 2021, "kind": "film", "seedInclusionTypes": ["created_by", "about_community"] },

@@ -1,8 +1,9 @@
-import type { Env, IngestParams } from "./bindings.js";
+import type { AliasKind, Env, IngestParams } from "./bindings.js";
 import { retryErroredJobs, refreshPopularity } from "./maintenance.js";
 import { fetchTmdbPersonGender } from "./sources/tmdb.js";
 import { slugId } from "./normalize.js";
 import { removeInvalidTmdbEntries } from "./cleanup/index.js";
+import { writeAliases } from "./persist.js";
 
 export { IngestWorkflow } from "./workflow.js";
 
@@ -12,6 +13,10 @@ export default {
    *   POST /ingest          { titles: IngestParams[] }   → kicks off one workflow per title
    *   GET  /jobs                                         → review queue
    *   POST /backfill-gender { limit?: number }           → TMDB-only, no Workers AI neurons
+   *   POST /aliases         { titleId, aliases: {alias, kind}[] } → backfill aliases
+   *                                                         for a title already ingested
+   *                                                         (new ingests set these via
+   *                                                         IngestParams.aliases instead)
    */
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
@@ -99,6 +104,17 @@ export default {
       }
 
       return Response.json({ checked: people.length, updated, stillUnknown: people.length - updated - errors.length, errors });
+    }
+
+    if (req.method === "POST" && url.pathname === "/aliases") {
+      const { titleId, aliases } = (await req.json()) as {
+        titleId: string;
+        aliases: { alias: string; kind: AliasKind }[];
+      };
+      const exists = await env.DB.prepare("SELECT id FROM titles WHERE id = ?").bind(titleId).first();
+      if (!exists) return Response.json({ error: `no such title: ${titleId}` }, { status: 404 });
+      await writeAliases(env, titleId, aliases);
+      return Response.json({ titleId, aliasCount: aliases.length });
     }
 
     if (req.method === "GET" && url.pathname === "/jobs") {

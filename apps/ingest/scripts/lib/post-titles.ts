@@ -6,6 +6,8 @@ export interface SeedTitle {
   /** Pins the exact TMDB id, skipping search - see bindings.ts IngestParams.tmdbId. */
   tmdbId?: number;
   seedInclusionTypes?: string[];
+  /** See bindings.ts AliasKind/IngestParams.aliases. */
+  aliases?: { alias: string; kind: "translation" | "alt_title" | "misspelling" | "nickname" }[];
 }
 
 const BATCH = 4; // keep Workers AI neurons/day in budget; the nightly cron mops up the rest

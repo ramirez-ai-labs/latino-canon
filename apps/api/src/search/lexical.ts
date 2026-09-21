@@ -18,8 +18,13 @@ export async function lexicalSearch(
   const { where, params } = filterToSql(filters, "t", 1); // ?1 is already MATCH below
   const gate = visibilityGateSql("t", 1 + params.length);
 
+  // Weights, in titles_fts column order: title, original_title, synopsis, people,
+  // tags, aliases. Aliases sit just under title itself (3.0 vs 4.0) - matching a
+  // known alternate name is nearly as strong a signal as matching the display title,
+  // stronger than matching original_title (which is often the same language as
+  // title and adds less disambiguating value).
   const sql = `
-    SELECT t.id AS titleId, -bm25(titles_fts, 4.0, 2.0, 1.0, 2.0, 1.5) AS score
+    SELECT t.id AS titleId, -bm25(titles_fts, 4.0, 2.0, 1.0, 2.0, 1.5, 3.0) AS score
     FROM titles_fts
     JOIN titles t ON t.rowid = titles_fts.rowid
     WHERE titles_fts MATCH ?1

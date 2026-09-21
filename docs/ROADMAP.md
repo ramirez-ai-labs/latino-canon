@@ -24,6 +24,7 @@ What's already built genuinely earns both halves of that comparison:
 | Capability | Spotify-like | Netflix-like |
 |---|---|---|
 | Hybrid BM25 + `bge-m3` multilingual semantic search, fused with RRF (`apps/api/src/search/hybrid.ts`) | ✅ fast known-item + fuzzy-meaning retrieval | |
+| Alternate-title/alias layer (`title_aliases`, indexed into `titles_fts`) | ✅ finds a title by a name TMDB's own metadata never captured | |
 | `inclusion_type`/theme taxonomy, `editor > seed > model` tag precedence (`packages/core/src/taxonomy.ts`) | | ✅ curation beats raw signal; guards against AI over-claiming identity |
 | Editorial "why it matters" blurbs, grounded with cited sources shown in the UI | | ✅ |
 | Curated + smart (filter-driven) collections (`apps/api/src/routes/collections.ts`) | | ✅ |
@@ -156,13 +157,21 @@ once this was confirmed working end-to-end.
 
 ## Near-term: closing the Spotify gap (obscure/half-remembered search)
 
-3. **Alias / alternate-title layer.** Nothing today lets "the road trip movie" or a
-   common misspelling or a Spanish nickname find *Y Tu Mamá También* except semantic
-   search happening to catch it. A real `title_aliases` table (alternate titles,
-   translated titles, common misspellings, notable character names) indexed into
-   `titles_fts` would directly implement the "obscure song" search experience this
-   project was originally inspired by — and is the single most Spotify-flavored gap
-   left.
+3. ~~**Alias / alternate-title layer.**~~ **Done.** A real `title_aliases` table
+   (migration `0019`), indexed as a 6th `titles_fts` column (weight `3.0`, just under
+   `title`'s `4.0`). Verified live *before* building this that `title`/
+   `original_title` already cover most language-swap cases on their own (TMDB's own
+   `original_title` is already indexed — "como agua para chocolate" already found
+   *Like Water for Chocolate*); the real, confirmed gap was names TMDB's own fields
+   never capture at all — a market-specific marketing retitle distinct from both
+   `title` and `original_title`. Seeded one verified, live-confirmed proof case
+   rather than a batch import (same discipline as the contextual schema's Griselda
+   proof title): *Y Tu Mamá También* → "And Your Mother Too", the film's real US
+   theatrical release title. `writeAliases()` (`apps/ingest/src/persist.ts`) handles
+   both new ingests (`IngestParams.aliases`) and backfilling a title already in
+   production (`POST /aliases`, `scripts/set-aliases.ts`) without a risky
+   `force: true` re-ingest. Broader alias curation across the catalog is a deliberate
+   follow-up, not bundled in here.
 4. Typo tolerance in lexical search is currently just FTS5 prefix matching
    (`toFtsMatch` in `apps/api/src/search/lexical.ts`) — no real fuzzy/edit-distance
    correction. Lower priority than #3; semantic search already covers most of what
