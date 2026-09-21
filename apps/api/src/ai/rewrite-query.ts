@@ -49,6 +49,22 @@ export async function rewriteQuery(
 const DECADE_RE = /\b((?:19|20)\d0|\d0)s?\b/;
 const DECADE_WORDS: Record<string, number> = { nineties: 1990, eighties: 1980, seventies: 1970 };
 
+// Bilingual synonyms for thematic expansion (Spanish ↔ English)
+const SYNONYM_EXPANSIONS: Record<string, string[]> = {
+  border: ["crossing", "immigration", "fronteras", "cruce", "migrante"],
+  crossing: ["border", "immigration", "fronteras", "cruce"],
+  immigration: ["border", "crossing", "migrants", "inmigración", "fronteras"],
+  fronteras: ["border", "crossing", "immigration", "cruce"],
+  family: ["familias", "community", "household"],
+  familias: ["family", "community", "household"],
+  love: ["romance", "amor", "passion", "corazón"],
+  amor: ["love", "romance", "passion", "corazón"],
+  crime: ["delito", "crimen", "corruption", "violence"],
+  delito: ["crime", "crimen", "corruption", "violence"],
+  music: ["música", "songs", "singer", "artist", "cantante"],
+  música: ["music", "songs", "singer", "artist", "cantante"],
+};
+
 /**
  * No nationality/heritage-word -> country filter here (there was one; it's gone).
  * `country` on a Title is where the work was *produced* (ISO 3166-1), but this catalog
@@ -93,6 +109,31 @@ function rulesRewrite(phrase: string): {
     hits++;
   }
 
+  // Bilingual synonym expansion: detect query tokens and add relevant synonyms
+  cleaned = expandBilingualSynonyms(cleaned);
+
   cleaned = cleaned.replace(/\s{2,}/g, " ").replace(/^[\s,]+|[\s,]+$/g, "");
   return { cleaned: cleaned || phrase, filters, hits };
+}
+
+/**
+ * Expand thematic synonyms for bilingual search. If query contains "border",
+ * also search for "crossing", "immigration", "fronteras", etc.
+ * This helps bridge Spanish/English vocabulary gaps in discovery queries.
+ */
+function expandBilingualSynonyms(phrase: string): string {
+  const lowerPhrase = phrase.toLowerCase();
+  const tokens = lowerPhrase.split(/\s+/);
+  const expanded = new Set<string>(tokens);
+
+  for (const token of tokens) {
+    const synonyms = SYNONYM_EXPANSIONS[token];
+    if (synonyms) {
+      for (const syn of synonyms) {
+        expanded.add(syn);
+      }
+    }
+  }
+
+  return Array.from(expanded).join(" ");
 }
