@@ -109,8 +109,10 @@ function rulesRewrite(phrase: string): {
     hits++;
   }
 
-  // Bilingual synonym expansion: detect query tokens and add relevant synonyms
-  cleaned = expandBilingualSynonyms(cleaned);
+  // Bilingual synonym expansion: only for thematic queries (3+ words or explicit keywords)
+  if (cleaned.split(/\s+/).length >= 3 || /\b(border|crossing|immigration|family|love|crime|music|fronteras|cruce|familias|amor|delito|música)\b/i.test(cleaned)) {
+    cleaned = expandBilingualSynonyms(cleaned);
+  }
 
   cleaned = cleaned.replace(/\s{2,}/g, " ").replace(/^[\s,]+|[\s,]+$/g, "");
   return { cleaned: cleaned || phrase, filters, hits };
