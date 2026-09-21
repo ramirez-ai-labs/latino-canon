@@ -1,0 +1,34 @@
+# Code ownership and review requirements for latino-canon
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# CRITICAL PATHS - Core platform code
+/apps/api/src/**                    @vhr1975
+/apps/ingest/src/**                 @vhr1975
+/apps/web/src/**                    @vhr1975
+/packages/core/src/**               @vhr1975
+/packages/eval/src/**               @vhr1975
+
+# DATA CURATION - Film additions require careful review
+/apps/ingest/src/seed/canon.seed.json    @vhr1975
+/docs/CANON_TRACKING_MASTER.csv          @vhr1975
+
+# INFRASTRUCTURE & CI/CD - Deployment pipeline
+/.github/workflows/**               @vhr1975
+/infra/**                           @vhr1975
+/.github/dependabot.yml             @vhr1975
+
+# DOCUMENTATION - Architecture & API docs
+/README.md                          @vhr1975
+/docs/ROADMAP.md                    @vhr1975
+/docs/INGEST.md                     @vhr1975
+/docs/CRITERIA.md                   @vhr1975
+/docs/operations/monitoring.md      @vhr1975
+/.github/WORKFLOWS.md               @vhr1975
+
+# GOVERNANCE - Security & policy
+/.github/CODEOWNERS                 @vhr1975
+/SECURITY.md                        @vhr1975
+/LICENSE                            @vhr1975
+
+# Default: require review from project owner
+*                                   @vhr1975
