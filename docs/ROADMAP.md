@@ -40,29 +40,21 @@ against that same framework, is the rest of this document.
 
 ### Week 1: Portfolio Polish (3.5 hours) — START HERE
 
-These unlock presentation credibility and OSS legitimacy:
+These unlock presentation credibility and OSS legitimacy. **All done** — the
+checkboxes below just hadn't been updated when the work landed:
 
-- [ ] **Add LICENSE file** (10 min)
-  - Use MIT or Apache-2.0 (GitHub repo should default to MIT)
-  - Legal clarity for portfolio/open-source consumption
-  - Add to repo root, commit
+- [x] **Add LICENSE file** — **Done.** MIT, repo root.
 
-- [ ] **Archive tactical phase documentation** (30 min)
-  - Create `docs/archive/phases/` directory
-  - Move: `PHASE_C_*.md`, `PHASE_D_*.md`, `FIX_SCHEMA_REBUILD.md`, `CLEANUP_*.md`, `PROJECT_COMPLETION_SUMMARY.md`, `SESSION_6_*.md`
-  - Keep as history; link from README: "See [Phase Documentation](docs/archive/phases/) for detailed development logs"
-  - Permanent docs remain: README, ROADMAP, CRITERIA, INGEST, infra/README
+- [x] **Archive tactical phase documentation** — **Done.**
+  `docs/archive/phases/` holds all 8 tactical docs; permanent docs (README,
+  ROADMAP, CRITERIA, INGEST, infra/README) stayed at their normal paths.
 
-- [ ] **Add .dev.vars.example files** (15 min)
-  - `apps/api/.dev.vars.example` (list required vars)
-  - `apps/web/.dev.vars.example` (list required vars)
-  - Ingest already has one; verify completeness
-  - Document in README setup instructions
+- [x] **Add .dev.vars.example files** — **Done.** All three apps
+  (`api`/`web`/`ingest`) have one.
 
-- [ ] **Add .dependabot.yml** (20 min)
-  - Enable automated security updates
-  - Set schedule to weekly, max 5 open PRs
-  - Reduces manual dependency management
+- [x] **Add .dependabot.yml** — **Done.** `.github/dependabot.yml` exists;
+  the string of `deps(deps)`/`ci(deps)`/`devdeps(deps-dev)` PRs (#121–#130)
+  are it working.
 
 - [x] **Create docs/operations/monitoring.md** — **Done.** Built around three real
   incidents rather than written generically: the blurb-approval silent-reset bug
@@ -95,11 +87,12 @@ Hardens untested critical paths (8 bugs caught in recent phases, all in untested
   - `refreshPopularity()`: TMDB-fetch popularity scores for existing titles
   - Verify cron trigger (8 AM UTC) actually runs
 
-- [ ] **Complete groundedness evaluation** (120 min)
-  - `run-groundedness.ts` currently requires manual title IDs
-  - Modify to enumerate all titles (or all with blurbs)
-  - Publish results to `.eval-out/groundedness-*.json`
-  - Add to README evaluation section
+- [x] **Complete groundedness evaluation** — **Done.** `run-groundedness.ts`
+  auto-enumerates via `GET /titles?hasBlurb=1`. A real run against the whole
+  canon (216 titles, 0 failures) is published in README's evaluation section:
+  mean score 0.486 — only reachable after fixing the blurb-approval-reset bug
+  (#138) that had every blurb sitting unapproved; see
+  [monitoring.md](operations/monitoring.md#1-blurb-approval-silently-reset-on-every-re-ingest).
 
 - [ ] **Add ESLint configuration** (60 min)
   - Remove dead `lint` task scaffolding
@@ -111,16 +104,10 @@ Hardens untested critical paths (8 bugs caught in recent phases, all in untested
 
 Optimizes retrieval quality and tunes thresholds responsibly:
 
-- [ ] **Expand golden query set** (480 min)
-  - Grow from 15 → 50+ real queries
-  - Collect relevance judgments (5-point scale or binary relevant/not)
-  - Document in `packages/eval/src/datasets/queries.jsonl`
+- [x] **Expand golden query set** — **Done**, see item #6 below (62 queries).
 
-- [ ] **Tune RRF weights + thresholds** (120 min)
-  - Re-run `pnpm eval:retrieval` with expanded query set
-  - Optimize `hybrid.ts` RRF weights (currently [1,1], hand-picked)
-  - Tune `semantic.ts` `MIN_SEMANTIC_SCORE` (currently 0.35, heuristic)
-  - Document tuning decisions and trade-offs in ROADMAP
+- [x] **Tune RRF weights + thresholds** — **Done**, see item #6 below
+  (`[1,1]` → `[2,1]`, `MIN_SEMANTIC_SCORE` tested and deliberately left at 0.35).
 
 - [ ] **Generate OpenAPI spec** (120 min)
   - Use Hono OpenAPI middleware
@@ -142,10 +129,10 @@ Optimizes retrieval quality and tunes thresholds responsibly:
    centering a queer Latina character's arc, and *One Day at a Time* / *Gentefied*'s
    showrunner-creators weren't tagged `led_by` (only `created_by`), despite the
    taxonomy's own definition of `led_by` covering showrunners, not just directors.
-2. **Verify `pnpm eval:groundedness`'s rewritten judge actually works.** It was
-   rewired from Anthropic's API to Workers AI's REST API in the Anthropic-removal
-   work but has never actually been executed — needs a real `CLOUDFLARE_API_TOKEN`
-   to test.
+2. ~~**Verify `pnpm eval:groundedness`'s rewritten judge actually works.**~~ **Done.**
+   Not only works — running it surfaced the blurb-approval-reset bug (#138) and,
+   once fixed, produced a real full-catalog score (mean 0.486, n=216, 0 failures),
+   now published in README.
 
 ~~D1 migrations were entirely manual.~~ **Done.** Every migration in this project had
 to be applied to production by hand via `wrangler d1 migrations apply --remote`
@@ -192,16 +179,14 @@ once this was confirmed working end-to-end.
    growing further as the catalog grows past 219 titles — re-running the *original*
    15 queries at current scale (recall@5 0.889→0.744) is what turned this from
    optional into urgent; see the README's evaluation results section.
-7. **Netflix-style hero + carousel layout for collection/title pages.** Prompted by
-   comparing our `TitleCard`/`/collections/[slug]` grid against an actual Netflix
-   collection page: Netflix's card shows the full synopsis inline (not a truncated
-   teaser) and its own AI-generated mood/tone tags ("Witty, Irreverent, Romantic")
-   are conceptually the same move as our `inclusion_type`/theme tags — just
-   presented as a details-panel afterthought rather than the product's whole point,
-   which is the opposite of this project's actual differentiator (`TitleCard`'s own
-   comment: surfacing the model's output on its face "is the whole point of the
-   product"). Worth borrowing the layout (hero banner + horizontal carousel instead
-   of a plain grid), not the buried-tags approach.
+7. ~~**Netflix-style hero + carousel layout for collection/title pages.**~~ **Done.**
+   Homepage rebuilt (PR #147) with a hero banner (search front and center) followed
+   by a labeled horizontal-scroll `Rail` per collection (native scroll-snap, no
+   carousel library) instead of the old flat wrap-grid. `TitleCard` kept the buried
+   tags on the card face deliberately — that's the actual differentiator this item's
+   own reasoning argued for keeping, not a leftover to fix. `/collections/[slug]`
+   itself is still a plain grid, not a hero+carousel page; only the homepage got the
+   full treatment.
 
 ## Representation honesty: contextual/critical-archive schema
 
@@ -237,11 +222,16 @@ deferred rather than bundled in:
     Upon a Time in Mexico* (the titles that originally raised this question) still
     need their own individual verification pass under the now-decided rule, not an
     automatic re-add — a broader scope doesn't relax rule #1's credit-checking bar.
-    **Follow-up, not yet built:** the separate filter facets this decision implies
-    (U.S./diaspora stories vs. Latin American cinema vs. Latin American filmmakers
-    working in Hollywood vs. Latino actors in non-Latino-centered stories) so users
-    can actually distinguish these categories in search/browse, rather than everything
-    just being `about_community` with no further distinction.
+    **Follow-up, partially built:** a plain production-`country` filter is now
+    surfaced in `SearchFilters` (the API already supported it end-to-end; it was
+    never wired up in the UI) — lets users filter to e.g. Spain specifically (8 of
+    218 titles are Spain-only productions; another 28 are Latin American films with
+    Spanish co-production financing, not "Spain shows") without inventing a new
+    category. This is objective and country-based, not the fuller distinction this
+    item originally asked for (U.S./diaspora vs. Latin American cinema vs. Latin
+    American filmmakers working in Hollywood vs. Latino actors in non-Latino-centered
+    stories) — that would need a real editorial judgment call per title on top of
+    what `inclusion_type` already carries, and is still not built.
 
 ## Standing backlog (SDLC / completeness, unchanged priority)
 
@@ -253,9 +243,14 @@ deferred rather than bundled in:
 10. Add real linting (`turbo.json`/`package.json` advertise a `lint` task with no
     ESLint/Biome config and no per-package script behind it — currently dead
     scaffolding, not run in CI).
-11. Smaller: add a LICENSE, a Dependabot config, confirm branch protection is
-    actually enabled on `main` (unverifiable via API on a private repo), and clean up
-    the `"community" as never` type-cast hack in `apps/web/src/lib/local-data.ts`.
+11. ~~Smaller: add a LICENSE, a Dependabot config, confirm branch protection is
+    actually enabled on `main`~~ LICENSE and Dependabot: **done**, see Week 1 above.
+    Branch protection: confirmed via the GitHub API (not just "unverifiable") that
+    it's literally impossible to enable while the repo is private without GitHub
+    Pro — going public unlocks it for free, and it should be turned on immediately
+    after that flip, since nothing currently stops a direct push to `main`. Still
+    open: clean up the `"community" as never` type-cast hack in
+    `apps/web/src/lib/local-data.ts`.
 14. **Process rule, found the hard way (PR #40/#41): `deploy-api.yml` (runs
     migrations) and `ingest-new-titles.yml` (POSTs new titles for async ingestion)
     both trigger off the same merge push and run in parallel, with no ordering
@@ -277,7 +272,11 @@ deferred rather than bundled in:
     `BATCH = 4` rate-limits a single run; nothing tracks the running total *across*
     runs in a day, and the cap is shared with any other Workers AI usage on the same
     Cloudflare account. Worth either a lightweight neuron-spend tracker before a large
-    batch, or just a standing discipline of checking current usage first.
+    batch, or just a standing discipline of checking current usage first — the
+    latter is now written down as a manual check in
+    [monitoring.md](operations/monitoring.md#alert-neuron-budget-headroom), which
+    closes the "at least document the discipline" half of this item. A real
+    in-code tracker is still open.
 16. ~~**Decade filter matches release year, not story setting — found via the golden-set
     expansion above.**~~ **Done.** A query mentioning a decade the story is *set in*
     ("1940s Los Angeles pachuco riots stage musical" → *Zoot Suit*, released 1981) got
