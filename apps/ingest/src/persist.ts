@@ -162,13 +162,19 @@ export async function setJob(
   stage: string,
   status: "pending" | "running" | "needs_review" | "done" | "error",
   errorMessage: string | null = null,
+  params?: unknown,
 ): Promise<void> {
+  // params is only ever passed on "register job" (the workflow's own IngestParams) -
+  // every later call in the same run omits it, and COALESCE keeps the row's original
+  // value instead of nulling it out on each subsequent status update.
+  const paramsJson = params !== undefined ? JSON.stringify(params) : null;
   await env.DB.prepare(
-    `INSERT INTO ingest_jobs (id, title_ref, stage, status, error, updated_at)
-     VALUES (?1,?2,?3,?4,?5, datetime('now'))
+    `INSERT INTO ingest_jobs (id, title_ref, stage, status, error, params, updated_at)
+     VALUES (?1,?2,?3,?4,?5,?6, datetime('now'))
      ON CONFLICT(id) DO UPDATE SET
-       stage=excluded.stage, status=excluded.status, error=excluded.error, updated_at=datetime('now')`,
+       stage=excluded.stage, status=excluded.status, error=excluded.error,
+       params=COALESCE(excluded.params, ingest_jobs.params), updated_at=datetime('now')`,
   )
-    .bind(id, ref, stage, status, errorMessage)
+    .bind(id, ref, stage, status, errorMessage, paramsJson)
     .run();
 }
