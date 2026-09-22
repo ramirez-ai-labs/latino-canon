@@ -22,10 +22,20 @@ titlesRoute.get("/", async (c) => {
   const recent = c.req.query("recent") === "1";
   const limit = Math.min(Number(c.req.query("limit") || "1000"), 10000);
 
+  // Found live (500 on both `?recent=1` and the plain no-params call: "no such
+  // column: t.title"/"t.created_at") - misdiagnosed on the first pass as a genuinely
+  // missing `created_at` column (fixed to order by updated_at instead), but CI's own
+  // migration-driven D1 disproved that: updated_at produced the identical error, and a
+  // direct `wrangler d1 execute` against the live table confirmed created_at genuinely
+  // exists. The real bug: the `!hasBlurb` branch below selected `FROM titles` with no
+  // `t` alias, so every `t.`-qualified ORDER BY column - including the plain default
+  // `t.title ASC`, not just the recent=1 case - never resolved to anything.
+  // `hasBlurb=1` was never affected (its branch already aliases `titles t`), which is
+  // why the groundedness eval's `GET /titles?hasBlurb=1` always worked fine.
   const orderBy = recent ? "t.created_at DESC" : "t.title ASC";
   const sql = hasBlurb
     ? `SELECT DISTINCT t.id FROM titles t INNER JOIN blurbs b ON t.id = b.title_id WHERE b.approved = 1 ORDER BY ${orderBy} LIMIT ?`
-    : `SELECT id FROM titles ORDER BY ${orderBy} LIMIT ?`;
+    : `SELECT id FROM titles t ORDER BY ${orderBy} LIMIT ?`;
 
   const { results } = await c.env.DB.prepare(sql).bind(limit).all<{ id: string }>();
   return c.json({

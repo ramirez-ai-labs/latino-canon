@@ -154,3 +154,47 @@ describe("GET /titles/:id", () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe("GET /titles", () => {
+  // Regression coverage for a real bug found live in production, on both the plain
+  // no-params call AND ?recent=1: the !hasBlurb branch selected `FROM titles` with no
+  // `t` alias, so every `t.`-qualified ORDER BY column - the default `t.title ASC`, not
+  // just `t.created_at DESC` for recent=1 - never resolved, 500ing every time
+  // ("no such column: t.title"/"t.created_at"). hasBlurb=1's branch already aliases
+  // `titles t`, which is why the groundedness eval's own GET /titles?hasBlurb=1 calls
+  // were never affected. created_at itself was never actually missing - confirmed via
+  // a direct `wrangler d1 execute` against the live table - that was a wrong first
+  // diagnosis based on an error message that looks identical for either cause.
+  beforeAll(async () => {
+    await env.DB.batch([
+      env.DB.prepare(
+        `INSERT INTO titles (id, kind, title, year_start, countries, languages, created_at)
+         VALUES ('recent-older-2020', 'film', 'Older', 2020, '[]', '[]', '2020-01-01T00:00:00Z')`,
+      ),
+      env.DB.prepare(
+        // Far-future, not just "later than the other row" - every other title in this
+        // file defaults created_at to the real wall-clock time the test runs, which
+        // would otherwise sort ahead of any plausible hand-picked "recent" date.
+        `INSERT INTO titles (id, kind, title, year_start, countries, languages, created_at)
+         VALUES ('recent-newer-2021', 'film', 'Newer', 2021, '[]', '[]', '2099-01-01T00:00:00Z')`,
+      ),
+    ]);
+  });
+
+  it("plain call (no query params) doesn't 500 on the missing FROM titles alias", async () => {
+    const res = await app.request("/titles?limit=100", {}, env);
+    expect(res.status).toBe(200);
+  });
+
+  it("?recent=1 orders by created_at DESC", async () => {
+    const res = await app.request("/titles?recent=1&limit=100", {}, env);
+    expect(res.status).toBe(200);
+    const body = await res.json<{ titleIds: string[] }>();
+    // recent-newer-2021's far-future date guarantees first place outright. Everything
+    // else in this file defaults created_at to the real wall-clock test-run time, which
+    // is later than recent-older-2020's 2020 date - so only relative order between the
+    // two is asserted, not recent-older-2020's absolute position.
+    expect(body.titleIds[0]).toBe("recent-newer-2021");
+    expect(body.titleIds.indexOf("recent-newer-2021")).toBeLessThan(body.titleIds.indexOf("recent-older-2020"));
+  });
+});
