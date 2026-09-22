@@ -16,14 +16,16 @@ import type { Env } from "../bindings.js";
 
 export const titlesRoute = new Hono<{ Bindings: Env }>();
 
-/** GET /titles?hasBlurb=1 — enumerate title IDs, optionally filtered by blurb presence. */
+/** GET /titles?hasBlurb=1&recent=1 — enumerate title IDs, optionally filtered by blurb presence or recency. */
 titlesRoute.get("/", async (c) => {
   const hasBlurb = c.req.query("hasBlurb") === "1";
+  const recent = c.req.query("recent") === "1";
   const limit = Math.min(Number(c.req.query("limit") || "1000"), 10000);
 
+  const orderBy = recent ? "t.created_at DESC" : "t.title ASC";
   const sql = hasBlurb
-    ? "SELECT DISTINCT t.id FROM titles t INNER JOIN blurbs b ON t.id = b.title_id WHERE b.approved = 1 ORDER BY t.title ASC LIMIT ?"
-    : "SELECT id FROM titles ORDER BY title ASC LIMIT ?";
+    ? `SELECT DISTINCT t.id FROM titles t INNER JOIN blurbs b ON t.id = b.title_id WHERE b.approved = 1 ORDER BY ${orderBy} LIMIT ?`
+    : `SELECT id FROM titles ORDER BY ${orderBy} LIMIT ?`;
 
   const { results } = await c.env.DB.prepare(sql).bind(limit).all<{ id: string }>();
   return c.json({

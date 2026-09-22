@@ -66,23 +66,27 @@ export async function hydrateCards(env: Env, hits: RankedHit[]): Promise<TitleCa
   return ids
     .map((id) => byId.get(id))
     .filter((r): r is CardRow => Boolean(r))
-    .map((r) => ({
-      id: r.id,
-      kind: r.kind,
-      title: r.title,
-      yearStart: r.year_start,
-      yearEnd: r.year_end,
-      director: r.director,
-      directorGender: r.director_gender,
-      posterKey: r.poster_key,
-      blurbTeaser: r.blurb ? truncate(r.blurb, 140) : null,
-      inclusionTypes: parseTags(r.inclusion_types) as InclusionType[],
-      themes: parseTags(r.themes) as Theme[],
-      score: scoreById.get(r.id) ?? 0,
-      representationHandling: r.representation_handling,
-      runtime: r.runtime,
-      oscarWin: r.oscar_win,
-    }));
+    .map((r) => {
+      const inclusionTagsWithConf = parseTagsWithConfidence(r.inclusion_types);
+      return {
+        id: r.id,
+        kind: r.kind,
+        title: r.title,
+        yearStart: r.year_start,
+        yearEnd: r.year_end,
+        director: r.director,
+        directorGender: r.director_gender,
+        posterKey: r.poster_key,
+        blurbTeaser: r.blurb ? truncate(r.blurb, 140) : null,
+        inclusionTypes: inclusionTagsWithConf.map((t) => t.slug) as InclusionType[],
+        inclusionTypesWithConfidence: inclusionTagsWithConf,
+        themes: parseTags(r.themes) as Theme[],
+        score: scoreById.get(r.id) ?? 0,
+        representationHandling: r.representation_handling,
+        runtime: r.runtime,
+        oscarWin: r.oscar_win,
+      };
+    });
 }
 
 function parseTags(concat: string | null): string[] {
@@ -95,6 +99,19 @@ function parseTags(concat: string | null): string[] {
     })
     .filter((t) => t.slug && t.conf >= MODEL_TAG_DISPLAY_THRESHOLD)
     .map((t) => t.slug as string);
+}
+
+function parseTagsWithConfidence(
+  concat: string | null,
+): Array<{ slug: InclusionType | Theme; confidence: number }> {
+  if (!concat) return [];
+  return concat
+    .split(",")
+    .map((pair) => {
+      const [slug, conf] = pair.split(":");
+      return { slug: slug as InclusionType | Theme, confidence: Number(conf) };
+    })
+    .filter((t): t is { slug: InclusionType | Theme; confidence: number } => t.slug !== undefined && t.confidence >= MODEL_TAG_DISPLAY_THRESHOLD);
 }
 
 function truncate(s: string, n: number): string {

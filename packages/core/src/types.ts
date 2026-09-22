@@ -89,6 +89,11 @@ export interface Title {
   oscarWin: string | null;
 }
 
+export interface TagWithConfidence {
+  slug: InclusionType | Theme;
+  confidence: number;
+}
+
 /** Compact shape returned by /search — enough to render a card. */
 export interface TitleCard {
   id: string;
@@ -102,6 +107,7 @@ export interface TitleCard {
   posterKey: string | null;
   blurbTeaser: string | null;
   inclusionTypes: InclusionType[];
+  inclusionTypesWithConfidence: TagWithConfidence[];
   themes: Theme[];
   score: number;
   representationHandling: RepresentationHandling | null;

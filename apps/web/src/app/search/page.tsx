@@ -68,11 +68,41 @@ export default async function SearchPage({
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {results.map((t) => (
-          <TitleCard key={t.id} title={t} />
-        ))}
-      </div>
+      {results.length === 0 ? (
+        <div className="mt-12 flex flex-col items-center justify-center rounded-2xl border border-border bg-surface-raised py-12 px-6 text-center">
+          <p className="text-lg font-semibold text-text">No titles match these filters</p>
+          <p className="mt-2 text-sm text-muted max-w-md">
+            Try adjusting your search or removing filters like decade, country, or theme to see more results.
+          </p>
+          <div className="mt-6 flex flex-col gap-2 text-sm">
+            {sp.q && (
+              <p className="text-muted">
+                Searching for: <code className="rounded bg-surface px-2 py-1 text-text">{sp.q}</code>
+              </p>
+            )}
+            {Object.entries(sp).filter(([k, v]) => k !== "q" && v != null && k !== "page" && k !== "mode").length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2 justify-center">
+                {Object.entries(sp)
+                  .filter(([k, v]) => k !== "q" && v != null && k !== "page" && k !== "mode")
+                  .map(([k, v]) => (
+                    <span key={k} className="rounded bg-surface px-2 py-1 text-muted text-xs">
+                      {k}: {v}
+                    </span>
+                  ))}
+              </div>
+            )}
+            <Link href="/search" className={cn(buttonVariants({ variant: "secondary", size: "sm" }), "mt-4 w-fit mx-auto")}>
+              Clear filters & browse
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {results.map((t) => (
+            <TitleCard key={t.id} title={t} />
+          ))}
+        </div>
+      )}
 
       {isBrowse && (
         <div className="my-10 flex items-center justify-center gap-4">
