@@ -58,7 +58,7 @@ describe("extractIntent", () => {
     expect(intent.kind).toBe("film");
     expect(intent.theme).toBe("identity");
     expect(intent.source).toBe("llm");
-    expect(callSpy).toHaveBeenCalledWith(expect.objectContaining({ task: "query-rewrite" }));
+    expect(callSpy).toHaveBeenCalledWith(expect.objectContaining({ task: "query-rewrite", caller: "agents.curate" }));
   });
 
   it("falls back to rewriteQuery's own rules result when the LLM call fails - decade/kind still come through", async () => {
@@ -90,7 +90,7 @@ describe("scoreTone", () => {
     const { llm, callSpy } = fakeLlm('{"a-2020": 0.9}');
     await scoreTone(llm, [card({ id: "a-2020" })], "lighter");
     expect(callSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ task: "judge", maxTokens: 100 }), // 80 + 1*20
+      expect.objectContaining({ task: "judge", caller: "agents.curate", maxTokens: 100 }), // 80 + 1*20
     );
   });
 

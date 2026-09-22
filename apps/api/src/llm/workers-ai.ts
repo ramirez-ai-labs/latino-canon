@@ -28,7 +28,7 @@ export class WorkersAiClient implements LlmClient {
           // dedupe identical prompts (e.g. same NL query) for the TTL
           skipCache: false,
           cacheTtl: opts.task === "query-rewrite" ? 3600 : 0,
-          metadata: { task: opts.task },
+          metadata: opts.caller ? { task: opts.task, caller: opts.caller } : { task: opts.task },
         },
       },
     )) as { response?: unknown };

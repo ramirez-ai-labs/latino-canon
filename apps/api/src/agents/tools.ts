@@ -19,7 +19,7 @@ const HEAVIER_RE = /\b(heavy|heavier|dark|serious|intense|not too light)\b/i;
  * kind of judgment a 70B classify call brings nothing over a regex for.
  */
 export async function extractIntent(llm: LlmClient, query: string): Promise<ExtractedIntent> {
-  const interpretation = await rewriteQuery(llm, query);
+  const interpretation = await rewriteQuery(llm, query, "agents.curate");
 
   const directorGender = DIRECTOR_GENDER_RE.test(query)
     ? "female"
@@ -82,6 +82,7 @@ Return valid JSON only: {"title-id": 0.85, ...}`;
   try {
     const result = await llm.call({
       task: "judge",
+      caller: "agents.curate",
       messages: [{ role: "user", content: prompt }],
       // Sized to the actual (small, caller-bounded) batch rather than a flat guess -
       // each entry is roughly 15-20 tokens of JSON; this leaves real headroom without

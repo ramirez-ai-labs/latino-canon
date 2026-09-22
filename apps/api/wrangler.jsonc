@@ -6,8 +6,16 @@
 	"compatibility_flags": [
 		"nodejs_compat"
 	],
+	// traces.head_sampling_rate: 1 (100%) is deliberate at this project's request volume -
+	// full visibility into every request's AI.run()/D1/Vectorize call chain matters more
+	// right now than the cost of sampling down, which only pays off at real production
+	// traffic. Free on the Workers Free plan; only OTel *export* of traces needs Paid.
 	"observability": {
-		"enabled": true
+		"enabled": true,
+		"traces": {
+			"enabled": true,
+			"head_sampling_rate": 1
+		}
 	},
 	"ai": {
 		"binding": "AI"

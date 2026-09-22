@@ -18,6 +18,7 @@ import {
 export async function rewriteQuery(
   llm: LlmClient,
   phrase: string,
+  caller: string = "search",
 ): Promise<QueryInterpretation | null> {
   const trimmed = phrase.trim();
   if (trimmed.length < 3) return null;
@@ -29,6 +30,7 @@ export async function rewriteQuery(
   try {
     const res = await llm.call({
       task: "query-rewrite",
+      caller,
       json: true,
       maxTokens: 200,
       messages: [
