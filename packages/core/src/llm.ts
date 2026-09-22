@@ -14,6 +14,12 @@ export interface LlmMessage {
 export interface LlmCallOptions {
   /** Logical task name — surfaces in AI Gateway metadata and picks the model tier. */
   task: "query-rewrite" | "classify" | "blurb" | "judge";
+  /** Which caller/route made this call - e.g. "search", "agents.curate", "ingest".
+   * `task` alone can't distinguish /search's rewriteQuery call from the curation
+   * agent's, since both use "query-rewrite" - this is what makes AI Gateway logs
+   * filterable by which feature actually produced a given call. Optional so
+   * existing call sites aren't forced to update immediately. */
+  caller?: string;
   messages: LlmMessage[];
   /** Ask the model for strict JSON. Callers still validate with zod. */
   json?: boolean;
@@ -33,12 +39,24 @@ export interface LlmClient {
   call(opts: LlmCallOptions): Promise<LlmResult>;
 }
 
-/** Model choice per task. Keep runtime tasks small/cheap. */
+/**
+ * Model choice per task. Keep runtime tasks small/cheap.
+ *
+ * query-rewrite/judge were on the plain (non "-fast") llama-3.1-8b-instruct, which
+ * Cloudflare deprecated 2026-05-30 - every call has been returning 410 Gone since,
+ * silently falling back to each caller's own rules-based path (rewriteQuery.ts's
+ * rules pass; scoreTone's catch-and-skip). This was invisible for ~4 months because
+ * that fallback design means /search never actually broke for a user - it just quietly
+ * ran without LLM-based query interpretation the whole time. Only surfaced via the
+ * curation agent's new structured logging (docs/operations/monitoring.md). The
+ * "-fast" variant is confirmed still active - verified against Cloudflare's own
+ * deprecation changelog before changing this, not just taken on faith.
+ */
 export const MODELS: Record<LlmCallOptions["task"], string> = {
-  "query-rewrite": "@cf/meta/llama-3.1-8b-instruct",
+  "query-rewrite": "@cf/meta/llama-3.1-8b-instruct-fast",
   classify: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
   blurb: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-  judge: "@cf/meta/llama-3.1-8b-instruct",
+  judge: "@cf/meta/llama-3.1-8b-instruct-fast",
 };
 
 export const EMBEDDING_MODEL = "@cf/baai/bge-m3"; // 1024-dim, multilingual (EN + ES)
