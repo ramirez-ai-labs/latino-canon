@@ -145,7 +145,7 @@ export default async function SearchPage({
         <div className="space-y-4">
           {(results as RankedTitle[]).map((ranked) => (
             <div key={ranked.title.id} className="flex gap-4">
-              <div className="flex-shrink-0 w-32 sm:w-40">
+              <div className="flex-shrink-0" style={{ width: "150px" }}>
                 <TitleCard title={ranked.title} />
               </div>
               <div className="flex-1 flex flex-col justify-center">
