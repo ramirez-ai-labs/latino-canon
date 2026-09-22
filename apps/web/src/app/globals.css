@@ -3,18 +3,35 @@
 @theme {
   --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
 
-  --color-bg: #0b0b0d;
-  --color-surface: #16161a;
-  --color-surface-raised: #1e1e23;
-  --color-border: #27272e;
+  /* Modern Base Colors */
+  --color-bg: #0f0f1e;
+  --color-surface: #1a1225;
+  --color-surface-raised: #2a1f3d;
+  --color-border: #3d2852;
   --color-text: #f4f4f5;
-  --color-muted: #9b9ba5;
-  --color-accent: #e0954a;
-  --color-accent-muted: #e0954a26;
-  --color-gold: #d4af37;
+  --color-muted: #a8a0b8;
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -8px rgba(0, 0, 0, 0.5);
-  --shadow-card-hover: 0 2px 4px rgba(0, 0, 0, 0.5), 0 16px 40px -8px rgba(0, 0, 0, 0.65);
+  /* Modern Gradient Accents */
+  --color-primary: #667eea;
+  --color-primary-dark: #764ba2;
+  --color-accent: #f093fb;
+  --color-accent-alt: #f5576c;
+  --color-accent-cyan: #4facfe;
+  --color-accent-cyan-light: #00f2fe;
+  --color-gold: #ffd89b;
+
+  /* Muted variants for transparency */
+  --color-primary-muted: rgba(102, 126, 234, 0.15);
+  --color-accent-muted: rgba(240, 147, 251, 0.15);
+  --color-cyan-muted: rgba(79, 172, 254, 0.15);
+
+  /* Depth & Shadow System */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 20px rgba(102, 126, 234, 0.4);
+  --shadow-glow-accent: 0 0 20px rgba(240, 147, 251, 0.4);
 }
 
 @layer base {
@@ -40,6 +57,39 @@
   }
 }
 
+@layer base {
+  @keyframes gradient-flow {
+    0% { background-position: 0% center; }
+    50% { background-position: 100% center; }
+    100% { background-position: 0% center; }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.8; }
+  }
+
+  @keyframes slide-in-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+  }
+}
+
 @layer utilities {
   .scrollbar-none::-webkit-scrollbar {
     display: none;
@@ -51,5 +101,94 @@
 
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Glassmorphism */
+  .glass {
+    @apply backdrop-blur-md bg-opacity-40;
+    background: rgba(26, 18, 37, 0.4);
+    border: 1px solid rgba(61, 40, 82, 0.5);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  }
+
+  .glass-light {
+    @apply backdrop-blur-sm bg-opacity-30;
+    background: rgba(26, 18, 37, 0.3);
+    border: 1px solid rgba(61, 40, 82, 0.3);
+  }
+
+  .glass-heavy {
+    @apply backdrop-blur-lg bg-opacity-50;
+    background: rgba(26, 18, 37, 0.5);
+    border: 1px solid rgba(61, 40, 82, 0.6);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Gradient Backgrounds */
+  .gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .gradient-accent {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  }
+
+  .gradient-cyan {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  }
+
+  .gradient-mesh {
+    background:
+      radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.2) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(240, 147, 251, 0.2) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(79, 172, 254, 0.2) 0%, transparent 50%),
+      linear-gradient(135deg, #0f0f1e 0%, #1a1225 100%);
+  }
+
+  /* Animations */
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+
+  .animate-slide-in-up {
+    animation: slide-in-up 0.5s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .animate-gradient-flow {
+    animation: gradient-flow 3s ease infinite;
+    background-size: 200% 200%;
+  }
+
+  /* Hover Effects */
+  .hover-lift {
+    @apply transition-all duration-300;
+  }
+
+  .hover-lift:hover {
+    @apply -translate-y-1 shadow-lg;
+  }
+
+  .hover-glow {
+    @apply transition-all duration-300;
+  }
+
+  .hover-glow:hover {
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* Motion Preferences */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation: none !important;
+      transition: none !important;
+    }
   }
 }
