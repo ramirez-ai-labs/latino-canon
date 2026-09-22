@@ -4,7 +4,6 @@ import type { TitleCard as TitleCardData, SearchResponse, CurationResponse, Rank
 import { SearchBar } from "@/components/SearchBar";
 import { SearchFilters } from "@/components/SearchFilters";
 import { TitleCard } from "@/components/TitleCard";
-import { AgentSearchReasoning } from "@/components/AgentSearchReasoning";
 import { buttonVariants } from "@/components/ui/button";
 import { search, curateSearch } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -96,7 +95,21 @@ export default async function SearchPage({
         </div>
       </Suspense>
 
-      {isAgent && <AgentSearchReasoning response={res as CurationResponse} />}
+      {isAgent && (
+        <div className="mb-6 rounded-lg border border-border bg-surface-raised p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="inline-block px-2 py-1 text-xs font-semibold rounded bg-brand text-white">AI Search</span>
+            <p className="text-sm font-medium text-text">{(res as CurationResponse).interpretation}</p>
+          </div>
+          <div className="space-y-1">
+            {(res as CurationResponse).reasoning.map((line: string, i: number) => (
+              <p key={i} className="text-xs text-muted font-mono">
+                {line}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mb-5 flex flex-wrap items-center gap-x-2 text-sm text-muted">
         {!isAgent && (res as SearchResponse).interpretation && (
@@ -148,9 +161,20 @@ export default async function SearchPage({
               <div className="flex-shrink-0 w-32 sm:w-40">
                 <TitleCard title={ranked.title} />
               </div>
-              <div className="flex-1 flex flex-col justify-center">
-                <p className="text-sm text-text">{ranked.title.director}</p>
-                <p className="text-xs text-muted mt-1">{ranked.reason}</p>
+              <div className="flex-1">
+                <div className="text-sm text-muted space-y-1">
+                  {ranked.matchedCriteria.length > 0 && (
+                    <p className="flex flex-wrap gap-1">
+                      <span className="font-semibold">Matched:</span>
+                      {ranked.matchedCriteria.map((crit: string, i: number) => (
+                        <span key={i} className="inline-block px-2 py-0.5 rounded bg-surface text-xs">
+                          {crit}
+                        </span>
+                      ))}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted italic">{ranked.reason}</p>
+                </div>
               </div>
             </div>
           ))}
