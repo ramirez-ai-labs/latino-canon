@@ -154,3 +154,39 @@ describe("GET /titles/:id", () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe("GET /titles?recent=1", () => {
+  // Regression coverage for a real bug found live in production: this ordered by
+  // `t.created_at DESC`, a column that doesn't exist on the live `titles` table
+  // despite being in the original 0001 schema (exact history of when it was dropped
+  // wasn't tracked down) - every `recent=1` request 500'd with
+  // "D1_ERROR: no such column: t.created_at". Fixed to order by `updated_at`, which
+  // persistTitle actually sets on every insert/update.
+  beforeAll(async () => {
+    await env.DB.batch([
+      env.DB.prepare(
+        `INSERT INTO titles (id, kind, title, year_start, countries, languages, updated_at)
+         VALUES ('recent-older-2020', 'film', 'Older', 2020, '[]', '[]', '2020-01-01T00:00:00Z')`,
+      ),
+      env.DB.prepare(
+        // Far-future, not just "later than the other row" - every other title in this
+        // file defaults updated_at to the real wall-clock time the test runs, which
+        // would otherwise sort ahead of any plausible hand-picked "recent" date.
+        `INSERT INTO titles (id, kind, title, year_start, countries, languages, updated_at)
+         VALUES ('recent-newer-2021', 'film', 'Newer', 2021, '[]', '[]', '2099-01-01T00:00:00Z')`,
+      ),
+    ]);
+  });
+
+  it("orders by updated_at DESC instead of the nonexistent created_at column", async () => {
+    const res = await app.request("/titles?recent=1&limit=100", {}, env);
+    expect(res.status).toBe(200);
+    const body = await res.json<{ titleIds: string[] }>();
+    // recent-newer-2021's far-future date guarantees first place outright. Everything
+    // else in this file defaults updated_at to the real wall-clock test-run time, which
+    // is later than recent-older-2020's 2020 date - so only relative order between the
+    // two is asserted, not recent-older-2020's absolute position.
+    expect(body.titleIds[0]).toBe("recent-newer-2021");
+    expect(body.titleIds.indexOf("recent-newer-2021")).toBeLessThan(body.titleIds.indexOf("recent-older-2020"));
+  });
+});
