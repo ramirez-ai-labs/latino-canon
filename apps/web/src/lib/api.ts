@@ -58,18 +58,6 @@ export function search(params: {
   return apiFetch<SearchResponse>(`/search?${qs}`);
 }
 
-const DIRECTOR_GENDER_RE = /\b(directed|made|helmed)\b.{0,20}\b(women|female|woman)\b|\bwomen[- ]directed\b|\bfemale directors?\b/i;
-const DIRECTOR_GENDER_MALE_RE = /\b(directed|made|helmed)\b.{0,20}\b(men|male|man)\b|\bmen[- ]directed\b|\bmale directors?\b/i;
-const LIGHTER_RE = /\b(light(er)?|fun|funny|feel[- ]good|uplifting|comedic|comed(y|ies))\b/i;
-const HEAVIER_RE = /\b(heavy|heavier|dark|serious|intense|not too light)\b/i;
-
-function isComplexQuery(q: string): boolean {
-  if (!q) return false;
-  const hasDirectorGender = DIRECTOR_GENDER_RE.test(q) || DIRECTOR_GENDER_MALE_RE.test(q);
-  const hasTone = LIGHTER_RE.test(q) || HEAVIER_RE.test(q);
-  return hasDirectorGender || hasTone;
-}
-
 export function curateSearch(params: { q: string; limit?: number }): Promise<CurationResponse> {
   return apiFetch<CurationResponse>(`/agents/curate`, {
     method: "POST",

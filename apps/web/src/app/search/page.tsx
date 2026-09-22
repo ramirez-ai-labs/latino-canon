@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import type { TitleCard as TitleCardData } from "@latino-canon/core";
+import type { TitleCard as TitleCardData, SearchResponse, CurationResponse, RankedTitle } from "@latino-canon/core";
 import { SearchBar } from "@/components/SearchBar";
 import { SearchFilters } from "@/components/SearchFilters";
 import { TitleCard } from "@/components/TitleCard";
@@ -36,15 +36,14 @@ export default async function SearchPage({
   const isBrowse = !sp.q;
   const isAgentSearch = sp.q && isComplexQuery(sp.q);
 
-  let res: any;
+  let res: SearchResponse | CurationResponse;
   let isAgent = false;
 
   if (isAgentSearch && sp.q) {
-    const curateRes = await curateSearch({ q: sp.q, limit: PER_PAGE });
-    res = curateRes;
+    res = await curateSearch({ q: sp.q, limit: PER_PAGE });
     isAgent = true;
   } else {
-    const searchRes = await search({
+    res = await search({
       q: sp.q,
       mode: sp.mode ?? "hybrid",
       theme: sp.theme,
@@ -55,7 +54,6 @@ export default async function SearchPage({
       limit: PER_PAGE + 1,
       offset: isBrowse ? offset : undefined,
     });
-    res = searchRes;
   }
 
   const hasNext = (isAgent ? res.topResults : res.results).length >= PER_PAGE;
@@ -138,7 +136,7 @@ export default async function SearchPage({
         </div>
       ) : isAgent ? (
         <div className="space-y-4">
-          {results.map((ranked: any) => (
+          {results.map((ranked: RankedTitle) => (
             <div key={ranked.title.id} className="flex gap-4">
               <div className="flex-shrink-0">
                 <TitleCard title={ranked.title} />
