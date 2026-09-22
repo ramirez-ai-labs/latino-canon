@@ -56,8 +56,11 @@ export default async function SearchPage({
     });
   }
 
-  const hasNext = (isAgent ? res.topResults : res.results).length >= PER_PAGE;
-  const results = isAgent ? res.topResults.slice(0, PER_PAGE) : res.results.slice(0, PER_PAGE);
+  const resultsArray = isAgent
+    ? (res as CurationResponse).topResults
+    : (res as SearchResponse).results;
+  const hasNext = resultsArray.length >= PER_PAGE;
+  const results = resultsArray.slice(0, PER_PAGE);
   const hasPrev = page > 1;
 
   const pageHref = (p: number) =>
@@ -79,10 +82,10 @@ export default async function SearchPage({
         <div className="mb-6 rounded-lg border border-border bg-surface-raised p-4">
           <div className="mb-3 flex items-center gap-2">
             <span className="inline-block px-2 py-1 text-xs font-semibold rounded bg-brand text-white">AI Search</span>
-            <p className="text-sm font-medium text-text">{res.interpretation}</p>
+            <p className="text-sm font-medium text-text">{(res as CurationResponse).interpretation}</p>
           </div>
           <div className="space-y-1">
-            {res.reasoning.map((line: string, i: number) => (
+            {(res as CurationResponse).reasoning.map((line: string, i: number) => (
               <p key={i} className="text-xs text-muted font-mono">
                 {line}
               </p>
@@ -92,17 +95,17 @@ export default async function SearchPage({
       )}
 
       <div className="mb-5 flex flex-wrap items-center gap-x-2 text-sm text-muted">
-        {!isAgent && res.interpretation && (
+        {!isAgent && (res as SearchResponse).interpretation && (
           <p>
-            Interpreting as <code className="rounded bg-surface-raised px-1.5 py-0.5 text-text">{res.interpretation.cleanedQuery || "(browse)"}</code>
-            {Object.entries(res.interpretation.filters).length > 0 && (
-              <> · {Object.entries(res.interpretation.filters).map(([k, v]) => `${k}:${v}`).join(" · ")}</>
+            Interpreting as <code className="rounded bg-surface-raised px-1.5 py-0.5 text-text">{((res as SearchResponse).interpretation!).cleanedQuery || "(browse)"}</code>
+            {Object.entries(((res as SearchResponse).interpretation!).filters).length > 0 && (
+              <> · {Object.entries(((res as SearchResponse).interpretation!).filters).map(([k, v]) => `${k}:${v}`).join(" · ")}</>
             )}
-            <span className="opacity-60"> ({res.interpretation.source})</span>
+            <span className="opacity-60"> ({((res as SearchResponse).interpretation!).source})</span>
           </p>
         )}
         <p>
-          {results.length} results {isAgent ? "· AI-curated" : `· ${res.mode} · ${res.tookMs}ms`} {isBrowse && `· Page ${page}`}
+          {results.length} results {isAgent ? "· AI-curated" : `· ${(res as SearchResponse).mode} · ${(res as SearchResponse).tookMs}ms`} {isBrowse && `· Page ${page}`}
         </p>
       </div>
 
@@ -136,7 +139,7 @@ export default async function SearchPage({
         </div>
       ) : isAgent ? (
         <div className="space-y-4">
-          {results.map((ranked: RankedTitle) => (
+          {(results as RankedTitle[]).map((ranked) => (
             <div key={ranked.title.id} className="flex gap-4">
               <div className="flex-shrink-0">
                 <TitleCard title={ranked.title} />
@@ -161,7 +164,7 @@ export default async function SearchPage({
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {results.map((t: TitleCardData) => (
+          {(results as TitleCardData[]).map((t) => (
             <TitleCard key={t.id} title={t} />
           ))}
         </div>
