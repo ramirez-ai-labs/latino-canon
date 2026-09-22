@@ -69,7 +69,7 @@ export function search(params: {
 export function curateSearch(params: { q: string; limit?: number }): Promise<CurationResponse> {
   return apiFetch<CurationResponse>(`/agents/curate`, {
     method: "POST",
-    body: JSON.stringify(params),
+    body: JSON.stringify({ query: params.q, limit: params.limit }),
   });
 }
 
