@@ -171,7 +171,7 @@ budget on a given day.
   paid plan removes the daily cap — a deliberate cost decision to make
   explicitly, not something to back into by accident mid-incident.
 
-## Custom Dashboard: Curation Agent
+## Observability queries: Curation Agent
 
 `POST /agents/curate` (`apps/api/src/agents/`) emits one structured
 `console.warn(JSON.stringify(...))` line per request, tagged `event:
@@ -184,9 +184,20 @@ JSON, which is what actually makes a request queryable later - the
 human-readable `reasoning` array in the API response only ever reaches whoever
 called the endpoint for that one request.
 
-**Seed data before building panels** - Cloudflare's dashboard builder needs a
-field to have appeared in at least one log line before you can filter/group on
-it:
+**Not a Custom Dashboard** - corrected after actually checking Cloudflare's own
+docs, having gotten this wrong twice already: Custom Dashboards (Observe ->
+Analytics) only cover GraphQL analytics datasets (standard Workers metrics -
+requests, errors, CPU time) and Log Explorer datasets, and Workers Logs custom
+fields (`event`, `outcome`, `timings.totalMs`, `source`) aren't in Log
+Explorer's [supported dataset
+list](https://developers.cloudflare.com/log-explorer/manage-datasets/#supported-datasets)
+at all. The tool that actually supports filtering/grouping/visualizing a
+Worker's own custom log fields is the **Workers Observability Query Builder** -
+a different feature, and it produces individually saved queries, not one
+unified multi-widget dashboard.
+
+**Seed data before building queries** - the field picker needs a field to have
+appeared in at least one log line before it'll offer it:
 
 ```bash
 AGENT_URL=https://latino-canon-api.<acct>.workers.dev \
@@ -196,16 +207,15 @@ AGENT_URL=https://latino-canon-api.<acct>.workers.dev \
 Fires 12 distinct queries in a burst - 10 land `completed`, the last 2 trip the
 per-IP rate limit and land `rate_limited`, giving every outcome except
 `budget_exhausted` (a 200/day account-wide cap, not worth actually burning just
-to seed a chart) real data to chart against.
+to seed a chart) real data to query against.
 
-**Build it**: Cloudflare dashboard -> **Observe** (top-level sidebar section,
-not the `Observability` item nested under `Build > Compute` next to
-`Workers & Pages` - that one's just this Worker's own aggregated logs view) ->
-**Analytics** -> Custom Dashboards -> Create Dashboard. Every widget: data
-source = Workers Logs for `latino-canon-api`, base filter
-`event = "agents.curate"`.
+**Build it**: `latino-canon-api` -> **Observability** -> **Query Builder** (the
+plain Events/Query Builder page, not Observe -> Analytics -> Custom
+Dashboards). For each row below: set the filter, pick the visualization, add
+the group-by field, **Run**, then **Save** - one saved query per row, viewed
+individually rather than as widgets on one page.
 
-| Widget | Visualization | Filter (in addition to the base one) | Group by | Watching for |
+| Saved query | Visualization | Filter (in addition to `event = "agents.curate"`) | Group by | Watching for |
 |---|---|---|---|---|
 | Requests over time | Time series | none | time bucket | Traffic pattern - spikes during a demo, quiet otherwise |
 | Outcome breakdown | Pie / stacked bar | none | `outcome` | Split across all five outcomes - a wall of `rate_limited`/`budget_exhausted` means the guards are actually firing |
@@ -213,10 +223,10 @@ source = Workers Logs for `latino-canon-api`, base filter
 | Step latency breakdown | Bar chart, 3 series | `outcome = "completed"` | none | Avg of `timings.intentMs`, `timings.searchMs`, `timings.toneMs` side by side - identifies the bottleneck if p95 looks bad (almost certainly `searchMs`, the one hitting D1 + Vectorize) |
 | Intent source | Pie | `outcome = "completed"` | `source` | `rules` vs `llm` vs `none` - how often intent extraction actually skips the AI call |
 
-If the field picker doesn't offer a nested path like `timings.totalMs` directly,
-check one raw log entry in the plain **Logs** tab first (not Custom Dashboards)
-to see exactly how Cloudflare flattened the JSON - the picker's field name
-should match whatever that shows.
+If the field picker doesn't offer a nested path like `timings.totalMs`
+directly, check one raw log entry in the plain **Logs** view first to see
+exactly how Cloudflare flattened the JSON - the picker's field name should
+match whatever that shows.
 
 ## What's not here
 
