@@ -54,9 +54,9 @@ export function TitleCard({ title, className }: { title: TitleCardData; classNam
           {title.representationHandling && (
             <Badge variant="contextual">{REPRESENTATION_HANDLING_LABELS[title.representationHandling]}</Badge>
           )}
-          {title.inclusionTypes.map((t) => (
-            <Badge key={t} variant="inclusion">
-              {t === "led_by" ? ledByLabel(title.directorGender) : INCLUSION_TYPE_LABELS[t]}
+          {title.inclusionTypesWithConfidence.map((t) => (
+            <Badge key={t.slug} variant="inclusion" title={`${Math.round(t.confidence * 100)}% confidence`}>
+              {t.slug === "led_by" ? ledByLabel(title.directorGender) : INCLUSION_TYPE_LABELS[t.slug as keyof typeof INCLUSION_TYPE_LABELS]} {t.confidence < 0.99 && `(${Math.round(t.confidence * 100)}%)`}
             </Badge>
           ))}
           {title.themes.slice(0, 2).map((t) => (

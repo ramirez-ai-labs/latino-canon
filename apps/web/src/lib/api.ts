@@ -60,6 +60,14 @@ export const listCollections = () => apiFetch<{ collections: Collection[] }>(`/c
 export const getCollection = (slug: string) => apiFetch<Collection>(`/collections/${slug}`);
 export const listEvalRuns = (limit = 20) => apiFetch<{ runs: EvalRun[] }>(`/eval-runs?limit=${limit}`);
 
+export async function listRecentTitles(limit = 5): Promise<Title[]> {
+  const res = await apiFetch<{ titleIds: string[] }>(`/titles?recent=1&limit=${limit}`);
+  const titles = await Promise.all(
+    res.titleIds.map((id) => getTitle(id).catch(() => null))
+  );
+  return titles.filter((t): t is Title => t !== null);
+}
+
 export function posterUrl(key: string | null): string {
   if (!key) return "/poster-placeholder.svg";
   return `${process.env.PUBLIC_API_URL ?? ""}/posters/${key.replace(/^posters\//, "")}`;
