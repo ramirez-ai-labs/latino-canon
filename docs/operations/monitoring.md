@@ -171,6 +171,50 @@ budget on a given day.
   paid plan removes the daily cap — a deliberate cost decision to make
   explicitly, not something to back into by accident mid-incident.
 
+## Custom Dashboard: Curation Agent
+
+`POST /agents/curate` (`apps/api/src/agents/`) emits one structured
+`console.warn(JSON.stringify(...))` line per request, tagged `event:
+"agents.curate"`, with an `outcome` field (`completed` | `error` | `cache_hit` |
+`rate_limited` | `budget_exhausted`) and, on `completed`/`error`, per-step
+`timings` (`intentMs`/`searchMs`/`toneMs`/`rerankMs`/`totalMs`) plus the
+extracted intent (`source`/`theme`/`decade`/`directorGender`/`tone`). Cloudflare
+Workers Logs parses `console` output as structured fields when it's valid
+JSON, which is what actually makes a request queryable later - the
+human-readable `reasoning` array in the API response only ever reaches whoever
+called the endpoint for that one request.
+
+**Seed data before building panels** - Cloudflare's dashboard builder needs a
+field to have appeared in at least one log line before you can filter/group on
+it:
+
+```bash
+AGENT_URL=https://latino-canon-api.<acct>.workers.dev \
+  pnpm --filter @latino-canon/api exec ./scripts/seed-agent-logs.sh
+```
+
+Fires 12 distinct queries in a burst - 10 land `completed`, the last 2 trip the
+per-IP rate limit and land `rate_limited`, giving every outcome except
+`budget_exhausted` (a 200/day account-wide cap, not worth actually burning just
+to seed a chart) real data to chart against.
+
+**Build it**: Cloudflare dashboard -> Workers & Pages -> `latino-canon-api` ->
+Observability -> Custom Dashboards -> Create Dashboard. Every widget: data
+source = Workers Logs for this Worker, base filter `event = "agents.curate"`.
+
+| Widget | Visualization | Filter (in addition to the base one) | Group by | Watching for |
+|---|---|---|---|---|
+| Requests over time | Time series | none | time bucket | Traffic pattern - spikes during a demo, quiet otherwise |
+| Outcome breakdown | Pie / stacked bar | none | `outcome` | Split across all five outcomes - a wall of `rate_limited`/`budget_exhausted` means the guards are actually firing |
+| p95 latency | Single stat / time series | `outcome = "completed"` | none | `timings.totalMs` - the real "is this demo-fast" number |
+| Step latency breakdown | Bar chart, 3 series | `outcome = "completed"` | none | Avg of `timings.intentMs`, `timings.searchMs`, `timings.toneMs` side by side - identifies the bottleneck if p95 looks bad (almost certainly `searchMs`, the one hitting D1 + Vectorize) |
+| Intent source | Pie | `outcome = "completed"` | `source` | `rules` vs `llm` vs `none` - how often intent extraction actually skips the AI call |
+
+If the field picker doesn't offer a nested path like `timings.totalMs` directly,
+check one raw log entry in the plain **Logs** tab first (not Custom Dashboards)
+to see exactly how Cloudflare flattened the JSON - the picker's field name
+should match whatever that shows.
+
 ## What's not here
 
 Being direct about this rather than implying more observability exists than
