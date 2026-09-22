@@ -10,6 +10,7 @@ import { postersRoute } from "./routes/posters.js";
 import { evalRunsRoute } from "./routes/eval-runs.js";
 import { openapiRoute } from "./routes/openapi.js";
 import { docsRoute } from "./routes/docs.js";
+import { agentsRoute } from "./routes/agents.js";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -35,6 +36,7 @@ app.route("/collections", collectionsRoute);
 app.route("/feedback", feedbackRoute);
 app.route("/posters", postersRoute);
 app.route("/eval-runs", evalRunsRoute);
+app.route("/agents", agentsRoute);
 
 app.onError((err, c) => {
   console.error(err);
