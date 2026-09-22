@@ -69,13 +69,18 @@ agentsRoute.post("/curate", async (c) => {
   // bound exactly that cost.
   const cacheKey = `agents:curate:${body.query.trim().toLowerCase()}:${body.limit ?? 5}`;
   const cached = await c.env.CACHE.get<CurationResponse>(cacheKey, "json");
-  if (cached) return c.json({ ...cached, cached: true });
+  if (cached) {
+    console.warn(JSON.stringify({ event: "agents.curate", outcome: "cache_hit", query: body.query }));
+    return c.json({ ...cached, cached: true });
+  }
 
   const ip = c.req.header("cf-connecting-ip") ?? "unknown";
   if (await isRateLimited(c.env, ip)) {
+    console.warn(JSON.stringify({ event: "agents.curate", outcome: "rate_limited", query: body.query }));
     return c.json({ error: "Rate limit exceeded - try again in a minute" }, 429);
   }
   if (await isDailyBudgetExhausted(c.env)) {
+    console.warn(JSON.stringify({ event: "agents.curate", outcome: "budget_exhausted", query: body.query }));
     return c.json({ error: "Daily request budget exhausted - try again after the daily reset (00:00 UTC)" }, 429);
   }
 
