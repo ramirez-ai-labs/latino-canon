@@ -79,6 +79,7 @@ export async function curate(env: Env, request: CurationRequest): Promise<Curati
     timings.totalMs = Date.now() - startedAt;
 
     logCurateEvent({
+      outcome: "completed",
       query: request.query,
       source: intent.source,
       theme: intent.theme,
@@ -103,7 +104,7 @@ export async function curate(env: Env, request: CurationRequest): Promise<Curati
     const message = err instanceof Error ? err.message : String(err);
     reasoning.push(`Error: ${message}`);
     timings.totalMs = Date.now() - startedAt;
-    logCurateEvent({ query: request.query, error: message, timings });
+    logCurateEvent({ outcome: "error", query: request.query, error: message, timings });
 
     return {
       userQuery: request.query,
