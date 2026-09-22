@@ -12,6 +12,14 @@ export function Rail({ children, className }: { children: React.ReactNode; class
   );
 }
 
-export function RailItem({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("shrink-0 snap-start", className)}>{children}</div>;
+export function RailItem({
+  children,
+  className,
+  style,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return <div className={cn("shrink-0 snap-start", className)} style={style}>{children}</div>;
 }

@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { TitleCard } from "@/components/TitleCard";
 import { Rail, RailItem } from "@/components/ui/Rail";
-import { buttonVariants } from "@/components/ui/button";
 import { getCollection, listCollections, listRecentTitles } from "@/lib/api";
 import { MODEL_TAG_DISPLAY_THRESHOLD } from "@latino-canon/core";
 import type { TitleCard as TitleCardType } from "@latino-canon/core";
@@ -67,22 +66,28 @@ export default async function HomePage() {
   const recentCards = recentTitles.map(titleToCard);
 
   return (
-    <div className="flex flex-col gap-14">
-      <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-b from-surface to-bg px-6 py-16 text-center sm:px-12">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--color-accent-muted),_transparent_60%)]"
-        />
-        <div className="relative mx-auto max-w-2xl">
-          <h1 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">
-            The Latino film canon, <span className="text-accent">searchable.</span>
+    <div className="flex flex-col gap-20">
+      {/* Hero Section with Gradient Mesh */}
+      <section className="relative overflow-hidden rounded-3xl px-6 py-24 text-center sm:px-12 sm:py-32">
+        <div aria-hidden className="gradient-mesh absolute inset-0 pointer-events-none" />
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(240, 147, 251, 0.15) 0%, transparent 50%)'
+        }} />
+
+        <div className="relative mx-auto max-w-3xl">
+          <h1 className="text-balance text-5xl sm:text-6xl font-800 tracking-tight leading-tight">
+            The Latino film canon,
+            <br />
+            <span className="bg-gradient-to-r from-[#667eea] via-[#f093fb] to-[#4facfe] bg-clip-text text-transparent">
+              searchable.
+            </span>
           </h1>
-          <p className="mx-auto mt-3 max-w-lg text-balance text-muted">
-            A curated, credit-verified index of Latino-directed, Latino-created, and
-            Latino-centered film and TV — searchable by plot, theme, era, or filmmaker,
-            in English or Spanish.
+
+          <p className="mx-auto mt-6 max-w-2xl text-balance text-lg text-muted leading-relaxed">
+            A curated, credit-verified index of Latino-directed, Latino-created, and Latino-centered film and TV — searchable by plot, theme, era, or filmmaker, in English or Spanish.
           </p>
-          <div className="mt-6">
+
+          <div className="mt-10">
             <Suspense>
               <SearchBar />
             </Suspense>
@@ -90,29 +95,44 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-        {PILLARS.map((p) => (
-          <div key={p.title} className="flex gap-3">
-            <p.icon className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
-            <div>
-              <h3 className="text-sm font-semibold">{p.title}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-muted">{p.body}</p>
+      {/* Pillars Section with Glassmorphism */}
+      <section className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        {PILLARS.map((p, i) => (
+          <div
+            key={p.title}
+            className="glass rounded-2xl p-8 flex flex-col hover-lift group"
+            style={{
+              animation: `slide-in-up 0.6s ease-out ${i * 100}ms both`,
+            }}
+          >
+            <div className="mb-4 inline-flex">
+              <div className="bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-full p-3">
+                <p.icon className="size-6 text-white" aria-hidden />
+              </div>
             </div>
+            <h3 className="text-lg font-semibold text-text">{p.title}</h3>
+            <p className="mt-3 text-sm leading-relaxed text-muted flex-1">{p.body}</p>
           </div>
         ))}
       </section>
 
       {recentCards.length > 0 && (
         <section>
-          <div className="mb-3 flex items-end justify-between">
+          <div className="mb-6 flex items-end justify-between">
             <div>
-              <h2 className="text-lg font-semibold">Recently Added</h2>
-              <p className="text-sm text-muted">Latest titles added to the canon</p>
+              <h2 className="text-3xl font-bold text-text">Recently Added</h2>
+              <p className="text-sm text-muted mt-2">Latest titles added to the canon</p>
             </div>
           </div>
           <Rail>
-            {recentCards.map((t) => (
-              <RailItem key={t.id} className="w-[42vw] sm:w-[220px]">
+            {recentCards.map((t, i) => (
+              <RailItem
+                key={t.id}
+                className="w-[42vw] sm:w-[220px]"
+                style={{
+                  animation: `slide-in-up 0.6s ease-out ${i * 50}ms both`,
+                }}
+              >
                 <TitleCard title={t} />
               </RailItem>
             ))}
@@ -120,18 +140,46 @@ export default async function HomePage() {
         </section>
       )}
 
-      <section className="rounded-2xl border border-border bg-gradient-to-br from-surface to-surface-raised p-6 sm:p-8">
-        <h2 className="text-lg font-semibold">Why "AI, disclosed" matters</h2>
-        <div className="mt-4 grid gap-4 text-sm text-muted">
-          <p>
-            <strong className="text-text">Netflix &amp; Spotify hide their algorithms.</strong> You see results, but not why. The ML lives in a black box.
-          </p>
-          <p>
-            <strong className="text-text">Latino Canon discloses them.</strong> Every tag—inclusion type, theme, gender—shows its confidence score and source (seed data, model prediction, or editor judgment). Click any title to see the full reasoning.
-          </p>
-          <p>
-            <strong className="text-text">Why this matters for Latino cinema:</strong> Representation isn't generic. When a film is tagged "led by Latina director," you see 99% confidence + "editor verified" (not guessed by ML). That transparency builds trust in a curated collection.
-          </p>
+      {/* AI Disclosure Section */}
+      <section className="relative overflow-hidden rounded-3xl glass-heavy px-6 py-12 sm:px-12 sm:py-16">
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(240, 147, 251, 0.05) 100%)'
+        }} />
+
+        <div className="relative">
+          <h2 className="text-3xl font-bold text-text">Why "AI, disclosed" matters</h2>
+
+          <div className="mt-8 grid gap-6 text-base text-muted">
+            <div className="flex gap-4">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-[#667eea] to-[#764ba2] flex items-center justify-center text-white text-xs font-bold mt-0.5">
+                1
+              </div>
+              <div>
+                <p className="font-semibold text-text">Netflix & Spotify hide their algorithms</p>
+                <p className="text-sm mt-1">You see results, but not why. The ML lives in a black box.</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-[#f093fb] to-[#f5576c] flex items-center justify-center text-white text-xs font-bold mt-0.5">
+                2
+              </div>
+              <div>
+                <p className="font-semibold text-text">Latino Canon discloses them</p>
+                <p className="text-sm mt-1">Every tag shows its confidence score and source (seed data, model prediction, or editor judgment). Click any title to see the full reasoning.</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-[#4facfe] to-[#00f2fe] flex items-center justify-center text-white text-xs font-bold mt-0.5">
+                3
+              </div>
+              <div>
+                <p className="font-semibold text-text">Why this matters for Latino cinema</p>
+                <p className="text-sm mt-1">Representation isn't generic. When a film is tagged "led by Latina director," you see 99% confidence + "editor verified" (not guessed by ML). Transparency builds trust.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -139,18 +187,27 @@ export default async function HomePage() {
         .filter((c) => c && c.items.length > 0)
         .map((c) => (
           <section key={c!.slug} id={c!.slug === "core-canon" ? "collections" : undefined}>
-            <div className="mb-3 flex items-end justify-between">
+            <div className="mb-6 flex items-end justify-between">
               <div>
-                <h2 className="text-lg font-semibold">{c!.title}</h2>
-                <p className="text-sm text-muted">{c!.description}</p>
+                <h2 className="text-3xl font-bold text-text">{c!.title}</h2>
+                <p className="text-sm text-muted mt-2">{c!.description}</p>
               </div>
-              <Link href={`/collections/${c!.slug}`} className="shrink-0 text-sm text-muted transition-colors hover:text-accent">
+              <Link
+                href={`/collections/${c!.slug}`}
+                className="shrink-0 text-sm text-muted transition-colors hover:text-accent font-medium"
+              >
                 See all →
               </Link>
             </div>
             <Rail>
-              {c!.items.map((t) => (
-                <RailItem key={t.id} className="w-[42vw] sm:w-[220px]">
+              {c!.items.map((t, itemIdx) => (
+                <RailItem
+                  key={t.id}
+                  className="w-[42vw] sm:w-[220px]"
+                  style={{
+                    animation: `slide-in-up 0.6s ease-out ${itemIdx * 50}ms both`,
+                  }}
+                >
                   <TitleCard title={t} />
                 </RailItem>
               ))}
@@ -158,8 +215,20 @@ export default async function HomePage() {
           </section>
         ))}
 
-      <div className="text-center">
-        <Link href="/catalog" className={buttonVariants({ variant: "secondary", size: "lg" })}>
+      {/* CTA Section */}
+      <div className="flex flex-col items-center gap-8 py-12">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-text">Ready to explore?</h2>
+          <p className="text-muted mt-2">Discover Latino cinema by plot, theme, era, or filmmaker</p>
+        </div>
+        <Link
+          href="/catalog"
+          className="inline-flex items-center justify-center px-8 py-4 rounded-full font-semibold text-white transition-all duration-300 hover-lift"
+          style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            boxShadow: '0 0 30px rgba(102, 126, 234, 0.4)'
+          }}
+        >
           Browse the full catalog
         </Link>
       </div>
