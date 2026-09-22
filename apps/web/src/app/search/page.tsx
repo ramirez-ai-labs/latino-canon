@@ -143,22 +143,50 @@ export default async function SearchPage({
         </div>
       ) : isAgent ? (
         <div className="space-y-4">
-          {(results as RankedTitle[]).map((ranked) => (
-            <div key={ranked.title.id} className="flex gap-4">
+          {(results as RankedTitle[]).map((ranked, idx) => (
+            <div
+              key={ranked.title.id}
+              className="glass-light rounded-2xl p-4 flex gap-4 hover-lift transition-all duration-300 border border-border/50 hover:border-border"
+              style={{
+                background: "linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(240, 147, 251, 0.05) 100%)",
+                animation: `slide-in-up 0.6s ease-out ${idx * 100}ms both`,
+              }}
+            >
               <div className="flex-shrink-0" style={{ width: "150px" }}>
                 <TitleCard title={ranked.title} />
               </div>
               <div className="flex-1 flex flex-col justify-center">
-                <p className="text-sm text-text">{ranked.title.director}</p>
-                <p className="text-xs text-muted mt-1">{ranked.reason}</p>
+                <h3 className="font-semibold text-text text-sm">{ranked.title.title}</h3>
+                <p className="text-xs text-muted mt-1">Directed by {ranked.title.director}</p>
+                <p className="text-sm text-muted mt-3 leading-relaxed">{ranked.reason}</p>
+                <div className="mt-3 flex items-center gap-2">
+                  <div className="flex-1 bg-surface-raised rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-[#667eea] to-[#f093fb]"
+                      style={{ width: `${Math.round(ranked.score * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-semibold text-accent">{Math.round(ranked.score * 100)}%</span>
+                </div>
               </div>
             </div>
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {(results as TitleCardData[]).map((t) => (
-            <TitleCard key={t.id} title={t} />
+          {(results as TitleCardData[]).map((t, idx) => (
+            <div
+              key={t.id}
+              className="group cursor-pointer"
+              style={{
+                animation: `slide-in-up 0.6s ease-out ${idx * 50}ms both`,
+              }}
+            >
+              <div className="relative rounded-xl overflow-hidden transition-all duration-300 hover-lift">
+                <div className="absolute inset-0 glass opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10 rounded-xl" />
+                <TitleCard title={t} />
+              </div>
+            </div>
           ))}
         </div>
       )}
