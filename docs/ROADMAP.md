@@ -29,6 +29,7 @@ What's already built genuinely earns both halves of that comparison:
 | Editorial "why it matters" blurbs, grounded with cited sources shown in the UI | | ✅ |
 | Curated + smart (filter-driven) collections (`apps/api/src/routes/collections.ts`) | | ✅ |
 | Confidence-based human review queue (`ingest_jobs.status = 'needs_review'`, `GET /jobs`) | | ✅ |
+| Curation agent (`POST /agents/curate`, `apps/api/src/agents/`) — transparent, step-by-step reasoning trail over the same hybrid search | ✅ multi-signal query (theme/decade/director gender/tone) | ✅ shows its work instead of hiding the algorithm |
 
 What's missing before it *feels* like that blend to an actual user, honestly assessed
 against that same framework, is the rest of this document.
@@ -260,16 +261,20 @@ deferred rather than bundled in:
    **Done**, see Week 2 above.
 9. ~~Add tests for `workflow.ts`, `persist.ts`, `hybrid.ts`~~ **Done**, see Week 2
    above.
-10. Add real linting (`turbo.json`/`package.json` advertise a `lint` task with no
-    ESLint/Biome config and no per-package script behind it — currently dead
-    scaffolding, not run in CI).
+10. ~~Add real linting~~ **Done**, see Week 2 above ([PR #169](https://github.com/ramirez-ai-labs/latino-canon/pull/169)).
 11. ~~Smaller: add a LICENSE, a Dependabot config, confirm branch protection is
-    actually enabled on `main`~~ LICENSE and Dependabot: **done**, see Week 1 above.
-    Branch protection: confirmed via the GitHub API (not just "unverifiable") that
-    it's literally impossible to enable while the repo is private without GitHub
-    Pro — going public unlocks it for free, and it should be turned on immediately
-    after that flip, since nothing currently stops a direct push to `main`. Still
-    open: clean up the `"community" as never` type-cast hack in
+    actually enabled on `main`~~ LICENSE and Dependabot: **done**, see Week 1 above
+    — though Dependabot was later disabled again (repo went public, then
+    Dependabot's own update PRs caused repeat breaking-change chaos: TypeScript
+    5→7 a second time, an untested zod 3→4 major bump), pending either a
+    post-merge lockfile-sync CI step or scoping it to security-only updates
+    (both raised, neither built yet). Branch protection: **done** — required
+    status checks + 1 approving review + CODEOWNERS
+    ([PR #166](https://github.com/ramirez-ai-labs/latino-canon/pull/166)). The
+    review requirement has no second human to satisfy it on a solo-maintainer
+    repo, so every PR since has needed an admin-override merge — worth deciding
+    whether to relax back to 0 approvals or actually bring in a second reviewer.
+    Still open: clean up the `"community" as never` type-cast hack in
     `apps/web/src/lib/local-data.ts`.
 14. **Process rule, found the hard way (PR #40/#41): `deploy-api.yml` (runs
     migrations) and `ingest-new-titles.yml` (POSTs new titles for async ingestion)
