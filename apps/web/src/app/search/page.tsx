@@ -40,8 +40,23 @@ export default async function SearchPage({
   let isAgent = false;
 
   if (isAgentSearch && sp.q) {
-    res = await curateSearch({ q: sp.q, limit: PER_PAGE });
-    isAgent = true;
+    try {
+      res = await curateSearch({ q: sp.q, limit: PER_PAGE });
+      isAgent = true;
+    } catch (err) {
+      console.warn("Agent search failed, falling back to regular search:", err);
+      res = await search({
+        q: sp.q,
+        mode: sp.mode ?? "hybrid",
+        theme: sp.theme,
+        kind: sp.kind,
+        country: sp.country,
+        decade: sp.decade ? Number(sp.decade) : undefined,
+        inclusionType: sp.inclusionType,
+        limit: PER_PAGE + 1,
+        offset: isBrowse ? offset : undefined,
+      });
+    }
   } else {
     res = await search({
       q: sp.q,
