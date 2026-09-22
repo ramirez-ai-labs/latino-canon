@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { TitleCard } from "@/components/TitleCard";
 import { Rail, RailItem } from "@/components/ui/Rail";
-import { buttonVariants } from "@/components/ui/button";
 import { getCollection, listCollections, listRecentTitles } from "@/lib/api";
 import { MODEL_TAG_DISPLAY_THRESHOLD } from "@latino-canon/core";
 import type { TitleCard as TitleCardType } from "@latino-canon/core";
@@ -186,7 +185,7 @@ export default async function HomePage() {
 
       {rails
         .filter((c) => c && c.items.length > 0)
-        .map((c, sectionIdx) => (
+        .map((c) => (
           <section key={c!.slug} id={c!.slug === "core-canon" ? "collections" : undefined}>
             <div className="mb-6 flex items-end justify-between">
               <div>
