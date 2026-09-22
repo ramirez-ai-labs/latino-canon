@@ -1,12 +1,15 @@
 import "server-only";
-import type { Collection, EvalRun, SearchResponse, Title } from "@latino-canon/core";
+import type { Collection, CurationResponse, EvalRun, SearchResponse, Title } from "@latino-canon/core";
 import { localCollection, localCollections, localSearch, localTitle } from "./local-data";
 
 /**
  * Server-side API client. Prefers the `API` service binding (no network hop); falls
  * back to PUBLIC_API_URL when running `next dev` without bindings.
  */
-async function apiFetch<T>(path: string): Promise<T> {
+async function apiFetch<T>(
+  path: string,
+  options?: { method?: string; body?: string },
+): Promise<T> {
   if (process.env.LOCAL_DEV === "1") return localFetch<T>(path);
 
   const { getCloudflareContext } = await import("@opennextjs/cloudflare");
@@ -15,8 +18,8 @@ async function apiFetch<T>(path: string): Promise<T> {
   const url = `https://api${path}`;
 
   const res = api
-    ? await api.fetch(new Request(url))
-    : await fetch(`${process.env.PUBLIC_API_URL ?? "http://localhost:8787"}${path}`);
+    ? await api.fetch(new Request(url, options))
+    : await fetch(`${process.env.PUBLIC_API_URL ?? "http://localhost:8787"}${path}`, options);
 
   if (!res.ok) throw new Error(`api ${res.status} for ${path}`);
   return (await res.json()) as T;
@@ -53,6 +56,13 @@ export function search(params: {
   const qs = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) if (v != null && v !== "") qs.set(k, String(v));
   return apiFetch<SearchResponse>(`/search?${qs}`);
+}
+
+export function curateSearch(params: { q: string; limit?: number }): Promise<CurationResponse> {
+  return apiFetch<CurationResponse>(`/agents/curate`, {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
 }
 
 export const getTitle = (id: string) => apiFetch<Title>(`/titles/${id}`);
