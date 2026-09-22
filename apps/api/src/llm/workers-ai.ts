@@ -20,7 +20,17 @@ export class WorkersAiClient implements LlmClient {
         messages: opts.messages,
         max_tokens: opts.maxTokens ?? 512,
         temperature: opts.temperature ?? 0,
-        ...(opts.json ? { response_format: { type: "json_schema" } } : {}),
+        // `opts.json` used to set response_format: { type: "json_schema" } with no
+        // `json_schema` field - always malformed, per Workers AI's own vLLM-backed
+        // validation ("the 'json_schema' field must be provided"). The deprecated
+        // llama-3.1-8b-instruct silently ignored the malformed hint; its "-fast"
+        // replacement's stricter backend rejects the whole request with a 400
+        // instead (found live, 2026-09-21, right after fixing the deprecation - see
+        // docs/operations/monitoring.md). Every caller already enforces its own JSON
+        // contract via the prompt's own "Respond ONLY with JSON matching: {...}"
+        // instruction plus extractJson()'s fence/brace extraction and zod validation -
+        // that's the real guarantee here, not this parameter, which was never actually
+        // doing anything even before it started erroring.
       } as Parameters<Ai["run"]>[1],
       {
         gateway: {
