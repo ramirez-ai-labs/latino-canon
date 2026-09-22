@@ -17,9 +17,17 @@ async function apiFetch<T>(
   const api = (env as { API?: { fetch: typeof fetch } }).API;
   const url = `https://api${path}`;
 
+  const fetchOptions = {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options?.body ? {} : {}),
+    },
+  };
+
   const res = api
-    ? await api.fetch(new Request(url, options))
-    : await fetch(`${process.env.PUBLIC_API_URL ?? "http://localhost:8787"}${path}`, options);
+    ? await api.fetch(new Request(url, fetchOptions))
+    : await fetch(`${process.env.PUBLIC_API_URL ?? "http://localhost:8787"}${path}`, fetchOptions);
 
   if (!res.ok) throw new Error(`api ${res.status} for ${path}`);
   return (await res.json()) as T;
