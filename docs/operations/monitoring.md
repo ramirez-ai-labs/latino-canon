@@ -129,10 +129,10 @@ Models in use (via `packages/core/src/llm.ts`'s `MODELS`):
 
 | Task | Model |
 |---|---|
-| Query rewrite | `@cf/meta/llama-3.1-8b-instruct` |
+| Query rewrite | `@cf/meta/llama-3.1-8b-instruct-fast` |
 | Classify (inclusion types + themes) | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` |
 | Blurb generation | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` |
-| Groundedness judge | `@cf/meta/llama-3.1-8b-instruct` |
+| Groundedness judge | `@cf/meta/llama-3.1-8b-instruct-fast` |
 | Embeddings | `@cf/baai/bge-m3` (1024-dim, multilingual) |
 
 `classify`/`blurb` run on the most expensive model here, twice per title — that's
@@ -198,9 +198,12 @@ per-IP rate limit and land `rate_limited`, giving every outcome except
 `budget_exhausted` (a 200/day account-wide cap, not worth actually burning just
 to seed a chart) real data to chart against.
 
-**Build it**: Cloudflare dashboard -> Workers & Pages -> `latino-canon-api` ->
-Observability -> Custom Dashboards -> Create Dashboard. Every widget: data
-source = Workers Logs for this Worker, base filter `event = "agents.curate"`.
+**Build it**: Cloudflare dashboard -> **Observe** (top-level sidebar section,
+not the `Observability` item nested under `Build > Compute` next to
+`Workers & Pages` - that one's just this Worker's own aggregated logs view) ->
+**Analytics** -> Custom Dashboards -> Create Dashboard. Every widget: data
+source = Workers Logs for `latino-canon-api`, base filter
+`event = "agents.curate"`.
 
 | Widget | Visualization | Filter (in addition to the base one) | Group by | Watching for |
 |---|---|---|---|---|
