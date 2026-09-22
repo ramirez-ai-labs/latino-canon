@@ -44,7 +44,9 @@ export default async function SearchPage({
       res = await curateSearch({ q: sp.q, limit: PER_PAGE });
       isAgent = true;
     } catch (err) {
-      console.warn("Agent search failed, falling back to regular search:", err);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.warn(`[Agent] Failed for query "${sp.q}": ${errMsg}`);
+      console.error(`[Agent] Full error:`, err);
       res = await search({
         q: sp.q,
         mode: sp.mode ?? "hybrid",
