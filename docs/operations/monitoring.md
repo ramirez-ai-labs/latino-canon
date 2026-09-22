@@ -129,10 +129,10 @@ Models in use (via `packages/core/src/llm.ts`'s `MODELS`):
 
 | Task | Model |
 |---|---|
-| Query rewrite | `@cf/meta/llama-3.1-8b-instruct` |
+| Query rewrite | `@cf/meta/llama-3.1-8b-instruct-fast` |
 | Classify (inclusion types + themes) | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` |
 | Blurb generation | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` |
-| Groundedness judge | `@cf/meta/llama-3.1-8b-instruct` |
+| Groundedness judge | `@cf/meta/llama-3.1-8b-instruct-fast` |
 | Embeddings | `@cf/baai/bge-m3` (1024-dim, multilingual) |
 
 `classify`/`blurb` run on the most expensive model here, twice per title — that's
