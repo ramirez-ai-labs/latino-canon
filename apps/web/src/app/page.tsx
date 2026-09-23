@@ -89,11 +89,7 @@ export default async function HomePage() {
           <h2 className="text-4xl font-bold text-text">Why we are different.</h2>
 
           <p className="mt-6 text-lg text-muted leading-relaxed">
-            Unlike Netflix and Spotify, we show you the reasoning. Every tag (director, theme, inclusion type) displays its confidence score and source: seed data, model prediction, or editor judgment. Never hidden. Never guessed.
-          </p>
-
-          <p className="mt-6 text-lg text-muted leading-relaxed">
-            For representation, this matters. When a film is tagged "led by Latina director," you see 99% confidence plus "editor verified." That transparency builds trust in a curated collection.
+            Three things a typical streaming search bar doesn't give you — and, further down, why every tag you see here comes with a receipt.
           </p>
 
           <div className="mt-10 grid gap-6 sm:grid-cols-3">
