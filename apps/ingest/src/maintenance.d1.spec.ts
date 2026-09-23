@@ -26,6 +26,8 @@ function makeTitleRow(id: string, tmdbId: number) {
     representationHandling: null,
     contextNotes: [],
     oscarWin: null,
+    genres: [],
+    contentAdvisory: null,
   });
 }
 

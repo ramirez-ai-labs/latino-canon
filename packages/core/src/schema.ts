@@ -1,10 +1,12 @@
 import { z } from "zod";
-import { CONTEXT_NOTE_CATEGORIES, INCLUSION_TYPES, REPRESENTATION_HANDLINGS, THEMES } from "./taxonomy.js";
+import { CONTENT_ADVISORIES, CONTEXT_NOTE_CATEGORIES, GENRES, INCLUSION_TYPES, REPRESENTATION_HANDLINGS, THEMES } from "./taxonomy.js";
 
 export const titleKindSchema = z.enum(["film", "series", "special"]);
 export const searchModeSchema = z.enum(["hybrid", "lexical", "semantic"]);
 export const inclusionTypeSchema = z.enum(INCLUSION_TYPES);
 export const themeSchema = z.enum(THEMES);
+export const genreSchema = z.enum(GENRES);
+export const contentAdvisorySchema = z.enum(CONTENT_ADVISORIES);
 export const representationHandlingSchema = z.enum(REPRESENTATION_HANDLINGS);
 export const contextNoteCategorySchema = z.enum(CONTEXT_NOTE_CATEGORIES);
 
@@ -29,6 +31,8 @@ export const searchFiltersSchema = z.object({
   country: z.string().length(2).toUpperCase().optional(),
   theme: themeSchema.optional(),
   inclusionType: inclusionTypeSchema.optional(),
+  genre: genreSchema.optional(),
+  contentAdvisory: contentAdvisorySchema.optional(),
 });
 
 export const searchQuerySchema = z.object({
@@ -45,6 +49,8 @@ export const searchQuerySchema = z.object({
   country: z.string().length(2).optional(),
   theme: themeSchema.optional(),
   inclusionType: inclusionTypeSchema.optional(),
+  genre: genreSchema.optional(),
+  contentAdvisory: contentAdvisorySchema.optional(),
 });
 
 /** Structured output contract for the query-rewriting LLM call. */

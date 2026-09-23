@@ -54,7 +54,14 @@ export async function curate(env: Env, request: CurationRequest): Promise<Curati
 
     reasoning.push("[2/4] Running hybrid search");
     stepStart = Date.now();
-    const filters = { kind: intent.kind, decade: intent.decade, country: intent.country, theme: intent.theme };
+    const filters = {
+      kind: intent.kind,
+      decade: intent.decade,
+      country: intent.country,
+      theme: intent.theme,
+      genre: intent.genre,
+      contentAdvisory: intent.contentAdvisory,
+    };
     const results = await searchWithFilters(env, intent.cleanedQuery, filters, Math.max(limit * 4, 20));
     timings.searchMs = Date.now() - stepStart;
     reasoning.push(`Hybrid search: ${results.length} candidates`);

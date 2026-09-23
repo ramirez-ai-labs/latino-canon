@@ -25,6 +25,8 @@ function makeTitle(overrides: Partial<Title> = {}): Title {
     representationHandling: null,
     contextNotes: [],
     oscarWin: null,
+    genres: [],
+    contentAdvisory: null,
     ...overrides,
   };
 }

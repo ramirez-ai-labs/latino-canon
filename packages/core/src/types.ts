@@ -1,5 +1,7 @@
 import type {
+  ContentAdvisory,
   ContextNoteCategory,
+  Genre,
   InclusionType,
   PersonGender,
   RepresentationHandling,
@@ -101,6 +103,10 @@ export interface Title {
   contextNotes: ContextNote[];
   /** e.g. "Best International Feature (2019)". null = no Oscar win on record. */
   oscarWin: string | null;
+  /** TMDB genre names (e.g. "Animation"). Empty until backfilled/ingested with it. */
+  genres: string[];
+  /** null = not yet classified - unknown, not "general". See taxonomy.ts. */
+  contentAdvisory: ContentAdvisory | null;
 }
 
 export interface TagWithConfidence {
@@ -130,6 +136,9 @@ export interface TitleCard {
   representationHandling: RepresentationHandling | null;
   runtime: number | null;
   oscarWin: string | null;
+  genres: string[];
+  /** null = not yet classified - unknown, not "general". See taxonomy.ts. */
+  contentAdvisory: ContentAdvisory | null;
 }
 
 export interface SearchFilters {
@@ -138,6 +147,8 @@ export interface SearchFilters {
   country?: string; // ISO 3166-1 alpha-2
   theme?: Theme;
   inclusionType?: InclusionType;
+  genre?: Genre;
+  contentAdvisory?: ContentAdvisory;
 }
 
 export interface SearchRequest {

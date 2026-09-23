@@ -67,6 +67,24 @@ beforeAll(async () => {
       `INSERT INTO title_tags (title_id, tag_id, confidence, source)
        SELECT 'ministry-of-time-2015', id, 1.0, 'seed' FROM tags WHERE slug = 'led_by'`,
     ),
+    // genres/content_advisory fixtures - one of each value to prove hydrateCards parses
+    // both the JSON array and the plain scalar column correctly.
+    env.DB.prepare(
+      `INSERT INTO titles (id, kind, title, year_start, countries, languages, popularity, genres, content_advisory)
+       VALUES ('animated-kids-title-2020', 'film', 'Animated Kids Title', 2020, '[]', '[]', 5, '["Animation","Family"]', 'general')`,
+    ),
+    env.DB.prepare(
+      `INSERT INTO title_tags (title_id, tag_id, confidence, source)
+       SELECT 'animated-kids-title-2020', id, 1.0, 'seed' FROM tags WHERE slug = 'led_by'`,
+    ),
+    env.DB.prepare(
+      `INSERT INTO titles (id, kind, title, year_start, countries, languages, popularity, content_advisory)
+       VALUES ('mature-drama-2020', 'film', 'Mature Drama', 2020, '[]', '[]', 5, 'mature')`,
+    ),
+    env.DB.prepare(
+      `INSERT INTO title_tags (title_id, tag_id, confidence, source)
+       SELECT 'mature-drama-2020', id, 1.0, 'seed' FROM tags WHERE slug = 'led_by'`,
+    ),
   ]);
 });
 
@@ -93,5 +111,22 @@ describe("hydrateCards", () => {
     const [card] = await hydrateCards(env, [{ titleId: "ministry-of-time-2015", score: 1 }]);
     expect(card?.director).toBe("Javier Olivares");
     expect(card?.directorGender).toBe("male");
+  });
+
+  it("parses the genres JSON array and passes contentAdvisory through", async () => {
+    const [card] = await hydrateCards(env, [{ titleId: "animated-kids-title-2020", score: 1 }]);
+    expect(card?.genres).toEqual(["Animation", "Family"]);
+    expect(card?.contentAdvisory).toBe("general");
+  });
+
+  it("defaults to an empty genres array and null contentAdvisory when neither was ever set", async () => {
+    const [card] = await hydrateCards(env, [{ titleId: "real-women-have-curves-2002", score: 1 }]);
+    expect(card?.genres).toEqual([]);
+    expect(card?.contentAdvisory).toBeNull();
+  });
+
+  it("passes contentAdvisory='mature' through unchanged", async () => {
+    const [card] = await hydrateCards(env, [{ titleId: "mature-drama-2020", score: 1 }]);
+    expect(card?.contentAdvisory).toBe("mature");
   });
 });

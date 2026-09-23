@@ -48,6 +48,16 @@ export function filterToSql(
     params.push(filters.inclusionType);
     clauses.push(tagExists("inclusion_type", ph));
   }
+  if (filters.genre) {
+    const ph = p();
+    params.push(filters.genre);
+    clauses.push(`EXISTS (SELECT 1 FROM json_each(${titleAlias}.genres) WHERE value = ${ph})`);
+  }
+  if (filters.contentAdvisory) {
+    const ph = p();
+    params.push(filters.contentAdvisory);
+    clauses.push(`${titleAlias}.content_advisory = ${ph}`);
+  }
 
   return { where: clauses.join(" AND "), params };
 
@@ -108,5 +118,5 @@ export function filterToVectorize(filters: SearchFilters): VectorizeVectorMetada
 
 /** True when `filters` has a constraint `filterToVectorize` can't push down to Vectorize. */
 export function needsD1PostFilter(filters: SearchFilters): boolean {
-  return Boolean(filters.country || filters.theme || filters.inclusionType);
+  return Boolean(filters.country || filters.theme || filters.inclusionType || filters.genre || filters.contentAdvisory);
 }

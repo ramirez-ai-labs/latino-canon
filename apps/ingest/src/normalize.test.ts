@@ -27,6 +27,7 @@ function details(overrides: Partial<TmdbDetails> = {}): TmdbDetails {
     runtime: 128,
     popularity: 8.4,
     adult: false,
+    genres: [],
     credits: { directors: [], writers: [], creators: [], cast: [] },
     ...overrides,
   };

@@ -58,6 +58,8 @@ export function search(params: {
   kind?: string;
   country?: string;
   inclusionType?: string;
+  genre?: string;
+  contentAdvisory?: string;
   limit?: number;
   offset?: number;
 }): Promise<SearchResponse> {

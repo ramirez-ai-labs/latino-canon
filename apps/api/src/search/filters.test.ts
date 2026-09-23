@@ -37,6 +37,22 @@ describe("filterToSql", () => {
     expect(where).toContain("?5"); // country
     expect(params).toEqual(["film", 1990, 1999, "MX"]);
   });
+
+  // genre is array-valued (titles.genres is a JSON array, same shape as countries) -
+  // same json_each membership check as country, not a plain equality.
+  it("filters genre via a json_each membership check, like country", () => {
+    const { where, params } = filterToSql({ genre: "Animation" });
+    expect(where).toContain("json_each(t.genres)");
+    expect(params).toEqual(["Animation"]);
+  });
+
+  // contentAdvisory is a plain scalar column on titles, not array-valued - simple
+  // equality, no json_each.
+  it("filters contentAdvisory via plain equality", () => {
+    const { where, params } = filterToSql({ contentAdvisory: "general" });
+    expect(where).toBe("t.content_advisory = ?1");
+    expect(params).toEqual(["general"]);
+  });
 });
 
 describe("filterToVectorize", () => {
@@ -46,7 +62,15 @@ describe("filterToVectorize", () => {
   // against an array-valued field never matches, so semantic search + any of these three
   // filters always returned zero results, confirmed live against the deployed API.
   it("only pushes down kind and decade, the two scalar-valued filters", () => {
-    const f = filterToVectorize({ kind: "film", decade: 1990, country: "MX", theme: "family", inclusionType: "led_by" });
+    const f = filterToVectorize({
+      kind: "film",
+      decade: 1990,
+      country: "MX",
+      theme: "family",
+      inclusionType: "led_by",
+      genre: "Animation",
+      contentAdvisory: "general",
+    });
     expect(f).toEqual({ kind: "film", decade: 1990 });
   });
 
@@ -56,10 +80,12 @@ describe("filterToVectorize", () => {
 });
 
 describe("needsD1PostFilter", () => {
-  it("is true when country, theme, or inclusionType is set", () => {
+  it("is true when country, theme, inclusionType, genre, or contentAdvisory is set", () => {
     expect(needsD1PostFilter({ country: "MX" })).toBe(true);
     expect(needsD1PostFilter({ theme: "family" })).toBe(true);
     expect(needsD1PostFilter({ inclusionType: "led_by" })).toBe(true);
+    expect(needsD1PostFilter({ genre: "Animation" })).toBe(true);
+    expect(needsD1PostFilter({ contentAdvisory: "general" })).toBe(true);
   });
 
   it("is false when only kind/decade (or nothing) is set", () => {

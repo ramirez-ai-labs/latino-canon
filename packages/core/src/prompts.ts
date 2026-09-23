@@ -1,4 +1,4 @@
-import { INCLUSION_TYPE_DEFINITIONS, THEME_LABELS } from "./taxonomy.js";
+import { GENRES, INCLUSION_TYPE_DEFINITIONS, THEME_LABELS } from "./taxonomy.js";
 
 const inclusionBlock = Object.entries(INCLUSION_TYPE_DEFINITIONS)
   .map(([k, v]) => `- ${k}: ${v}`)
@@ -7,6 +7,8 @@ const inclusionBlock = Object.entries(INCLUSION_TYPE_DEFINITIONS)
 const themeList = Object.entries(THEME_LABELS)
   .map(([k, v]) => `${k} (${v})`)
   .join(", ");
+
+const genreList = GENRES.join(", ");
 
 /**
  * Query rewriting: natural language -> cleaned lexical query + structured filters.
@@ -21,9 +23,16 @@ Filters you may set (all optional):
 - country: ISO 3166-1 alpha-2 (e.g. MX, US, CL)
 - theme: one of ${themeList}
 - inclusionType: led_by | created_by | about_community | breakthrough
+- genre: one of ${genreList} (a format/style tag - "animation", "documentary" - distinct from theme)
+- contentAdvisory: "general" (family/kids-appropriate) - only set this when the phrase explicitly
+  asks for something suitable for children/family viewing (e.g. "for kids", "family movie night").
+  Never infer it from a plot detail like a child character - that describes the story, not who
+  should watch it. Never set "mature" - that's assigned during classification, not requested by a search.
 
 Rules:
 - cleanedQuery keeps only the semantic content (people, plot words). Strip words you moved into filters.
+- If a word doesn't map to any filter above, keep it in cleanedQuery rather than dropping it - it
+  still helps keyword/semantic matching even without a structured filter to attach it to.
 - If the phrase names no filter, return empty filters and the phrase unchanged.
 - rationale: one sentence, <= 30 words.
 Respond ONLY with JSON matching: {"cleanedQuery": string, "filters": object, "rationale": string}`;
