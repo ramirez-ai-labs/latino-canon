@@ -12,15 +12,15 @@ export { IngestWorkflow } from "./workflow.js";
 export default {
   /**
    * Admin surface — protected by INGEST_ADMIN_TOKEN. Not public.
-   *   POST /ingest          { titles: IngestParams[] }   → kicks off one workflow per title
-   *   GET  /jobs                                         → review queue
-   *   POST /backfill-gender           { limit?: number } → TMDB-only, no Workers AI neurons
-   *   POST /backfill-genres           { limit?: number } → TMDB-only, no Workers AI neurons
-   *   POST /backfill-content-advisory { limit?: number } → LLM classification (small model)
-   *   POST /aliases         { titleId, aliases: {alias, kind}[] } → backfill aliases
-   *                                                         for a title already ingested
-   *                                                         (new ingests set these via
-   *                                                         IngestParams.aliases instead)
+   *   POST /ingest               { titles: IngestParams[] }   → kicks off one workflow per title
+   *   GET  /jobs                                              → review queue
+   *   POST /backfill-gender           { limit?: number }      → TMDB-only, no Workers AI neurons
+   *   POST /backfill-genres           { limit?: number }      → TMDB-only, no Workers AI neurons
+   *   POST /backfill-content-advisory { limit?: number }      → LLM classification (small model)
+   *   POST /aliases         { titleId, aliases: {alias, kind}[] } → backfill aliases for a
+   *                                                               title already ingested
+   *   POST /rebuild-search-cache                              → clear search result cache
+   *                                                               (needed after backfill)
    */
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
@@ -359,6 +359,32 @@ export default {
           deleted: result.deleted,
           verified: result.verified,
           message: "All 13 invalid TMDB entries cleaned from database",
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        return Response.json(
+          { status: "error", message },
+          { status: 500 },
+        );
+      }
+    }
+
+    if (req.method === "POST" && url.pathname === "/rebuild-search-cache") {
+      try {
+        // Clear all search-related cache keys from CACHE KV.
+        // The cache key pattern is: search:${mode}:${query}:${filters}:${limit}:${offset}
+        // We delete all keys matching "search:*" prefix to invalidate genre, theme,
+        // and other filter results after a backfill.
+        const cacheKeys = await env.CACHE.list({ prefix: "search:" });
+        let deletedCount = 0;
+        for (const key of cacheKeys.keys) {
+          await env.CACHE.delete(key.name);
+          deletedCount++;
+        }
+        return Response.json({
+          status: "success",
+          message: `Cleared ${deletedCount} cached search results`,
+          deletedCount,
         });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
