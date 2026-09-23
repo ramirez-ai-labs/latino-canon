@@ -4,6 +4,7 @@ export interface Env {
   DB: D1Database;
   POSTERS: R2Bucket;
   INGEST_WORKFLOW: Workflow<IngestParams>;
+  CACHE: KVNamespace;
 
   AI_GATEWAY_ID: string;
 
