@@ -104,6 +104,9 @@ export interface TitleCard {
   director: string | null;
   /** Gender of the primary (first-ordered) credited director, if known - drives led_by's label. */
   directorGender: PersonGender | null;
+  /** Top-billed (lowest `ord`) cast credit, if any - a title's "lead" actor. */
+  leadActor: string | null;
+  leadActorGender: PersonGender | null;
   posterKey: string | null;
   blurbTeaser: string | null;
   inclusionTypes: InclusionType[];

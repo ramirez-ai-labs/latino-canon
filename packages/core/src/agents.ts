@@ -7,6 +7,9 @@ export interface ExtractedIntent {
   country?: string;
   kind?: TitleKind;
   directorGender?: PersonGender;
+  /** Lead/starring actor's gender - a distinct signal from directorGender, e.g.
+   * "female director with a female lead" asks for both independently. */
+  leadGender?: PersonGender;
   tone?: "lighter" | "heavier";
   cleanedQuery: string;
   source: QueryInterpretation["source"] | "none";

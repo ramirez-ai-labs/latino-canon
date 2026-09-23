@@ -49,7 +49,7 @@ export async function curate(env: Env, request: CurationRequest): Promise<Curati
       intent.source === "none"
         ? "No structured filters found; searching on the raw query"
         : `Extracted (${intent.source}): theme=${intent.theme ?? "any"}, decade=${intent.decade ?? "any"}, ` +
-          `directorGender=${intent.directorGender ?? "any"}, tone=${intent.tone ?? "any"}`,
+          `directorGender=${intent.directorGender ?? "any"}, leadGender=${intent.leadGender ?? "any"}, tone=${intent.tone ?? "any"}`,
     );
 
     reasoning.push("[2/4] Running hybrid search");
@@ -85,6 +85,7 @@ export async function curate(env: Env, request: CurationRequest): Promise<Curati
       theme: intent.theme,
       decade: intent.decade,
       directorGender: intent.directorGender,
+      leadGender: intent.leadGender,
       tone: intent.tone,
       resultCount: ranked.length,
       totalMatches: results.length,
@@ -93,7 +94,7 @@ export async function curate(env: Env, request: CurationRequest): Promise<Curati
 
     return {
       userQuery: request.query,
-      interpretation: `Theme: ${intent.theme ?? "any"}, Decade: ${intent.decade ?? "any"}, Director gender: ${intent.directorGender ?? "any"}, Tone: ${intent.tone ?? "any"}`,
+      interpretation: `Theme: ${intent.theme ?? "any"}, Decade: ${intent.decade ?? "any"}, Director gender: ${intent.directorGender ?? "any"}, Lead gender: ${intent.leadGender ?? "any"}, Tone: ${intent.tone ?? "any"}`,
       topResults: ranked,
       totalMatches: results.length,
       reasoning,
