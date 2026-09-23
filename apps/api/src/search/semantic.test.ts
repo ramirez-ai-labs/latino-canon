@@ -80,6 +80,21 @@ describe("keepMatchingD1", () => {
     const kept = await keepMatchingD1(env, hits, { country: "MX" });
     expect(kept).toEqual([]);
   });
+
+  // Regression: D1/SQLite caps a statement at 100 bound parameters. A full 100-id
+  // Vectorize candidate set already exhausts that budget on its own, and the
+  // visibility gate's param (always added) pushed the real query to ?101 - live 500
+  // on "latino animation film for kids". Params never used as ids don't need to
+  // resolve to real titles; this just proves the statement doesn't throw.
+  it("doesn't overflow D1's 100-bound-parameter limit with a full 100-id candidate set", async () => {
+    const hits = Array.from({ length: 100 }, (_, i) => ({ titleId: `title-${i}`, score: 0.9 }));
+    await expect(keepMatchingD1(env, hits, {})).resolves.not.toThrow();
+  });
+
+  it("still overflow-safe with filters that add their own bound params", async () => {
+    const hits = Array.from({ length: 100 }, (_, i) => ({ titleId: `title-${i}`, score: 0.9 }));
+    await expect(keepMatchingD1(env, hits, { country: "MX", decade: 1990 })).resolves.not.toThrow();
+  });
 });
 
 describe("semanticSearch (score floor)", () => {
