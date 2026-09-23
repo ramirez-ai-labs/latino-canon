@@ -23,7 +23,7 @@ export function TitleCard({ title, className }: { title: TitleCardData; classNam
   return (
     <Link
       href={`/title/${title.id}`}
-      className={`group block overflow-hidden rounded-xl bg-surface shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-card-hover ${className ?? ""}`}
+      className={`group block overflow-hidden rounded-xl bg-surface shadow-[var(--shadow-sm)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)] ${className ?? ""}`}
     >
       <div className="relative aspect-2/3 w-full overflow-hidden bg-surface-raised">
         <Image
@@ -32,6 +32,11 @@ export function TitleCard({ title, className }: { title: TitleCardData; classNam
           fill
           sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 200px"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          style={{ background: "linear-gradient(135deg, rgba(102,126,234,0.35) 0%, rgba(240,147,251,0.35) 100%)" }}
         />
       </div>
       <div className="p-3">
@@ -60,7 +65,7 @@ export function TitleCard({ title, className }: { title: TitleCardData; classNam
             </Badge>
           ))}
           {title.themes.slice(0, 2).map((t) => (
-            <Badge key={t}>{THEME_LABELS[t]}</Badge>
+            <Badge key={t} variant="theme">{THEME_LABELS[t]}</Badge>
           ))}
         </div>
       </div>

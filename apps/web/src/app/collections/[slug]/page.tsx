@@ -12,13 +12,19 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
   return (
     <>
       <section className="mb-8">
-        <h1 className="mb-1 text-2xl font-bold tracking-tight">{collection.title}</h1>
+        <h1 className="mb-1 text-2xl font-bold tracking-tight sm:text-3xl">
+          <span className="bg-gradient-to-r from-primary via-accent to-accent-cyan bg-clip-text text-transparent">
+            {collection.title}
+          </span>
+        </h1>
         <p className="text-muted">{collection.description}</p>
       </section>
 
-      <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {collection.items.map((t) => (
-          <TitleCard key={t.id} title={t} />
+      <div className="columns-2 gap-5 sm:columns-3 md:columns-4 lg:columns-5">
+        {collection.items.map((t, i) => (
+          <div key={t.id} className="mb-5 break-inside-avoid" style={{ animation: `slide-in-up 0.5s ease-out ${i * 40}ms both` }}>
+            <TitleCard title={t} />
+          </div>
         ))}
       </div>
     </>
