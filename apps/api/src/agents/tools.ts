@@ -1,23 +1,9 @@
-import type { LlmClient, SearchFilters, TitleCard } from "@latino-canon/core";
+import { detectDirectorGender, detectLeadGender, detectTone, type LlmClient, type SearchFilters, type TitleCard } from "@latino-canon/core";
 import { rewriteQuery } from "../ai/rewrite-query.js";
 import { retrieve } from "../search/hybrid.js";
 import { hydrateCards } from "../db/cards.js";
 import type { Env } from "../bindings.js";
 import type { ExtractedIntent } from "./types.js";
-
-const DIRECTOR_GENDER_RE = /\b(directed|made|helmed)\b.{0,20}\b(women|female|woman)\b|\bwomen[- ]directed\b|\bfemale directors?\b/i;
-const DIRECTOR_GENDER_MALE_RE = /\b(directed|made|helmed)\b.{0,20}\b(men|male|man)\b|\bmen[- ]directed\b|\bmale directors?\b/i;
-// Deliberately distinct wording from the director regexes above - "lead"/"protagonist"/
-// "starring" all point at the cast, not who directed, so "female director" alone never
-// matches this, and "female lead" alone never matches DIRECTOR_GENDER_RE. A query can
-// (and the one that motivated this - "female director with a female lead" - does) name
-// both independently. "lead actor(s)" is deliberately not the male counterpart of "lead
-// actress" - unlike "actress", "lead actor" is commonly used gender-neutrally today, so
-// treating it as a male signal would be a real, unforced bias, not a symmetry win.
-const LEAD_GENDER_RE = /\bfemale leads?\b|\blead actress(es)?\b|\bfemale protagonists?\b|\bstarring (a )?wom(a|e)n\b/i;
-const LEAD_GENDER_MALE_RE = /\bmale leads?\b|\bmale protagonists?\b|\bstarring (a )?m(a|e)n\b/i;
-const LIGHTER_RE = /\b(light(er)?|fun|funny|feel[- ]good|uplifting|comedic|comed(y|ies))\b/i;
-const HEAVIER_RE = /\b(heavy|heavier|dark|serious|intense|not too light)\b/i;
 
 /**
  * Everything rewriteQuery already extracts well (theme/decade/country/kind, with a
@@ -30,17 +16,9 @@ const HEAVIER_RE = /\b(heavy|heavier|dark|serious|intense|not too light)\b/i;
 export async function extractIntent(llm: LlmClient, query: string): Promise<ExtractedIntent> {
   const interpretation = await rewriteQuery(llm, query, "agents.curate");
 
-  const directorGender = DIRECTOR_GENDER_RE.test(query)
-    ? "female"
-    : DIRECTOR_GENDER_MALE_RE.test(query)
-      ? "male"
-      : undefined;
-  const leadGender = LEAD_GENDER_RE.test(query)
-    ? "female"
-    : LEAD_GENDER_MALE_RE.test(query)
-      ? "male"
-      : undefined;
-  const tone = LIGHTER_RE.test(query) ? "lighter" : HEAVIER_RE.test(query) ? "heavier" : undefined;
+  const directorGender = detectDirectorGender(query);
+  const leadGender = detectLeadGender(query);
+  const tone = detectTone(query);
 
   return {
     ...interpretation?.filters,

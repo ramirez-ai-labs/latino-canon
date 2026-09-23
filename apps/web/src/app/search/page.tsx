@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import type { TitleCard as TitleCardData, SearchResponse, CurationResponse, RankedTitle } from "@latino-canon/core";
+import { isComplexQuery } from "@latino-canon/core";
 import { SearchBar } from "@/components/SearchBar";
 import { SearchFilters } from "@/components/SearchFilters";
 import { TitleCard } from "@/components/TitleCard";
@@ -13,18 +14,6 @@ export const metadata = { title: "Explore" };
 export const dynamic = "force-dynamic";
 
 const PER_PAGE = 50;
-
-const DIRECTOR_GENDER_RE = /\b(directed|made|helmed)\b.{0,20}\b(women|female|woman)\b|\bwomen[- ]directed\b|\bfemale directors?\b/i;
-const DIRECTOR_GENDER_MALE_RE = /\b(directed|made|helmed)\b.{0,20}\b(men|male|man)\b|\bmen[- ]directed\b|\bmale directors?\b/i;
-const LIGHTER_RE = /\b(light(er)?|fun|funny|feel[- ]good|uplifting|comedic|comed(y|ies))\b/i;
-const HEAVIER_RE = /\b(heavy|heavier|dark|serious|intense|not too light)\b/i;
-
-function isComplexQuery(q: string): boolean {
-  if (!q) return false;
-  const hasDirectorGender = DIRECTOR_GENDER_RE.test(q) || DIRECTOR_GENDER_MALE_RE.test(q);
-  const hasTone = LIGHTER_RE.test(q) || HEAVIER_RE.test(q);
-  return hasDirectorGender || hasTone;
-}
 
 export default async function SearchPage({
   searchParams,
