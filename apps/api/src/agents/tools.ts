@@ -7,14 +7,23 @@ import type { ExtractedIntent } from "./types.js";
 
 const DIRECTOR_GENDER_RE = /\b(directed|made|helmed)\b.{0,20}\b(women|female|woman)\b|\bwomen[- ]directed\b|\bfemale directors?\b/i;
 const DIRECTOR_GENDER_MALE_RE = /\b(directed|made|helmed)\b.{0,20}\b(men|male|man)\b|\bmen[- ]directed\b|\bmale directors?\b/i;
+// Deliberately distinct wording from the director regexes above - "lead"/"protagonist"/
+// "starring" all point at the cast, not who directed, so "female director" alone never
+// matches this, and "female lead" alone never matches DIRECTOR_GENDER_RE. A query can
+// (and the one that motivated this - "female director with a female lead" - does) name
+// both independently. "lead actor(s)" is deliberately not the male counterpart of "lead
+// actress" - unlike "actress", "lead actor" is commonly used gender-neutrally today, so
+// treating it as a male signal would be a real, unforced bias, not a symmetry win.
+const LEAD_GENDER_RE = /\bfemale leads?\b|\blead actress(es)?\b|\bfemale protagonists?\b|\bstarring (a )?wom(a|e)n\b/i;
+const LEAD_GENDER_MALE_RE = /\bmale leads?\b|\bmale protagonists?\b|\bstarring (a )?m(a|e)n\b/i;
 const LIGHTER_RE = /\b(light(er)?|fun|funny|feel[- ]good|uplifting|comedic|comed(y|ies))\b/i;
 const HEAVIER_RE = /\b(heavy|heavier|dark|serious|intense|not too light)\b/i;
 
 /**
  * Everything rewriteQuery already extracts well (theme/decade/country/kind, with a
  * cheap rules pass and an LLM fallback that's zod-validated and AI-Gateway-cached for
- * repeated phrases) is reused as-is rather than reinvented. This only adds the two
- * signals rewriteQuery has no reason to know about: directorGender and tone, both
+ * repeated phrases) is reused as-is rather than reinvented. This only adds the signals
+ * rewriteQuery has no reason to know about: directorGender, leadGender, and tone, all
  * detectable from explicit keywords without spending an AI call on them at all - the
  * kind of judgment a 70B classify call brings nothing over a regex for.
  */
@@ -26,11 +35,17 @@ export async function extractIntent(llm: LlmClient, query: string): Promise<Extr
     : DIRECTOR_GENDER_MALE_RE.test(query)
       ? "male"
       : undefined;
+  const leadGender = LEAD_GENDER_RE.test(query)
+    ? "female"
+    : LEAD_GENDER_MALE_RE.test(query)
+      ? "male"
+      : undefined;
   const tone = LIGHTER_RE.test(query) ? "lighter" : HEAVIER_RE.test(query) ? "heavier" : undefined;
 
   return {
     ...interpretation?.filters,
     directorGender,
+    leadGender,
     tone,
     cleanedQuery: interpretation?.cleanedQuery || query,
     source: interpretation?.source ?? "none",
@@ -135,6 +150,18 @@ export function rerankedResults(titles: TitleCard[], intent: ExtractedIntent, li
           matchedCriteria.push(`director: ${intent.directorGender}`);
           score += 0.35;
         } else if (title.directorGender) {
+          score -= 0.3;
+        }
+      }
+
+      // Same confirmed-match/confirmed-mismatch/unknown-stays-neutral shape as
+      // directorGender above - a distinct signal (the lead/starring credit, not
+      // who directed), scored the same way for the same reason.
+      if (intent.leadGender) {
+        if (title.leadActorGender === intent.leadGender) {
+          matchedCriteria.push(`lead: ${intent.leadGender}`);
+          score += 0.35;
+        } else if (title.leadActorGender) {
           score -= 0.3;
         }
       }

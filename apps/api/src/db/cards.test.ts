@@ -23,6 +23,24 @@ beforeAll(async () => {
        VALUES ('real-women-have-curves-2002', 'p-cardoso', 'director', NULL, 0)`,
     ),
     env.DB.prepare(
+      `INSERT INTO people (id, tmdb_id, name, known_for_department, gender)
+       VALUES ('p-ferrera', 101, 'America Ferrera', NULL, 'female')`,
+    ),
+    env.DB.prepare(
+      `INSERT INTO people (id, tmdb_id, name, known_for_department, gender)
+       VALUES ('p-costanzo', 102, 'George Lopez', NULL, 'male')`,
+    ),
+    // Two cast credits, out of ord order in the INSERT itself - hydrateCards must pick
+    // the lowest `ord` (top-billed) as the lead, not just the first row returned.
+    env.DB.prepare(
+      `INSERT INTO credits (title_id, person_id, role, character, ord)
+       VALUES ('real-women-have-curves-2002', 'p-costanzo', 'cast', NULL, 1)`,
+    ),
+    env.DB.prepare(
+      `INSERT INTO credits (title_id, person_id, role, character, ord)
+       VALUES ('real-women-have-curves-2002', 'p-ferrera', 'cast', NULL, 0)`,
+    ),
+    env.DB.prepare(
       `INSERT INTO title_tags (title_id, tag_id, confidence, source)
        SELECT 'real-women-have-curves-2002', id, 1.0, 'seed' FROM tags WHERE slug = 'led_by'`,
     ),
@@ -40,6 +58,12 @@ describe("hydrateCards", () => {
     expect(card?.director).toBe("Patricia Cardoso");
     expect(card?.directorGender).toBe("female");
     expect(card?.inclusionTypes).toEqual(["led_by"]);
+  });
+
+  it("carries the top-billed cast credit as the lead, not just whichever cast row comes back first", async () => {
+    const [card] = await hydrateCards(env, [{ titleId: "real-women-have-curves-2002", score: 1 }]);
+    expect(card?.leadActor).toBe("America Ferrera");
+    expect(card?.leadActorGender).toBe("female");
   });
 
   it("excludes a title with no qualifying inclusion_type tag", async () => {

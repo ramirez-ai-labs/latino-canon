@@ -23,6 +23,8 @@ interface CardRow {
   oscar_win: string | null;
   director: string | null;
   director_gender: PersonGender | null;
+  lead_actor: string | null;
+  lead_actor_gender: PersonGender | null;
   blurb: string | null;
   inclusion_types: string | null; // "slug:conf,slug:conf"
   themes: string | null;
@@ -46,6 +48,10 @@ export async function hydrateCards(env: Env, hits: RankedHit[]): Promise<TitleCa
         WHERE c.title_id = t.id AND c.role = 'director' ORDER BY c.ord LIMIT 1) AS director,
       (SELECT p.gender FROM credits c JOIN people p ON p.id = c.person_id
         WHERE c.title_id = t.id AND c.role = 'director' ORDER BY c.ord LIMIT 1) AS director_gender,
+      (SELECT p.name FROM credits c JOIN people p ON p.id = c.person_id
+        WHERE c.title_id = t.id AND c.role = 'cast' ORDER BY c.ord LIMIT 1) AS lead_actor,
+      (SELECT p.gender FROM credits c JOIN people p ON p.id = c.person_id
+        WHERE c.title_id = t.id AND c.role = 'cast' ORDER BY c.ord LIMIT 1) AS lead_actor_gender,
       b.text AS blurb,
       (SELECT group_concat(g.slug || ':' || tt.confidence)
         FROM title_tags tt JOIN tags g ON g.id = tt.tag_id
@@ -76,6 +82,8 @@ export async function hydrateCards(env: Env, hits: RankedHit[]): Promise<TitleCa
         yearEnd: r.year_end,
         director: r.director,
         directorGender: r.director_gender,
+        leadActor: r.lead_actor,
+        leadActorGender: r.lead_actor_gender,
         posterKey: r.poster_key,
         blurbTeaser: r.blurb ? truncate(r.blurb, 140) : null,
         inclusionTypes: inclusionTagsWithConf.map((t) => t.slug) as InclusionType[],

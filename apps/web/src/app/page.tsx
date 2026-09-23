@@ -25,6 +25,8 @@ function titleToCard(title: any): TitleCardType {
     yearEnd: title.yearEnd,
     director: title.credits.find((c: any) => c.role === "director")?.person.name ?? null,
     directorGender,
+    leadActor: title.credits.find((c: any) => c.role === "cast")?.person.name ?? null,
+    leadActorGender: title.credits.find((c: any) => c.role === "cast")?.person.gender ?? null,
     posterKey: title.posterKey,
     blurbTeaser: title.blurb?.text ? title.blurb.text.substring(0, 140) + (title.blurb.text.length > 140 ? "…" : "") : null,
     inclusionTypes: inclusionTypesWithConfidence.map((t: any) => t.slug),

@@ -24,6 +24,8 @@ function card(overrides: Partial<TitleCard> = {}): TitleCard {
     yearEnd: null,
     director: null,
     directorGender: null,
+    leadActor: null,
+    leadActorGender: null,
     posterKey: null,
     blurbTeaser: "A test film.",
     inclusionTypes: [],
@@ -74,6 +76,32 @@ describe("extractIntent", () => {
     const { llm } = fakeLlm('{"cleanedQuery":"films from the 90s","filters":{"decade":1990},"rationale":"test"}');
     const intent = await extractIntent(llm, "films from the 90s directed by women");
     expect(intent.directorGender).toBe("female");
+  });
+
+  it("detects leadGender via regex, distinct wording from directorGender so neither collides with the other", async () => {
+    const { llm } = fakeLlm("{}");
+    const female = await extractIntent(llm, "something with a female lead");
+    expect(female.leadGender).toBe("female");
+    expect(female.directorGender).toBeUndefined();
+
+    const male = await extractIntent(llm, "a film with a male protagonist");
+    expect(male.leadGender).toBe("male");
+
+    const actress = await extractIntent(llm, "starring a lead actress");
+    expect(actress.leadGender).toBe("female");
+  });
+
+  it("extracts directorGender and leadGender independently when a query names both - the case that motivated this", async () => {
+    const { llm } = fakeLlm("{}");
+    const intent = await extractIntent(llm, "female director with a female lead, 90s coming of age");
+    expect(intent.directorGender).toBe("female");
+    expect(intent.leadGender).toBe("female");
+  });
+
+  it("doesn't treat 'lead actor' as a male signal - unlike 'lead actress', it's used gender-neutrally today", async () => {
+    const { llm } = fakeLlm("{}");
+    const intent = await extractIntent(llm, "a film with a great lead actor performance");
+    expect(intent.leadGender).toBeUndefined();
   });
 
   it("detects tone keywords via regex, never via an AI call", async () => {
@@ -151,6 +179,35 @@ describe("rerankedResults", () => {
     // below one where the director's gender simply isn't known.
     expect(ranked[0]?.title.id).toBe("unknown-2020");
     expect(ranked[1]?.title.id).toBe("wrong-2020");
+  });
+
+  it("scores leadGender the same confirmed-match/mismatch/unknown way as directorGender", () => {
+    const rightLead = card({ id: "right-lead-2020", leadActorGender: "female" });
+    const wrongLead = card({ id: "wrong-lead-2020", leadActorGender: "male" });
+    const unknownLead = card({ id: "unknown-lead-2020", leadActorGender: null });
+    const intent = { leadGender: "female" as const, cleanedQuery: "q", source: "none" as const };
+
+    const ranked = rerankedResults([wrongLead, unknownLead, rightLead], intent, 5);
+
+    expect(ranked.map((r) => r.title.id)).toEqual(["right-lead-2020", "unknown-lead-2020", "wrong-lead-2020"]);
+    expect(ranked[0]?.matchedCriteria).toContain("lead: female");
+  });
+
+  it("scores directorGender and leadGender independently when a query asks for both - the exact live scenario", () => {
+    // Reproduces "female director with a female lead": a title matching only the
+    // director ask and one matching only the lead ask should both beat a title
+    // matching neither, and one matching both should beat either alone.
+    const both = card({ id: "both-2020", directorGender: "female", leadActorGender: "female" });
+    const directorOnly = card({ id: "director-only-2020", directorGender: "female", leadActorGender: "male" });
+    const leadOnly = card({ id: "lead-only-2020", directorGender: "male", leadActorGender: "female" });
+    const neither = card({ id: "neither-2020", directorGender: "male", leadActorGender: "male" });
+    const intent = { directorGender: "female" as const, leadGender: "female" as const, cleanedQuery: "q", source: "none" as const };
+
+    const ranked = rerankedResults([neither, leadOnly, directorOnly, both], intent, 5);
+
+    expect(ranked[0]?.title.id).toBe("both-2020");
+    expect(ranked[0]?.matchedCriteria).toEqual(expect.arrayContaining(["director: female", "lead: female"]));
+    expect(ranked.map((r) => r.title.id).indexOf("neither-2020")).toBe(3);
   });
 
   it("respects the caller's limit instead of a hardcoded 5", () => {
