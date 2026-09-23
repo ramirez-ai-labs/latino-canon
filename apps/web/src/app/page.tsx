@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Languages, ShieldCheck, Sparkles } from "lucide-react";
 import { Suspense } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { TitleCard } from "@/components/TitleCard";
@@ -10,23 +9,6 @@ import type { TitleCard as TitleCardType } from "@latino-canon/core";
 
 export const dynamic = "force-dynamic";
 
-const PILLARS = [
-  {
-    icon: ShieldCheck,
-    title: "Verified, not guessed",
-    body: "Every tag traces to a real director, writer, or cast credit — or an editor's call when the model isn't confident enough to show on its own.",
-  },
-  {
-    icon: Languages,
-    title: "Search however you remember it",
-    body: "Plot, theme, era, or filmmaker — in English or Spanish. Half-remembered is fine.",
-  },
-  {
-    icon: Sparkles,
-    title: "AI, disclosed",
-    body: "“Why it matters” notes are model-generated and editor-approved before they appear — never hidden behind an info icon.",
-  },
-];
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function titleToCard(title: any): TitleCardType {
@@ -84,7 +66,11 @@ export default async function HomePage() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-balance text-lg text-muted leading-relaxed">
-            A curated, credit-verified index of Latino-directed, Latino-created, and Latino-centered film and TV — searchable by plot, theme, era, or filmmaker, in English or Spanish.
+            A curated, credit-verified index of Latino-directed, Latino-created, and Latino-centered film and TV searchable by plot, theme, era, or filmmaker in English or Spanish.
+          </p>
+
+          <p className="mx-auto mt-3 max-w-2xl text-balance text-sm text-muted">
+            Try: Mexican family stories from the 90s
           </p>
 
           <div className="mt-10">
@@ -95,25 +81,49 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Pillars Section with Glassmorphism */}
-      <section className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-        {PILLARS.map((p, i) => (
-          <div
-            key={p.title}
-            className="glass rounded-2xl p-8 flex flex-col hover-lift group"
-            style={{
-              animation: `slide-in-up 0.6s ease-out ${i * 100}ms both`,
-            }}
-          >
-            <div className="mb-4 inline-flex">
-              <div className="bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-full p-3">
-                <p.icon className="size-6 text-white" aria-hidden />
-              </div>
+      {/* Why We're Different Section */}
+      <section className="relative overflow-hidden rounded-3xl glass-heavy px-6 py-12 sm:px-12 sm:py-16">
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(240, 147, 251, 0.05) 100%)'
+        }} />
+
+        <div className="relative mx-auto max-w-3xl">
+          <h2 className="text-4xl font-bold text-text">Why we are different.</h2>
+
+          <p className="mt-6 text-lg text-muted leading-relaxed">
+            Unlike Netflix and Spotify, we show you the reasoning. Every tag (director, theme, inclusion type) displays its confidence score and source: seed data, model prediction, or editor judgment. Never hidden. Never guessed.
+          </p>
+
+          <p className="mt-6 text-lg text-muted leading-relaxed">
+            For representation, this matters. When a film is tagged "led by Latina director," you see 99% confidence plus "editor verified." That transparency builds trust in a curated collection.
+          </p>
+
+          <div className="mt-10 grid gap-6 sm:grid-cols-3">
+            <div className="space-y-2">
+              <h3 className="font-semibold text-text flex items-center gap-2">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white text-xs font-bold">1</span>
+                Search however you remember it
+              </h3>
+              <p className="text-sm text-muted">Plot, theme, era, filmmaker, in English or Spanish</p>
             </div>
-            <h3 className="text-lg font-semibold text-text">{p.title}</h3>
-            <p className="mt-3 text-sm leading-relaxed text-muted flex-1">{p.body}</p>
+
+            <div className="space-y-2">
+              <h3 className="font-semibold text-text flex items-center gap-2">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-r from-[#f093fb] to-[#f5576c] text-white text-xs font-bold">2</span>
+                Browse curated collections
+              </h3>
+              <p className="text-sm text-muted">Core Canon, Border Stories, Directors, Breakthrough Firsts</p>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="font-semibold text-text flex items-center gap-2">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-r from-[#4facfe] to-[#00f2fe] text-white text-xs font-bold">3</span>
+                Explore with confidence
+              </h3>
+              <p className="text-sm text-muted">Every tag traces to a real credit or editor judgment call</p>
+            </div>
           </div>
-        ))}
+        </div>
       </section>
 
       {recentCards.length > 0 && (
