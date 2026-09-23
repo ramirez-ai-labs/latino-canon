@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { cn } from "@/lib/utils";
 import {
   INCLUSION_TYPES,
   INCLUSION_TYPE_LABELS,
@@ -51,7 +52,7 @@ const COUNTRIES: { value: string; label: string }[] = [
 ];
 
 const selectClass =
-  "rounded-lg border border-border bg-surface-raised px-3 py-1.5 text-[0.85rem] text-text transition-colors hover:border-muted focus:outline-none focus:ring-2 focus:ring-accent/50";
+  "glass-light rounded-full px-3.5 py-1.5 text-[0.85rem] text-text transition-all duration-200 hover:border-muted focus:outline-none focus:ring-2 focus:ring-accent/60 focus:shadow-[var(--shadow-glow)]";
 
 /**
  * Exposes the same mode/kind/theme/decade/inclusionType filters the search API has
@@ -68,13 +69,17 @@ export function SearchFilters() {
     router.push(`/search?${next.toString()}`);
   }
 
+  // A glow ring on any select whose value isn't the "no filter" default - a quick
+  // visual scan of which constraints are actually narrowing the current result set.
+  const glowClass = "ring-1 ring-accent/60 shadow-[var(--shadow-glow)]";
+
   return (
     <div className="mb-6 flex flex-wrap gap-2.5">
       <select
         aria-label="Search mode"
         value={params.get("mode") ?? "hybrid"}
         onChange={(e) => setParam("mode", e.target.value)}
-        className={selectClass}
+        className={cn(selectClass, params.get("mode") && params.get("mode") !== "hybrid" && glowClass)}
       >
         {MODES.map((m) => (
           <option key={m.value} value={m.value}>
@@ -87,7 +92,7 @@ export function SearchFilters() {
         aria-label="Kind"
         value={params.get("kind") ?? ""}
         onChange={(e) => setParam("kind", e.target.value)}
-        className={selectClass}
+        className={cn(selectClass, params.get("kind") && glowClass)}
       >
         <option value="">Film or series</option>
         {KINDS.map((k) => (
@@ -101,7 +106,7 @@ export function SearchFilters() {
         aria-label="Decade"
         value={params.get("decade") ?? ""}
         onChange={(e) => setParam("decade", e.target.value)}
-        className={selectClass}
+        className={cn(selectClass, params.get("decade") && glowClass)}
       >
         <option value="">Any decade</option>
         {DECADES.map((d) => (
@@ -115,7 +120,7 @@ export function SearchFilters() {
         aria-label="Country"
         value={params.get("country") ?? ""}
         onChange={(e) => setParam("country", e.target.value)}
-        className={selectClass}
+        className={cn(selectClass, params.get("country") && glowClass)}
       >
         <option value="">Any country</option>
         {COUNTRIES.map((c) => (
@@ -129,7 +134,7 @@ export function SearchFilters() {
         aria-label="Theme"
         value={params.get("theme") ?? ""}
         onChange={(e) => setParam("theme", e.target.value)}
-        className={selectClass}
+        className={cn(selectClass, params.get("theme") && glowClass)}
       >
         <option value="">Any theme</option>
         {(THEMES as readonly Theme[]).map((t) => (
@@ -143,7 +148,7 @@ export function SearchFilters() {
         aria-label="Inclusion type"
         value={params.get("inclusionType") ?? ""}
         onChange={(e) => setParam("inclusionType", e.target.value)}
-        className={selectClass}
+        className={cn(selectClass, params.get("inclusionType") && glowClass)}
       >
         <option value="">Any inclusion type</option>
         {(INCLUSION_TYPES as readonly InclusionType[]).map((t) => (

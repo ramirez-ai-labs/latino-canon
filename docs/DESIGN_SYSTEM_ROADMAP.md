@@ -1,7 +1,7 @@
 # Latino Canon Design System Roadmap
 
-**Status:** In Progress (Phase 1-2 complete, Phase 3-4 pending)
-**Updated:** 2026-09-22
+**Status:** In Progress (Phase 1-3 complete, Phase 4 pending)
+**Updated:** 2026-09-23
 
 ## Overview
 
@@ -62,21 +62,22 @@ Comprehensive modern UI redesign transforming Latino Canon from functional to pr
 
 ---
 
-## Phase 3: Title Detail & Collections (Pending)
+## Phase 3: Title Detail & Collections ✅
 
+**Status:** Complete (PR #202)
 **Timeline:** Week 3
 **Deliverable:** Title detail page redesign, collection page updates, advanced micro-interactions
 
 ### Title Detail Page
-- **Hero Section:** Poster + parallax effect with animated gradient overlay
-- **Glassmorphic Sidebar:** Layered metadata display with rounded corners and backdrop-blur
-- **Tags:** Gradient-tinted badges by category
-- **Related Titles:** Smooth horizontal scroll with staggered reveals
+- **Hero Section:** Ambient gradient-mesh glow behind the poster, gradient wash overlay, staggered slide-in-up entrance (deliberately not scroll-linked JS parallax — unreliable on mobile Safari and not worth the fragility for a single hero image)
+- **Glassmorphic Sidebar:** Metadata column wrapped in `.glass-heavy` with rounded corners and backdrop-blur
+- **Tags:** New `Badge` `theme` variant (cyan-tinted) distinguishes theme tags from inclusion-type tags (existing magenta `inclusion` variant)
+- **Related Titles:** Horizontal rail (shared `Rail`/`RailItem`), titles sharing the page's primary theme via the existing `/search?theme=` filter, staggered slide-in-up reveals
 
 ### Collection Pages
-- **Masonry Layout:** Staggered card loading with sequential reveals
-- **Filter Buttons:** Glassmorphic buttons with active state glow effects
-- **Card Hover:** Lift + shadow + gradient overlay effects
+- **Masonry Layout:** CSS multi-column (`columns-2..5` + `break-inside-avoid`) with staggered reveals, applied to both Collections and Catalog for consistency (same underlying `TitleCard` grid)
+- **Filter Buttons:** `SearchFilters`' selects restyled with `.glass-light` + an active-state glow ring (`shadow-[var(--shadow-glow)]`) when a filter is set — kept as native `<select>`s rather than converting to a button/toggle UI, to avoid an interaction rewrite outside this phase's scope
+- **Card Hover:** `TitleCard` now lifts + escalates shadow (real `--shadow-sm`/`--shadow-lg` tokens, replacing dead `shadow-card`/`shadow-card-hover` classes that resolved to nothing) + fades in a gradient overlay on the poster — shared by every page that renders `TitleCard` (home, search, catalog, collections)
 
 ---
 
@@ -106,11 +107,14 @@ Comprehensive modern UI redesign transforming Latino Canon from functional to pr
 
 ## Known Issues
 
-### Agent Detection Precision Gap 📌
-**Issue:** Regex patterns miss "female directed" syntax
-**Status:** Pinned for future iteration
-**Workaround:** Use "women-directed" or "directed by women"
-**Files:** apps/api/src/agents/tools.ts, apps/web/src/app/search/page.tsx
+### Agent Detection Precision Gap ✅ Resolved
+**Issue:** `apps/web`'s routing check kept its own copy of the director/lead-gender
+regexes and never picked up `leadGender` when it was added to the backend - a
+"female lead" query fell through to plain `/search` (no gender field at all) instead
+of the gender-aware `/agents/curate`.
+**Fix (PR #201):** Moved the regexes/detectors into `packages/core/src/query-signals.ts`
+as a single source of truth (`detectDirectorGender`, `detectLeadGender`, `detectTone`,
+`isComplexQuery`) imported by both sides - can't independently drift again.
 
 ### Title Deduplication
 **Issue:** Some titles appear in multiple collections
@@ -158,14 +162,12 @@ Gradients:
 |-------|----|---------| 
 | 1 | #195 | Merged |
 | 2 | #196 | Merged |
-| 3 | TBD | Pending |
+| 3 | #202 | Merged |
 | 4 | TBD | Pending |
 
 ---
 
 ## Next Steps
 
-1. Start Phase 3 (Title Detail + Collections)
-2. Complete Phase 3 testing and refinement
-3. Phase 4 accessibility audit and performance optimization
-4. Monitor user feedback post-launch
+1. Phase 4 accessibility audit and performance optimization
+2. Monitor user feedback post-launch

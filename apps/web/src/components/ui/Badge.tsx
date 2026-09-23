@@ -8,6 +8,7 @@ const badgeVariants = cva(
       variant: {
         default: "bg-surface-raised text-muted",
         inclusion: "bg-accent-muted text-accent",
+        theme: "bg-cyan-muted text-accent-cyan",
         contextual: "bg-gold/15 text-gold",
         solid: "bg-accent text-bg font-semibold",
         oscar: "bg-gold text-bg font-semibold",

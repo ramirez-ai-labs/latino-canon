@@ -43,9 +43,11 @@ export default async function CatalogPage({
         <SearchFilters />
       </Suspense>
 
-      <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {results.map((t) => (
-          <TitleCard key={t.id} title={t} />
+      <div className="columns-2 gap-5 sm:columns-3 md:columns-4 lg:columns-5">
+        {results.map((t, i) => (
+          <div key={t.id} className="mb-5 break-inside-avoid" style={{ animation: `slide-in-up 0.5s ease-out ${i * 40}ms both` }}>
+            <TitleCard title={t} />
+          </div>
         ))}
       </div>
 

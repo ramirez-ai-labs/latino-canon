@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import type { Theme } from "@latino-canon/core";
 import {
   CONTEXT_NOTE_CATEGORY_LABELS,
   INCLUSION_TYPE_LABELS,
@@ -8,8 +9,10 @@ import {
   REPRESENTATION_HANDLING_LABELS,
   THEME_LABELS,
 } from "@latino-canon/core";
-import { getTitle, posterUrl } from "@/lib/api";
+import { getTitle, posterUrl, search } from "@/lib/api";
 import { Badge } from "@/components/ui/Badge";
+import { TitleCard } from "@/components/TitleCard";
+import { Rail, RailItem } from "@/components/ui/Rail";
 
 export const dynamic = "force-dynamic";
 
@@ -22,12 +25,27 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
   // hydrateCards uses for TitleCard.directorGender - drives led_by's gendered label.
   const directorGender = title.credits.find((c) => c.role === "director")?.person.gender ?? null;
 
+  // "Related" reuses the same theme filter /catalog already exposes rather than a new
+  // similarity endpoint - a shared theme is the one signal every title already carries.
+  const primaryTheme = title.tags.find((t) => t.kind === "theme")?.slug as Theme | undefined;
+  const related = primaryTheme
+    ? (await search({ theme: primaryTheme, mode: "lexical", limit: 9 }).catch(() => ({ results: [] })))
+        .results.filter((t) => t.id !== title.id)
+        .slice(0, 8)
+    : [];
+
   return (
-    <article className="grid grid-cols-1 gap-8 sm:grid-cols-[240px_1fr]">
-      <div className="relative aspect-2/3 w-full overflow-hidden rounded-xl bg-surface-raised shadow-card">
-        <Image src={posterUrl(title.posterKey)} alt="" fill sizes="240px" className="object-cover" priority />
-      </div>
-      <div>
+    <article className="relative">
+      <div
+        aria-hidden
+        className="gradient-mesh pointer-events-none absolute -inset-x-6 -top-6 h-[420px] rounded-3xl opacity-60 blur-2xl"
+      />
+      <div className="relative grid grid-cols-1 gap-8 sm:grid-cols-[240px_1fr]">
+        <div className="group relative aspect-2/3 w-full overflow-hidden rounded-2xl bg-surface-raised shadow-[var(--shadow-xl)] animate-slide-in-up">
+          <Image src={posterUrl(title.posterKey)} alt="" fill sizes="240px" className="object-cover" priority />
+          <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-bg/70 via-transparent to-transparent" />
+        </div>
+        <div className="glass-heavy animate-slide-in-up rounded-2xl p-6" style={{ animationDelay: "80ms" }}>
         <div className="flex flex-wrap items-center gap-2.5">
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{title.title}</h1>
           {title.yearStart >= 2026 && <Badge variant="solid">✨ New to Canon</Badge>}
@@ -58,7 +76,7 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
           {title.tags
             .filter((t) => t.kind === "theme")
             .map((t) => (
-              <Badge key={t.slug}>{THEME_LABELS[t.slug as keyof typeof THEME_LABELS] ?? t.label}</Badge>
+              <Badge key={t.slug} variant="theme">{THEME_LABELS[t.slug as keyof typeof THEME_LABELS] ?? t.label}</Badge>
             ))}
         </div>
 
@@ -145,7 +163,25 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
             ))}
           </section>
         )}
+        </div>
       </div>
+
+      {related.length > 0 && (
+        <section className="mt-12">
+          <h2 className="mb-4 text-xl font-bold tracking-tight">Related titles</h2>
+          <Rail>
+            {related.map((t, i) => (
+              <RailItem
+                key={t.id}
+                className="w-[42vw] sm:w-[200px]"
+                style={{ animation: `slide-in-up 0.5s ease-out ${i * 60}ms both` }}
+              >
+                <TitleCard title={t} />
+              </RailItem>
+            ))}
+          </Rail>
+        </section>
+      )}
     </article>
   );
 }
