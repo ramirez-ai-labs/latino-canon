@@ -117,6 +117,42 @@ describe("rerankedResults", () => {
     expect(ranked[0]?.matchedCriteria).toContain("director: female");
   });
 
+  it("penalizes a confirmed director-gender mismatch instead of treating it as neutral - found live", () => {
+    // Reproduces the exact live bug: "female director" query returned two
+    // male-directed films ranked above the one film that actually had a female
+    // director, because theme+decade+kind (0.3+0.2+0.15=0.65) outweighed
+    // decade+kind+directorGender (0.2+0.15+0.2=0.55) under the old additive-only
+    // scoring - a known male director and an unknown director scored identically.
+    const wrongGenderStrongMatch = card({
+      id: "wrong-gender-2020",
+      directorGender: "male",
+      themes: ["coming_of_age"],
+      yearStart: 1995,
+    });
+    const rightGenderWeakMatch = card({ id: "right-gender-2020", directorGender: "female", yearStart: 1994 });
+    const intent = { theme: "coming_of_age" as const, decade: 1990, directorGender: "female" as const, cleanedQuery: "q", source: "none" as const };
+
+    const ranked = rerankedResults([wrongGenderStrongMatch, rightGenderWeakMatch], intent, 5);
+
+    expect(ranked[0]?.title.id).toBe("right-gender-2020");
+    expect(ranked[0]?.matchedCriteria).toContain("director: female");
+    expect(ranked[1]?.title.id).toBe("wrong-gender-2020");
+    expect(ranked[1]?.matchedCriteria).not.toContain("director: female");
+  });
+
+  it("doesn't penalize an unknown director gender the same as a confirmed mismatch", () => {
+    const unknownGender = card({ id: "unknown-2020", directorGender: null, themes: ["coming_of_age"] });
+    const confirmedWrong = card({ id: "wrong-2020", directorGender: "male", themes: ["coming_of_age"] });
+    const intent = { theme: "coming_of_age" as const, directorGender: "female" as const, cleanedQuery: "q", source: "none" as const };
+
+    const ranked = rerankedResults([confirmedWrong, unknownGender], intent, 5);
+
+    // Same theme match for both, so a known-wrong director should rank strictly
+    // below one where the director's gender simply isn't known.
+    expect(ranked[0]?.title.id).toBe("unknown-2020");
+    expect(ranked[1]?.title.id).toBe("wrong-2020");
+  });
+
   it("respects the caller's limit instead of a hardcoded 5", () => {
     const titles = Array.from({ length: 8 }, (_, i) => card({ id: `t${i}`, score: 1 - i * 0.1 }));
     const ranked = rerankedResults(titles, { cleanedQuery: "q", source: "none" }, 3);

@@ -122,9 +122,21 @@ export function rerankedResults(titles: TitleCard[], intent: ExtractedIntent, li
         score += 0.15;
       }
 
-      if (intent.directorGender && title.directorGender === intent.directorGender) {
-        matchedCriteria.push(`director: ${intent.directorGender}`);
-        score += 0.2;
+      // A *confirmed* mismatch (title.directorGender is known and differs) is
+      // penalized, not just left at zero - found live: a query for "female
+      // director" ranked two male-directed films #1/#2 (theme+decade+kind alone
+      // summed to more than decade+kind+directorGender), burying the one result
+      // that actually satisfied the explicit ask at #3. Treating "confirmed male"
+      // and "gender unknown" as equally neutral was the bug - only an unknown
+      // director stays neutral; a known, wrong one should rank below a title with
+      // no signal either way, not just tie with it.
+      if (intent.directorGender) {
+        if (title.directorGender === intent.directorGender) {
+          matchedCriteria.push(`director: ${intent.directorGender}`);
+          score += 0.35;
+        } else if (title.directorGender) {
+          score -= 0.3;
+        }
       }
 
       if (intent.tone && toneScores?.has(title.id)) {
@@ -137,15 +149,21 @@ export function rerankedResults(titles: TitleCard[], intent: ExtractedIntent, li
       // counts even when it doesn't happen to match any extracted filter.
       score += (title.score || 0) * 0.1;
 
+      // Clamped only for display/return - sorting below uses the raw score, so a
+      // mismatch penalty can still separate two titles that both clamp to 0%.
+      const displayScore = Math.max(0, Math.min(score, 1));
+
       return {
         title,
-        score: Math.min(score, 1),
+        score: displayScore,
+        rawScore: score,
         matchedCriteria,
         reason: matchedCriteria.length
-          ? `Matched: ${matchedCriteria.join(", ")}. Relevance: ${(score * 100).toFixed(0)}%`
-          : `Relevance: ${(score * 100).toFixed(0)}%`,
+          ? `Matched: ${matchedCriteria.join(", ")}. Relevance: ${(displayScore * 100).toFixed(0)}%`
+          : `Relevance: ${(displayScore * 100).toFixed(0)}%`,
       };
     })
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit);
+    .sort((a, b) => b.rawScore - a.rawScore)
+    .slice(0, limit)
+    .map(({ rawScore: _rawScore, ...rest }) => rest);
 }
