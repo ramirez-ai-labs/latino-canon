@@ -6,14 +6,19 @@ import {
   BLURB_SYSTEM,
   blurbUser,
   blurbSchema,
+  CONTENT_ADVISORY_SYSTEM,
+  contentAdvisoryUser,
+  contentAdvisoryClassificationSchema,
   coerceLlmText,
   extractJson,
   normalizeClassificationJson,
   normalizeBlurbJson,
+  normalizeContentAdvisoryJson,
   MODELS,
   type BlurbResult,
   type BlurbSource,
   type ClassificationResult,
+  type ContentAdvisory,
   type Title,
 } from "@latino-canon/core";
 import { ZodError } from "zod";
@@ -65,6 +70,27 @@ export async function classifyForIngest(env: Env, t: Title): Promise<Classificat
   return parseLlm(classificationSchema, normalizeClassificationJson(extractJson(out)), "classify");
 }
 
+/**
+ * Separate, cheaper call from classifyForIngest - a general/mature judgment doesn't
+ * need the 70B classify model's multi-label nuance, and keeping it a distinct call
+ * (rather than folding it into CLASSIFY_SYSTEM's output) means it can be backfilled
+ * against already-classified titles without re-running or disturbing their existing
+ * inclusion_type/theme tags.
+ */
+export async function classifyContentAdvisory(
+  env: Env,
+  input: { title: string; year: number; synopsis: string | null },
+): Promise<ContentAdvisory> {
+  const user = contentAdvisoryUser(input);
+  const out = await runLlm(env, "content-advisory", CONTENT_ADVISORY_SYSTEM, user);
+  const parsed = parseLlm(
+    contentAdvisoryClassificationSchema,
+    normalizeContentAdvisoryJson(extractJson(out)),
+    "content-advisory",
+  );
+  return parsed.rating;
+}
+
 export interface BlurbGroundingResult {
   result: BlurbResult;
   sources: BlurbSource[];
@@ -105,9 +131,14 @@ export async function blurbForIngest(
 
 // --- provider plumbing ------------------------------------------------------
 
-async function runLlm(env: Env, task: "classify" | "blurb", system: string, user: string): Promise<string> {
+async function runLlm(
+  env: Env,
+  task: "classify" | "blurb" | "content-advisory",
+  system: string,
+  user: string,
+): Promise<string> {
   const res = (await env.AI.run(
-    MODELS[task] as Parameters<Ai["run"]>[0],
+    MODELS[task],
     {
       messages: [
         { role: "system", content: system },

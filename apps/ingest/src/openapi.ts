@@ -276,6 +276,88 @@ export const ingestOpenApiSpec = {
         },
       },
     },
+    "/backfill-genres": {
+      post: {
+        summary: "Backfill title genres from TMDB",
+        description: "Update titles whose genres are still the '[]' default - no Workers AI neurons spent",
+        tags: ["Admin"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  limit: { type: "number", default: 50 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Backfill result",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    checked: { type: "number" },
+                    updated: { type: "number" },
+                    errors: { type: "array", items: { type: "string" } },
+                  },
+                },
+              },
+            },
+          },
+          "401": {
+            description: "Unauthorized",
+          },
+        },
+      },
+    },
+    "/backfill-content-advisory": {
+      post: {
+        summary: "Backfill content-advisory classification (general/mature)",
+        description: "LLM-classifies titles whose content_advisory is still NULL, from their synopsis",
+        tags: ["Admin"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  limit: { type: "number", default: 50 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Backfill result",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    checked: { type: "number" },
+                    updated: { type: "number" },
+                    errors: { type: "array", items: { type: "string" } },
+                  },
+                },
+              },
+            },
+          },
+          "401": {
+            description: "Unauthorized",
+          },
+        },
+      },
+    },
     "/aliases": {
       post: {
         summary: "Backfill alternate titles for a title",

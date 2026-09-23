@@ -25,8 +25,12 @@ function titleToCard(title: any): TitleCardType {
     yearEnd: title.yearEnd,
     director: lead?.person.name ?? null,
     directorGender: lead?.person.gender ?? null,
-    leadActor: title.credits.find((c: any) => c.role === "cast")?.person.name ?? null,
-    leadActorGender: title.credits.find((c: any) => c.role === "cast")?.person.gender ?? null,
+    leadActor: title.credits
+      .filter((c: any) => c.role === "cast")
+      .sort((a: any, b: any) => (a.order ?? 999) - (b.order ?? 999))[0]?.person.name ?? null,
+    leadActorGender: title.credits
+      .filter((c: any) => c.role === "cast")
+      .sort((a: any, b: any) => (a.order ?? 999) - (b.order ?? 999))[0]?.person.gender ?? null,
     posterKey: title.posterKey,
     blurbTeaser: title.blurb?.text ? title.blurb.text.substring(0, 140) + (title.blurb.text.length > 140 ? "…" : "") : null,
     inclusionTypes: inclusionTypesWithConfidence.map((t: any) => t.slug),

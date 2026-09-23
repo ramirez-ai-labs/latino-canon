@@ -1,4 +1,4 @@
-import type { ClassificationResult, Title } from "@latino-canon/core";
+import type { ClassificationResult, ContentAdvisory, Title } from "@latino-canon/core";
 import type { BlurbGroundingResult } from "./ai.js";
 import { EMBEDDING_MODEL } from "@latino-canon/core";
 import type { AliasKind, Env } from "./bindings.js";
@@ -136,6 +136,16 @@ export async function writeTags(
   }
 
   if (statements.length) await env.DB.batch(statements);
+}
+
+/**
+ * Direct column write, not a title_tags upsert - content_advisory is a single scalar
+ * per title (see migration 0020), not a multi-valued tag. Unconditional overwrite: a
+ * re-classification is always meant to replace the previous judgment, unlike
+ * writeTags' seed/model/editor precedence for a value multiple sources can supply.
+ */
+export async function writeContentAdvisory(env: Env, titleId: string, rating: ContentAdvisory): Promise<void> {
+  await env.DB.prepare("UPDATE titles SET content_advisory = ? WHERE id = ?").bind(rating, titleId).run();
 }
 
 /**

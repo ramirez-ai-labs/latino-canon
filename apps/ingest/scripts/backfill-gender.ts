@@ -8,6 +8,8 @@
  *
  * Requires INGEST_ADMIN_TOKEN in the environment.
  */
+export {}; // module scope - keeps this script's top-level consts from colliding with sibling scripts'
+
 const token = process.env.INGEST_ADMIN_TOKEN ?? "dev-only-change-me";
 const url = process.env.INGEST_URL ?? "http://localhost:8788";
 const limit = Number(process.argv[2] ?? 50);

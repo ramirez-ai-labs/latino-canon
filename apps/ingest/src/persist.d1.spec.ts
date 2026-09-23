@@ -1,7 +1,7 @@
 import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import type { Title } from "@latino-canon/core";
-import { persistTitle, setJob, writeAliases, writeBlurb, writeTags } from "./persist.js";
+import { persistTitle, setJob, writeAliases, writeBlurb, writeContentAdvisory, writeTags } from "./persist.js";
 
 function makeTitle(overrides: Partial<Title> = {}): Title {
   return {
@@ -288,5 +288,35 @@ describe("setJob", () => {
       .bind("job-no-params")
       .first<{ params: string | null }>();
     expect(row?.params).toBeNull();
+  });
+});
+
+describe("writeContentAdvisory", () => {
+  it("writes the rating to titles.content_advisory", async () => {
+    await persistTitle(env, makeTitle({ id: "advisory-general-2020" }));
+    await writeContentAdvisory(env, "advisory-general-2020", "general");
+    const row = await env.DB.prepare("SELECT content_advisory FROM titles WHERE id = ?")
+      .bind("advisory-general-2020")
+      .first<{ content_advisory: string }>();
+    expect(row?.content_advisory).toBe("general");
+  });
+
+  it("unconditionally overwrites a previous rating on re-classification", async () => {
+    await persistTitle(env, makeTitle({ id: "advisory-flip-2020" }));
+    await writeContentAdvisory(env, "advisory-flip-2020", "general");
+    await writeContentAdvisory(env, "advisory-flip-2020", "mature");
+    const row = await env.DB.prepare("SELECT content_advisory FROM titles WHERE id = ?")
+      .bind("advisory-flip-2020")
+      .first<{ content_advisory: string }>();
+    expect(row?.content_advisory).toBe("mature");
+  });
+
+  it("never touches title_tags - a scalar column write, not a tag upsert", async () => {
+    await persistTitle(env, makeTitle({ id: "advisory-no-tags-2020" }));
+    await writeContentAdvisory(env, "advisory-no-tags-2020", "general");
+    const { results } = await env.DB.prepare("SELECT * FROM title_tags WHERE title_id = ?")
+      .bind("advisory-no-tags-2020")
+      .all();
+    expect(results).toEqual([]);
   });
 });
