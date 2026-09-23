@@ -62,9 +62,22 @@ export async function semanticSearch(
  * filters - a title with an embedded vector but no qualifying tag yet (e.g. classified
  * with low confidence) must never surface here either. Scoped to just this candidate
  * set via an `id IN (...)` clause.
+ *
+ * D1/SQLite caps a prepared statement at 100 bound parameters total. semanticSearch's
+ * topK is itself capped at 100, so a broad query (many candidates clearing the score
+ * floor) can hand this function a full 100-id hit list - the `id IN (...)` clause alone
+ * then uses the entire budget, and the visibility gate's own param (always added, even
+ * with zero filters) pushes the statement to `?101` and D1 throws
+ * "variable number must be between ?1 and ?100" (found live on "latino animation film
+ * for kids"). Reserve room for the filter + gate params before deciding how many ids
+ * fit - hits are already ranked by Vectorize score, so truncating the tail is the same
+ * over-fetch-and-trim tradeoff topK already makes, not a new loss.
  */
 export async function keepMatchingD1(env: Env, hits: RankedHit[], filters: SearchFilters): Promise<RankedHit[]> {
-  const ids = hits.map((h) => h.titleId);
+  const MAX_D1_PARAMS = 100;
+  const reservedParams = filterToSql(filters, "t", 0).params.length + visibilityGateSql("t", 0).params.length;
+  const ids = hits.slice(0, MAX_D1_PARAMS - reservedParams).map((h) => h.titleId);
+
   const idPlaceholders = ids.map((_, i) => `?${i + 1}`).join(",");
   const { where, params } = filterToSql(filters, "t", ids.length);
   const gate = visibilityGateSql("t", ids.length + params.length);
