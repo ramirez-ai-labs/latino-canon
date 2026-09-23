@@ -31,8 +31,8 @@ adminRoute.post("/rebuild-vectorize", async (c) => {
     for (let i = 0; i < titles.length; i++) {
       const title = titles[i];
       const vector = vectors[i];
-      if (!vector) {
-        console.warn(`No vector for ${title.id}`);
+      if (!title || !vector) {
+        if (title) console.warn(`No vector for ${title.id}`);
         continue;
       }
 
