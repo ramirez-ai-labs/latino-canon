@@ -63,6 +63,7 @@ function title(id: string, name: string, year: number, kind: Title["kind"], dire
     tags: themes.map((theme) => ({ kind: "theme", slug: theme as never, label: theme.replaceAll("_", " "), confidence: 1, source: "seed" })),
     blurb: { text: blurb, sources: [{ kind: "synopsis", ref: id, quote: blurb }], model: "local-seed", approved: true },
     representationHandling: null, contextNotes: [], oscarWin: null,
+    genres: [], contentAdvisory: null,
   };
 }
 
@@ -77,6 +78,7 @@ function toCard(item: Title): TitleCard {
     inclusionTypesWithConfidence: [],
     themes: item.tags.filter((tag) => tag.kind === "theme").map((tag) => tag.slug as never), score: item.popularity,
     representationHandling: item.representationHandling, runtime: item.runtime, oscarWin: item.oscarWin,
+    genres: item.genres, contentAdvisory: item.contentAdvisory,
   };
 }
 

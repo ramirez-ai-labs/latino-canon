@@ -9,13 +9,14 @@ export async function persistTitle(env: Env, t: Title): Promise<void> {
   const statements = [
     env.DB.prepare(
       `INSERT INTO titles (id, tmdb_id, imdb_id, kind, title, original_title, year_start, year_end,
-         countries, languages, synopsis, popularity, runtime, updated_at)
-       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13, datetime('now'))
+         countries, languages, synopsis, popularity, runtime, genres, updated_at)
+       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14, datetime('now'))
        ON CONFLICT(id) DO UPDATE SET
-         synopsis=excluded.synopsis, popularity=excluded.popularity, updated_at=datetime('now')`,
+         synopsis=excluded.synopsis, popularity=excluded.popularity, genres=excluded.genres, updated_at=datetime('now')`,
     ).bind(
       t.id, t.tmdbId, t.imdbId, t.kind, t.title, t.originalTitle, t.yearStart, t.yearEnd,
       JSON.stringify(t.country), JSON.stringify(t.language), t.synopsis, t.popularity, t.runtime,
+      JSON.stringify(t.genres),
     ),
     // contentless FTS5: delete-then-insert by rowid keyed on titles.rowid. `aliases`
     // is read live from title_aliases (via subquery, not the in-memory Title) so a

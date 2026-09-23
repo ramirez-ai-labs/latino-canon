@@ -100,6 +100,42 @@ export type TagSource = "seed" | "model" | "editor";
 export const MODEL_TAG_DISPLAY_THRESHOLD = 0.6;
 
 /**
+ * TMDB genre names, restricted to the subset that actually shows up in this catalog -
+ * not the full ~19-genre TMDB list, most of which (Western, TV Movie, Talk) never
+ * apply here. Stored on titles.genres as free-text JSON (TMDB's own genre names,
+ * not ids), so this list is a filter/prompt vocabulary, not a DB-enforced enum -
+ * an ingested title can carry a genre name outside this list without erroring, it
+ * just won't appear as a pickable filter option or a rewriteQuery target.
+ */
+export const GENRES = [
+  "Animation",
+  "Family",
+  "Comedy",
+  "Drama",
+  "Documentary",
+  "Music",
+  "Romance",
+  "Crime",
+  "Thriller",
+  "Action",
+  "Horror",
+  "War",
+  "History",
+] as const;
+export type Genre = (typeof GENRES)[number];
+
+/**
+ * A softer signal than the classify prompt's CURATION GATE (which rejects hardcore
+ * adult/pornographic content outright): this is for content that legitimately belongs
+ * in the canon but carries mature themes (drug trafficking, explicit sexuality,
+ * graphic violence) that shouldn't rank for a family/kids-audience query. `null` means
+ * "not yet classified" (same convention as people.gender), not "general audience" -
+ * treat null as unknown/neutral, never as a confirmed-safe signal.
+ */
+export const CONTENT_ADVISORIES = ["general", "mature"] as const;
+export type ContentAdvisory = (typeof CONTENT_ADVISORIES)[number];
+
+/**
  * A title can earn an inclusion_type and still deserve scrutiny of how it represents
  * Latino people or communities — e.g. a narco-drama with a Latina lead and executive
  * producer, or a sitcom whose creator was praised for representation at the time but

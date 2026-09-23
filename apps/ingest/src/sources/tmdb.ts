@@ -28,6 +28,7 @@ export interface TmdbDetails {
   runtime: number | null;
   popularity: number;
   adult: boolean; // TMDB adult content flag - exclude if true
+  genres: string[]; // TMDB genre names, e.g. "Animation" - always present on this endpoint
   credits: {
     directors: TmdbPerson[];
     writers: TmdbPerson[];
@@ -124,6 +125,10 @@ interface TmdbCountryRaw {
 interface TmdbLanguageRaw {
   iso_639_1: string;
 }
+interface TmdbGenreRaw {
+  id: number;
+  name: string;
+}
 interface TmdbRaw {
   id: number;
   imdb_id?: string | null;
@@ -146,6 +151,9 @@ interface TmdbRaw {
   credits?: TmdbCreditsRaw;
   created_by?: TmdbCreatedByRaw[];
   external_ids?: { imdb_id?: string | null };
+  // Present on every /movie/{id} and /tv/{id} detail response (distinct from the
+  // genre_ids-only shape on search/list endpoints) - no extra API call needed.
+  genres?: TmdbGenreRaw[];
 }
 
 /** Full details + credits for a resolved id. */
@@ -174,6 +182,7 @@ export async function fetchTmdbDetails(env: Env, id: number, kind: "film" | "ser
     runtime: raw.runtime ?? raw.episode_run_time?.[0] ?? null,
     popularity: raw.popularity ?? 0,
     adult: raw.adult ?? false, // TMDB adult content flag
+    genres: (raw.genres ?? []).map((g) => g.name),
     credits: mapCredits(raw),
   };
 }

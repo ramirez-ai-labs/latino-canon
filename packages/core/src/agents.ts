@@ -1,11 +1,13 @@
 import type { TitleCard, TitleKind, QueryInterpretation } from "./types.js";
-import type { PersonGender, Theme } from "./taxonomy.js";
+import type { ContentAdvisory, Genre, PersonGender, Theme } from "./taxonomy.js";
 
 export interface ExtractedIntent {
   theme?: Theme;
   decade?: number;
   country?: string;
   kind?: TitleKind;
+  genre?: Genre;
+  contentAdvisory?: ContentAdvisory;
   directorGender?: PersonGender;
   /** Lead/starring actor's gender - a distinct signal from directorGender, e.g.
    * "female director with a female lead" asks for both independently. */

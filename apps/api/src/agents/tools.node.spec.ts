@@ -35,6 +35,8 @@ function card(overrides: Partial<TitleCard> = {}): TitleCard {
     representationHandling: null,
     runtime: null,
     oscarWin: null,
+    genres: [],
+    contentAdvisory: null,
     ...overrides,
   };
 }

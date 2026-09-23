@@ -38,6 +38,8 @@ function titleToCard(title: any): TitleCardType {
     representationHandling: title.representationHandling,
     runtime: title.runtime,
     oscarWin: title.oscarWin,
+    genres: title.genres,
+    contentAdvisory: title.contentAdvisory,
   };
 }
 

@@ -29,6 +29,8 @@ searchRoute.get("/", async (c) => {
     country: input.country,
     theme: input.theme,
     inclusionType: input.inclusionType,
+    genre: input.genre,
+    contentAdvisory: input.contentAdvisory,
   });
   let filters: SearchFilters = { ...explicitFilters };
   let effectiveQuery = input.q;

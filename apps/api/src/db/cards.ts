@@ -1,5 +1,6 @@
 import {
   MODEL_TAG_DISPLAY_THRESHOLD,
+  type ContentAdvisory,
   type InclusionType,
   type PersonGender,
   type RankedHit,
@@ -29,6 +30,8 @@ interface CardRow {
   inclusion_types: string | null; // "slug:conf,slug:conf"
   themes: string | null;
   representation_handling: RepresentationHandling | null;
+  genres: string; // JSON array, defaults to '[]'
+  content_advisory: ContentAdvisory | null;
 }
 
 /**
@@ -43,7 +46,7 @@ export async function hydrateCards(env: Env, hits: RankedHit[]): Promise<TitleCa
   const sql = `
     SELECT
       t.id, t.kind, t.title, t.year_start, t.year_end, t.poster_key, t.popularity, t.runtime, t.oscar_win,
-      t.representation_handling,
+      t.representation_handling, t.genres, t.content_advisory,
       -- led_by's own definition is "a Latino director OR SHOWRUNNER held primary
       -- creative control" - a series credited only with creators, never a formal
       -- director role, still earns led_by, so this must fall back to the first-
@@ -102,8 +105,19 @@ export async function hydrateCards(env: Env, hits: RankedHit[]): Promise<TitleCa
         representationHandling: r.representation_handling,
         runtime: r.runtime,
         oscarWin: r.oscar_win,
+        genres: parseJsonArray(r.genres),
+        contentAdvisory: r.content_advisory,
       };
     });
+}
+
+function parseJsonArray(raw: string): string[] {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as string[]) : [];
+  } catch {
+    return [];
+  }
 }
 
 function parseTags(concat: string | null): string[] {

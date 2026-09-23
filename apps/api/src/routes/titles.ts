@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import {
   MODEL_TAG_DISPLAY_THRESHOLD,
+  type ContentAdvisory,
   type ContextNote,
   type ContextNoteCategory,
   type CreditRole,
@@ -62,6 +63,8 @@ interface TitleRow {
   runtime: number | null;
   representation_handling: RepresentationHandling | null;
   oscar_win: string | null;
+  genres: string;
+  content_advisory: ContentAdvisory | null;
 }
 interface CreditRow {
   person_id: string;
@@ -191,6 +194,8 @@ titlesRoute.get("/:id", async (c) => {
       : null,
     representationHandling: title.representation_handling,
     oscarWin: title.oscar_win,
+    genres: JSON.parse(title.genres) as string[],
+    contentAdvisory: title.content_advisory,
     contextNotes: contextNotes.results.map(
       (n): ContextNote => ({
         category: n.category,
