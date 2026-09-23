@@ -375,9 +375,9 @@ export default {
         // The cache key pattern is: search:${mode}:${query}:${filters}:${limit}:${offset}
         // We delete all keys matching "search:*" prefix to invalidate genre, theme,
         // and other filter results after a backfill.
-        const cacheKeys = await env.CACHE.list({ prefix: "search:" });
+        const result = await env.CACHE.list({ prefix: "search:" });
         let deletedCount = 0;
-        for (const key of cacheKeys.keys) {
+        for (const key of result.keys) {
           await env.CACHE.delete(key.name);
           deletedCount++;
         }

@@ -1,9 +1,12 @@
+import type { KVNamespace } from "@cloudflare/workers-types";
+
 export interface Env {
   AI: Ai;
   VECTORIZE: Vectorize;
   DB: D1Database;
   POSTERS: R2Bucket;
   INGEST_WORKFLOW: Workflow<IngestParams>;
+  CACHE: KVNamespace;
 
   AI_GATEWAY_ID: string;
 
