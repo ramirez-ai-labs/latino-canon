@@ -5,6 +5,7 @@ import {
   CONTEXT_NOTE_CATEGORY_LABELS,
   INCLUSION_TYPE_LABELS,
   ledByLabel,
+  primaryCreativeLead,
   REPRESENTATION_HANDLING_DEFINITIONS,
   REPRESENTATION_HANDLING_LABELS,
   THEME_LABELS,
@@ -21,9 +22,9 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
   const title = await getTitle(id).catch(() => null);
   if (!title) notFound();
 
-  // First-ordered director credit, same "primary director" pick db/cards.ts's
+  // Director if credited, else the first-ordered creator - same fallback db/cards.ts's
   // hydrateCards uses for TitleCard.directorGender - drives led_by's gendered label.
-  const directorGender = title.credits.find((c) => c.role === "director")?.person.gender ?? null;
+  const directorGender = primaryCreativeLead(title.credits)?.person.gender ?? null;
 
   // "Related" reuses the same theme filter /catalog already exposes rather than a new
   // similarity endpoint - a shared theme is the one signal every title already carries.

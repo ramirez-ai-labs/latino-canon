@@ -20,7 +20,7 @@ export function SearchBar({ autoFocus = false }: { autoFocus?: boolean }) {
         else next.delete("q");
         router.push(`/search?${next.toString()}`);
       }}
-      className="flex items-center gap-2 rounded-full border border-border bg-surface-raised px-4 py-1 shadow-card transition-colors focus-within:border-accent/60"
+      className="flex items-center gap-2 rounded-full border border-border bg-surface-raised px-4 py-1 shadow-[var(--shadow-sm)] transition-all focus-within:border-accent/60 focus-within:shadow-[var(--shadow-glow)]"
     >
       <Search className="size-4 shrink-0 text-muted" aria-hidden />
       <input
