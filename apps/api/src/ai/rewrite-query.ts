@@ -24,7 +24,20 @@ export async function rewriteQuery(
   if (trimmed.length < 3) return null;
 
   const rules = rulesRewrite(trimmed);
-  const looksNatural = /\b(from|about|with|stories|the \d0s|directed by|in spanish)\b/i.test(trimmed);
+  // Bilingual: this product advertises Spanish search on its own home page, but the
+  // rules pass below never extracts a theme filter in either language - a natural
+  // Spanish phrase like "peliculas de inmigración y fronteras" set no rules.filters
+  // and matched none of these English-only connector words, so it short-circuited to
+  // null and skipped the LLM call entirely (which - per QUERY_REWRITE_SYSTEM's own
+  // prompt - already handles Spanish input fine). Found live: that exact query
+  // returned an unranked 50-result dump with no interpretation at all. A handful of
+  // Spanish connectors plus a length fallback (natural sentences run longer than
+  // keyword searches in any language) catches this without enumerating every possible
+  // Spanish phrasing.
+  const looksNatural =
+    /\b(from|about|with|stories|the \d0s|directed by|in spanish|de|sobre|con|pel[ií]culas?|historias|en español)\b/i.test(
+      trimmed,
+    ) || trimmed.split(/\s+/).length >= 4;
   if (!looksNatural && Object.keys(rules.filters).length === 0) return null;
 
   try {
