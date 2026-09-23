@@ -24,6 +24,10 @@
     { "binding": "POSTERS", "bucket_name": "latino-canon-posters" }
   ],
 
+  "kv_namespaces": [
+    { "binding": "CACHE", "id": "3cbc7e31b2de454db393f22775cc17ce" }
+  ],
+
   "workflows": [
     {
       "binding": "INGEST_WORKFLOW",
