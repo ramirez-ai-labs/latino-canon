@@ -89,10 +89,10 @@ export default async function HomePage() {
           <h2 className="text-4xl font-bold text-text">Why we are different.</h2>
 
           <p className="mt-6 text-lg text-muted leading-relaxed">
-            Three things a typical streaming search bar doesn't give you — and, further down, why every tag you see here comes with a receipt.
+            What a typical streaming search bar doesn't give you — plus why every tag you see here comes with a receipt.
           </p>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-3">
+          <div className="mt-10 grid gap-6 sm:grid-cols-2">
             <div className="space-y-2">
               <h3 className="font-semibold text-text flex items-center gap-2">
                 <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white text-xs font-bold">1</span>
@@ -108,13 +108,41 @@ export default async function HomePage() {
               </h3>
               <p className="text-sm text-muted">Core Canon, Border Stories, Directors, Breakthrough Firsts</p>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <h3 className="font-semibold text-text flex items-center gap-2">
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-r from-[#4facfe] to-[#00f2fe] text-white text-xs font-bold">3</span>
-                Explore with confidence
-              </h3>
-              <p className="text-sm text-muted">Every tag traces to a real credit or editor judgment call</p>
+          <div className="mt-10 border-t border-border/60 pt-10">
+            <h3 className="text-xl font-semibold text-text">Why "AI, disclosed" matters</h3>
+
+            <div className="mt-6 grid gap-6 text-base text-muted">
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-[#667eea] to-[#764ba2] flex items-center justify-center text-white text-xs font-bold mt-0.5">
+                  1
+                </div>
+                <div>
+                  <p className="font-semibold text-text">Netflix & Spotify hide their algorithms</p>
+                  <p className="text-sm mt-1">You see results, but not why. The ML lives in a black box.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-[#f093fb] to-[#f5576c] flex items-center justify-center text-white text-xs font-bold mt-0.5">
+                  2
+                </div>
+                <div>
+                  <p className="font-semibold text-text">Latino Canon discloses them</p>
+                  <p className="text-sm mt-1">Every tag shows its confidence score and source (seed data, model prediction, or editor judgment). Click any title to see the full reasoning.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-[#4facfe] to-[#00f2fe] flex items-center justify-center text-white text-xs font-bold mt-0.5">
+                  3
+                </div>
+                <div>
+                  <p className="font-semibold text-text">Why this matters for Latino cinema</p>
+                  <p className="text-sm mt-1">Representation isn't generic. When a film is tagged "led by Latina director," you see 99% confidence + "editor verified" (not guessed by ML). Transparency builds trust.</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -143,49 +171,6 @@ export default async function HomePage() {
           </Rail>
         </section>
       )}
-
-      {/* AI Disclosure Section */}
-      <section className="relative overflow-hidden rounded-3xl glass-heavy px-6 py-12 sm:px-12 sm:py-16">
-        <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(240, 147, 251, 0.05) 100%)'
-        }} />
-
-        <div className="relative">
-          <h2 className="text-3xl font-bold text-text">Why "AI, disclosed" matters</h2>
-
-          <div className="mt-8 grid gap-6 text-base text-muted">
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-[#667eea] to-[#764ba2] flex items-center justify-center text-white text-xs font-bold mt-0.5">
-                1
-              </div>
-              <div>
-                <p className="font-semibold text-text">Netflix & Spotify hide their algorithms</p>
-                <p className="text-sm mt-1">You see results, but not why. The ML lives in a black box.</p>
-              </div>
-            </div>
-
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-[#f093fb] to-[#f5576c] flex items-center justify-center text-white text-xs font-bold mt-0.5">
-                2
-              </div>
-              <div>
-                <p className="font-semibold text-text">Latino Canon discloses them</p>
-                <p className="text-sm mt-1">Every tag shows its confidence score and source (seed data, model prediction, or editor judgment). Click any title to see the full reasoning.</p>
-              </div>
-            </div>
-
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-[#4facfe] to-[#00f2fe] flex items-center justify-center text-white text-xs font-bold mt-0.5">
-                3
-              </div>
-              <div>
-                <p className="font-semibold text-text">Why this matters for Latino cinema</p>
-                <p className="text-sm mt-1">Representation isn't generic. When a film is tagged "led by Latina director," you see 99% confidence + "editor verified" (not guessed by ML). Transparency builds trust.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {rails
         .filter((c) => c && c.items.length > 0)
