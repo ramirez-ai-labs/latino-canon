@@ -4,7 +4,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { TitleCard } from "@/components/TitleCard";
 import { Rail, RailItem } from "@/components/ui/Rail";
 import { getCollection, listCollections, listRecentTitles } from "@/lib/api";
-import { MODEL_TAG_DISPLAY_THRESHOLD } from "@latino-canon/core";
+import { MODEL_TAG_DISPLAY_THRESHOLD, primaryCreativeLead } from "@latino-canon/core";
 import type { TitleCard as TitleCardType } from "@latino-canon/core";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function titleToCard(title: any): TitleCardType {
-  const directorGender = title.credits.find((c: any) => c.role === "director")?.person.gender ?? null;
+  const lead = primaryCreativeLead(title.credits);
   const inclusionTypesWithConfidence = title.tags
     .filter((t: any) => t.kind === "inclusion_type" && t.confidence >= MODEL_TAG_DISPLAY_THRESHOLD)
     .map((t: any) => ({ slug: t.slug, confidence: t.confidence }));
@@ -23,8 +23,8 @@ function titleToCard(title: any): TitleCardType {
     title: title.title,
     yearStart: title.yearStart,
     yearEnd: title.yearEnd,
-    director: title.credits.find((c: any) => c.role === "director")?.person.name ?? null,
-    directorGender,
+    director: lead?.person.name ?? null,
+    directorGender: lead?.person.gender ?? null,
     leadActor: title.credits.find((c: any) => c.role === "cast")?.person.name ?? null,
     leadActorGender: title.credits.find((c: any) => c.role === "cast")?.person.gender ?? null,
     posterKey: title.posterKey,
@@ -71,10 +71,6 @@ export default async function HomePage() {
             A curated, credit-verified index of Latino-directed, Latino-created, and Latino-centered film and TV searchable by plot, theme, era, or filmmaker in English or Spanish.
           </p>
 
-          <p className="mx-auto mt-3 max-w-2xl text-balance text-sm text-muted">
-            Try: Mexican family stories from the 90s
-          </p>
-
           <div className="mt-10">
             <Suspense>
               <SearchBar />
@@ -93,11 +89,7 @@ export default async function HomePage() {
           <h2 className="text-4xl font-bold text-text">Why we are different.</h2>
 
           <p className="mt-6 text-lg text-muted leading-relaxed">
-            Unlike Netflix and Spotify, we show you the reasoning. Every tag (director, theme, inclusion type) displays its confidence score and source: seed data, model prediction, or editor judgment. Never hidden. Never guessed.
-          </p>
-
-          <p className="mt-6 text-lg text-muted leading-relaxed">
-            For representation, this matters. When a film is tagged "led by Latina director," you see 99% confidence plus "editor verified." That transparency builds trust in a curated collection.
+            Three things a typical streaming search bar doesn't give you — and, further down, why every tag you see here comes with a receipt.
           </p>
 
           <div className="mt-10 grid gap-6 sm:grid-cols-3">

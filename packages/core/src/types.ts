@@ -27,6 +27,20 @@ export interface Credit {
   order: number;
 }
 
+/**
+ * The person who gets shown as a title's "director" byline and drives led_by's
+ * gendered label. led_by's own definition (taxonomy.ts) is "a Latino director OR
+ * SHOWRUNNER held primary creative control" - a TV series credited only with
+ * creators, never a formal director role, still earns led_by, so it must fall back
+ * to the first-ordered creator credit rather than showing nothing. Found live: "The
+ * Ministry of Time" (creator-only credits) displayed "-" for its byline and would
+ * have defaulted to "Latino-directed" over "Latina-directed" for a female showrunner
+ * with no director-role credit, since a null directorGender silently reads as male.
+ */
+export function primaryCreativeLead(credits: Credit[]): Credit | null {
+  return credits.find((c) => c.role === "director") ?? credits.find((c) => c.role === "creator") ?? null;
+}
+
 export interface Tag {
   kind: "inclusion_type" | "theme";
   slug: InclusionType | Theme;

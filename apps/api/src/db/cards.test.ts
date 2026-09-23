@@ -49,6 +49,24 @@ beforeAll(async () => {
       `INSERT INTO titles (id, kind, title, year_start, countries, languages, popularity)
        VALUES ('untagged-2011', 'film', 'Untagged', 2011, '[]', '[]', 15)`,
     ),
+    // Series credited only with a creator/showrunner, never a formal director role -
+    // led_by's own definition treats that as equivalent primary creative control.
+    env.DB.prepare(
+      `INSERT INTO titles (id, kind, title, year_start, countries, languages, popularity)
+       VALUES ('ministry-of-time-2015', 'series', 'The Ministry of Time', 2015, '[]', '[]', 8)`,
+    ),
+    env.DB.prepare(
+      `INSERT INTO people (id, tmdb_id, name, known_for_department, gender)
+       VALUES ('p-olivares', 103, 'Javier Olivares', NULL, 'male')`,
+    ),
+    env.DB.prepare(
+      `INSERT INTO credits (title_id, person_id, role, character, ord)
+       VALUES ('ministry-of-time-2015', 'p-olivares', 'creator', NULL, 0)`,
+    ),
+    env.DB.prepare(
+      `INSERT INTO title_tags (title_id, tag_id, confidence, source)
+       SELECT 'ministry-of-time-2015', id, 1.0, 'seed' FROM tags WHERE slug = 'led_by'`,
+    ),
   ]);
 });
 
@@ -69,5 +87,11 @@ describe("hydrateCards", () => {
   it("excludes a title with no qualifying inclusion_type tag", async () => {
     const cards = await hydrateCards(env, [{ titleId: "untagged-2011", score: 1 }]);
     expect(cards).toEqual([]);
+  });
+
+  it("falls back to the creator credit as director when no director role is credited", async () => {
+    const [card] = await hydrateCards(env, [{ titleId: "ministry-of-time-2015", score: 1 }]);
+    expect(card?.director).toBe("Javier Olivares");
+    expect(card?.directorGender).toBe("male");
   });
 });

@@ -44,10 +44,19 @@ export async function hydrateCards(env: Env, hits: RankedHit[]): Promise<TitleCa
     SELECT
       t.id, t.kind, t.title, t.year_start, t.year_end, t.poster_key, t.popularity, t.runtime, t.oscar_win,
       t.representation_handling,
+      -- led_by's own definition is "a Latino director OR SHOWRUNNER held primary
+      -- creative control" - a series credited only with creators, never a formal
+      -- director role, still earns led_by, so this must fall back to the first-
+      -- ordered creator credit rather than leaving director/director_gender null.
+      -- Found live: "The Ministry of Time" (creator-only credits) showed "-" for its
+      -- byline and would default to "Latino-directed" over "Latina-directed" for a
+      -- female showrunner, since a null director_gender silently reads as male.
       (SELECT p.name FROM credits c JOIN people p ON p.id = c.person_id
-        WHERE c.title_id = t.id AND c.role = 'director' ORDER BY c.ord LIMIT 1) AS director,
+        WHERE c.title_id = t.id AND c.role IN ('director', 'creator')
+        ORDER BY (c.role != 'director'), c.ord LIMIT 1) AS director,
       (SELECT p.gender FROM credits c JOIN people p ON p.id = c.person_id
-        WHERE c.title_id = t.id AND c.role = 'director' ORDER BY c.ord LIMIT 1) AS director_gender,
+        WHERE c.title_id = t.id AND c.role IN ('director', 'creator')
+        ORDER BY (c.role != 'director'), c.ord LIMIT 1) AS director_gender,
       (SELECT p.name FROM credits c JOIN people p ON p.id = c.person_id
         WHERE c.title_id = t.id AND c.role = 'cast' ORDER BY c.ord LIMIT 1) AS lead_actor,
       (SELECT p.gender FROM credits c JOIN people p ON p.id = c.person_id
