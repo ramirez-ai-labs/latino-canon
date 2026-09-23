@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { coerceLlmText, normalizeBlurbJson, normalizeClassificationJson } from "./llm.js";
+import { coerceLlmText, normalizeBlurbJson, normalizeClassificationJson, normalizeContentAdvisoryJson } from "./llm.js";
 
 describe("coerceLlmText", () => {
   it("passes a string through unchanged", () => {
@@ -85,5 +85,25 @@ describe("normalizeBlurbJson", () => {
     const claims = [{ claim: "x", supportedBy: "s1" }];
     const out = normalizeBlurbJson({ text: "A".repeat(400) + ".", claims }) as { claims: unknown };
     expect(out.claims).toBe(claims);
+  });
+});
+
+describe("normalizeContentAdvisoryJson", () => {
+  // Same casing-drift class of bug normalizeClassificationJson guards against
+  // (e.g. a live classify call returning "Family" instead of "family") - this field
+  // is just as exposed to it since it's model output, not user input.
+  it("lowercases rating casing drift", () => {
+    const out = normalizeContentAdvisoryJson({ rating: "General", rationale: "n/a" }) as { rating: string };
+    expect(out.rating).toBe("general");
+  });
+
+  it("trims whitespace", () => {
+    const out = normalizeContentAdvisoryJson({ rating: " mature ", rationale: "n/a" }) as { rating: string };
+    expect(out.rating).toBe("mature");
+  });
+
+  it("passes through unchanged when rating isn't a string", () => {
+    const raw = { rating: null, rationale: "n/a" };
+    expect(normalizeContentAdvisoryJson(raw)).toBe(raw);
   });
 });

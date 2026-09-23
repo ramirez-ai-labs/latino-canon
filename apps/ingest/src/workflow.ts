@@ -3,9 +3,9 @@ import type { Env, IngestParams } from "./bindings.js";
 import { resolveTmdbId, fetchTmdbDetails } from "./sources/tmdb.js";
 import { fetchOmdbRatings } from "./sources/omdb.js";
 import { normalizeTitle } from "./normalize.js";
-import { persistTitle, upsertVector, writeTags, writeAliases, writeBlurb, setJob } from "./persist.js";
+import { persistTitle, upsertVector, writeTags, writeAliases, writeBlurb, writeContentAdvisory, setJob } from "./persist.js";
 import { cachePoster } from "./poster.js";
-import { classifyForIngest, blurbForIngest } from "./ai.js";
+import { classifyForIngest, classifyContentAdvisory, blurbForIngest } from "./ai.js";
 import { jobIdFor, isYearMismatch, needsHumanReview } from "./workflow-rules.js";
 
 /**
@@ -111,6 +111,13 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
           seedInclusionTypes: p.seedInclusionTypes ?? [],
         }),
       );
+
+      const contentAdvisory = await step.do(
+        "classify content advisory",
+        { retries: { limit: 2, delay: "30 seconds" } },
+        () => classifyContentAdvisory(this.env, { title: title.title, year: title.yearStart, synopsis: title.synopsis }),
+      );
+      await step.do("write content advisory", () => writeContentAdvisory(this.env, title.id, contentAdvisory));
 
       stage = "embed";
       await step.do("embed + upsert vector", { retries: { limit: 3, delay: "10 seconds" } }, () =>

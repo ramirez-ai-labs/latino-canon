@@ -1,9 +1,10 @@
 import type { AliasKind, Env, IngestParams } from "./bindings.js";
 import { retryErroredJobs, refreshPopularity } from "./maintenance.js";
-import { fetchTmdbPersonGender } from "./sources/tmdb.js";
+import { fetchTmdbPersonGender, fetchTmdbDetails } from "./sources/tmdb.js";
 import { slugId } from "./normalize.js";
 import { removeInvalidTmdbEntries } from "./cleanup/index.js";
-import { writeAliases } from "./persist.js";
+import { writeAliases, writeContentAdvisory } from "./persist.js";
+import { classifyContentAdvisory } from "./ai.js";
 import { ingestOpenApiSpec } from "./openapi.js";
 
 export { IngestWorkflow } from "./workflow.js";
@@ -13,7 +14,9 @@ export default {
    * Admin surface — protected by INGEST_ADMIN_TOKEN. Not public.
    *   POST /ingest          { titles: IngestParams[] }   → kicks off one workflow per title
    *   GET  /jobs                                         → review queue
-   *   POST /backfill-gender { limit?: number }           → TMDB-only, no Workers AI neurons
+   *   POST /backfill-gender           { limit?: number } → TMDB-only, no Workers AI neurons
+   *   POST /backfill-genres           { limit?: number } → TMDB-only, no Workers AI neurons
+   *   POST /backfill-content-advisory { limit?: number } → LLM classification (small model)
    *   POST /aliases         { titleId, aliases: {alias, kind}[] } → backfill aliases
    *                                                         for a title already ingested
    *                                                         (new ingests set these via
@@ -264,6 +267,66 @@ export default {
       }
 
       return Response.json({ checked: people.length, updated, stillUnknown: people.length - updated - errors.length, errors });
+    }
+
+    // TMDB-only, no Workers AI neurons - genres come from the same detail response
+    // fetchTmdbDetails already parses. Safe to re-run: only ever touches rows whose
+    // genres are still the '[]' default. That default is also TMDB's genuine answer
+    // for a handful of genre-less titles, so a full backlog clear may still show a
+    // few rows re-checked on every call - a correctness non-issue (they'd just get
+    // re-set to '[]' again), not a bug worth a separate "checked" tracking column for
+    // a one-time, human-triggered backfill.
+    if (req.method === "POST" && url.pathname === "/backfill-genres") {
+      const { limit } = (await req.json().catch(() => ({}))) as { limit?: number };
+      const { results: titles } = await env.DB.prepare(
+        "SELECT id, tmdb_id, kind FROM titles WHERE tmdb_id IS NOT NULL AND genres = '[]' LIMIT ?",
+      )
+        .bind(limit ?? 50)
+        .all<{ id: string; tmdb_id: number; kind: "film" | "series" | "special" }>();
+
+      let updated = 0;
+      const errors: string[] = [];
+      for (const t of titles) {
+        try {
+          const details = await fetchTmdbDetails(env, t.tmdb_id, t.kind);
+          if (details.genres.length > 0) {
+            await env.DB.prepare("UPDATE titles SET genres = ? WHERE id = ?").bind(JSON.stringify(details.genres), t.id).run();
+            updated++;
+          }
+        } catch (err) {
+          errors.push(`${t.id}: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
+
+      return Response.json({ checked: titles.length, updated, errors });
+    }
+
+    // LLM-classified (see classifyContentAdvisory) - reads synopsis directly from D1
+    // rather than re-fetching TMDB, and writes only titles.content_advisory (never
+    // touches title_tags), so it can't disturb a title's existing inclusion_type/theme
+    // classification. Safe to re-run: only ever touches rows still NULL, same
+    // "null = not backfilled yet" convention as /backfill-gender.
+    if (req.method === "POST" && url.pathname === "/backfill-content-advisory") {
+      const { limit } = (await req.json().catch(() => ({}))) as { limit?: number };
+      const { results: titles } = await env.DB.prepare(
+        "SELECT id, title, year_start, synopsis FROM titles WHERE content_advisory IS NULL LIMIT ?",
+      )
+        .bind(limit ?? 50)
+        .all<{ id: string; title: string; year_start: number; synopsis: string | null }>();
+
+      let updated = 0;
+      const errors: string[] = [];
+      for (const t of titles) {
+        try {
+          const rating = await classifyContentAdvisory(env, { title: t.title, year: t.year_start, synopsis: t.synopsis });
+          await writeContentAdvisory(env, t.id, rating);
+          updated++;
+        } catch (err) {
+          errors.push(`${t.id}: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
+
+      return Response.json({ checked: titles.length, updated, errors });
     }
 
     if (req.method === "POST" && url.pathname === "/aliases") {

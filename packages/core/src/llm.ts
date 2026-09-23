@@ -13,7 +13,7 @@ export interface LlmMessage {
 
 export interface LlmCallOptions {
   /** Logical task name — surfaces in AI Gateway metadata and picks the model tier. */
-  task: "query-rewrite" | "classify" | "blurb" | "judge";
+  task: "query-rewrite" | "classify" | "blurb" | "judge" | "content-advisory";
   /** Which caller/route made this call - e.g. "search", "agents.curate", "ingest".
    * `task` alone can't distinguish /search's rewriteQuery call from the curation
    * agent's, since both use "query-rewrite" - this is what makes AI Gateway logs
@@ -57,6 +57,9 @@ export const MODELS: Record<LlmCallOptions["task"], string> = {
   classify: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
   blurb: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
   judge: "@cf/meta/llama-3.1-8b-instruct-fast",
+  // A single general/mature judgment from a synopsis doesn't need the 70B classify
+  // model's multi-label nuance - same tier as judge/query-rewrite.
+  "content-advisory": "@cf/meta/llama-3.1-8b-instruct-fast",
 };
 
 export const EMBEDDING_MODEL = "@cf/baai/bge-m3"; // 1024-dim, multilingual (EN + ES)
@@ -139,6 +142,15 @@ export function normalizeBlurbJson(raw: unknown): unknown {
   const obj = raw as Record<string, unknown>;
   if (typeof obj.text !== "string" || obj.text.length <= BLURB_MAX_CHARS) return raw;
   return { ...obj, text: truncateAtSentence(obj.text, BLURB_MAX_CHARS) };
+}
+
+/** Same casing-drift fix as normalizeTagList (e.g. "General"/"MATURE") for the
+ * content-advisory call's single enum field. */
+export function normalizeContentAdvisoryJson(raw: unknown): unknown {
+  if (typeof raw !== "object" || raw === null) return raw;
+  const obj = raw as Record<string, unknown>;
+  if (typeof obj.rating !== "string") return raw;
+  return { ...obj, rating: obj.rating.trim().toLowerCase() };
 }
 
 function truncateAtSentence(text: string, max: number): string {

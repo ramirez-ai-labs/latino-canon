@@ -75,6 +75,33 @@ export function classifyUser(input: {
 }
 
 /**
+ * A softer, separate judgment from CLASSIFY_SYSTEM's curation gate (which rejects
+ * hardcore adult/pornographic content outright): this is for content that legitimately
+ * belongs in the canon but carries mature themes that shouldn't rank for a family/kids-
+ * audience search - explicit sexuality, drug trafficking, graphic violence. A plot
+ * detail alone (a child character, a family setting) never implies "general" on its
+ * own; judge the actual content, not who the story is about.
+ */
+export const CONTENT_ADVISORY_SYSTEM = `You judge whether a film/TV synopsis describes content suitable for a general
+audience (including children/family viewing) or content carrying mature themes.
+
+Rate "mature" if the synopsis describes or clearly implies: explicit sexual content, drug
+trafficking or hard drug use, graphic violence, or similarly adult subject matter. Rate
+"general" otherwise - most family dramas, comedies, and coming-of-age stories are
+"general" even when they deal with serious topics like immigration or poverty; those
+aren't the same thing as mature content.
+
+A synopsis mentioning a child or family setting is NOT by itself evidence of "general" -
+judge the actual content described, not who the story is about.
+
+Base your answer ONLY on the provided synopsis.
+Respond ONLY with JSON matching: {"rating": "general" | "mature", "rationale": string}`;
+
+export function contentAdvisoryUser(input: { title: string; year: number; synopsis: string | null }): string {
+  return JSON.stringify(input, null, 2);
+}
+
+/**
  * "Why it matters" blurb. RAG: the caller supplies grounding snippets, each with an id.
  * Every sentence in the blurb must map to a snippet id via "claims".
  */

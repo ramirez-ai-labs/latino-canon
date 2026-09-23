@@ -89,6 +89,13 @@ export const feedbackSchema = z.object({
   value: z.union([z.boolean(), z.string().max(500)]),
 });
 
+/** Structured output contract for the content-advisory classification call. */
+export const contentAdvisoryClassificationSchema = z.object({
+  rating: contentAdvisorySchema,
+  rationale: z.string().max(280),
+});
+
 export type SearchQueryInput = z.infer<typeof searchQuerySchema>;
 export type ClassificationResult = z.infer<typeof classificationSchema>;
 export type BlurbResult = z.infer<typeof blurbSchema>;
+export type ContentAdvisoryClassificationResult = z.infer<typeof contentAdvisoryClassificationSchema>;
