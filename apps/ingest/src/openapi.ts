@@ -444,6 +444,37 @@ export const ingestOpenApiSpec = {
         },
       },
     },
+    "/rebuild-search-cache": {
+      post: {
+        summary: "Rebuild search cache",
+        description: "Clear all cached search results after backfill or database updates. Search results are cached by query+filters; this endpoint invalidates that cache so new genres, content advisory ratings, and other changes are immediately searchable.",
+        tags: ["Admin"],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "Cache cleared",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: { type: "string" },
+                    message: { type: "string" },
+                    deletedCount: { type: "number" },
+                  },
+                },
+              },
+            },
+          },
+          "401": {
+            description: "Unauthorized",
+          },
+          "500": {
+            description: "Server error",
+          },
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {
