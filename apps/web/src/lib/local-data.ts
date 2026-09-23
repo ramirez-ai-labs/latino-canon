@@ -1,4 +1,4 @@
-import type { Collection, SearchResponse, Title, TitleCard } from "@latino-canon/core";
+import type { Collection, Credit, SearchResponse, Title, TitleCard } from "@latino-canon/core";
 
 const titles: Title[] = [
   title("mi-familia-1995", "Mi Familia", 1995, "film", "Gregory Nava", ["family", "identity"], "A multigenerational Mexican American family story."),
@@ -74,10 +74,10 @@ function toCard(item: Title): TitleCard {
     directorGender: item.credits.find((credit) => credit.role === "director")?.person.gender ?? null,
     leadActor: item.credits
       .filter((credit) => credit.role === "cast")
-      .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))[0]?.person.name ?? null,
+      .sort((a: Credit, b: Credit) => (a.order ?? 999) - (b.order ?? 999))[0]?.person.name ?? null,
     leadActorGender: item.credits
       .filter((credit) => credit.role === "cast")
-      .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))[0]?.person.gender ?? null,
+      .sort((a: Credit, b: Credit) => (a.order ?? 999) - (b.order ?? 999))[0]?.person.gender ?? null,
     posterKey: null, blurbTeaser: item.blurb?.text ?? null, inclusionTypes: [],
     inclusionTypesWithConfidence: [],
     themes: item.tags.filter((tag) => tag.kind === "theme").map((tag) => tag.slug as never), score: item.popularity,
