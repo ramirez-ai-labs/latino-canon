@@ -2,6 +2,8 @@ import { detectDirectorGender, detectLeadGender, detectTone, type LlmClient, typ
 import { rewriteQuery } from "../ai/rewrite-query.js";
 import { retrieve } from "../search/hybrid.js";
 import { hydrateCards } from "../db/cards.js";
+import { browseByPopularity } from "../db/browse.js";
+import { isFillerQuery } from "../search/query-plan.js";
 import type { Env } from "../bindings.js";
 import type { ExtractedIntent } from "./types.js";
 
@@ -39,7 +41,12 @@ export async function searchWithFilters(
   filters: SearchFilters,
   limit: number,
 ): Promise<TitleCard[]> {
-  const hits = await retrieve(env, { query, mode: "hybrid", filters, limit });
+  // Same rule as /search: filler text plus filters means "list what matches the filters".
+  const definedFilters = Object.values(filters).some((v) => v !== undefined);
+  const hits =
+    definedFilters && isFillerQuery(query)
+      ? await browseByPopularity(env, filters, limit)
+      : await retrieve(env, { query, mode: "hybrid", filters, limit });
   return hydrateCards(env, hits);
 }
 

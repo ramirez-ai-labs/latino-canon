@@ -5,6 +5,7 @@ import {
   extractJson,
   type LlmClient,
   type QueryInterpretation,
+  type Genre,
   type SearchFilters,
 } from "@latino-canon/core";
 
@@ -52,6 +53,9 @@ export async function rewriteQuery(
       ],
     });
     const parsed = queryInterpretationSchema.parse(extractJson(res.text));
+    // A genre keyword ("cartoons", "animadas", "documentary") is unambiguous - keep the
+    // rules' genre when the LLM left it out, rather than trusting the model to notice.
+    if (rules.filters.genre && !parsed.filters.genre) parsed.filters.genre = rules.filters.genre;
     return { ...parsed, source: "llm" };
   } catch (err) {
     console.warn("rewriteQuery LLM failed, using rules:", err);
@@ -62,6 +66,17 @@ export async function rewriteQuery(
 }
 
 const DECADE_RE = /\b((?:19|20)\d0|\d0)s?\b/;
+
+/**
+ * Genre words that need no model to recognize, EN + ES. Without this, a short query like
+ * "kids cartoons" never reached the LLM (under 4 words, no connector word, no rules
+ * filter) and was matched on text alone - Spy Kids and On My Block, not animation.
+ * Accented and unaccented Spanish both match ("animación"/"animacion").
+ */
+const GENRE_KEYWORDS: [Genre, RegExp][] = [
+  ["Animation", /\b(animated|animation|cartoons?|anime|animad[oa]s?|animaci[oó]n|dibujos animados)\b/i],
+  ["Documentary", /\b(documentar(y|ies)|documentales?)\b/i],
+];
 const DECADE_WORDS: Record<string, number> = { nineties: 1990, eighties: 1980, seventies: 1970 };
 
 // Bilingual synonyms for thematic expansion (Spanish ↔ English)
@@ -114,6 +129,14 @@ function rulesRewrite(phrase: string): {
       filters.decade = year;
       cleaned = cleaned.replace(new RegExp(word, "i"), "").trim();
       hits++;
+    }
+  }
+  for (const [genre, re] of GENRE_KEYWORDS) {
+    if (re.test(cleaned)) {
+      filters.genre = genre;
+      cleaned = cleaned.replace(re, "").trim();
+      hits++;
+      break;
     }
   }
   if (/\bseries|tv|show\b/i.test(cleaned)) {
