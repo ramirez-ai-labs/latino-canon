@@ -42,4 +42,15 @@ describe("citations", () => {
       { text: "." },
     ]);
   });
+
+  it("handles a marker citing several sources", () => {
+    const multi = "Directed by Javier Ruiz Caldera and Alberto de Toro [d0, d1].";
+    expect(stripCitations(multi)).toBe("Directed by Javier Ruiz Caldera and Alberto de Toro.");
+    expect(splitCitations(multi)).toEqual([
+      { text: "Directed by Javier Ruiz Caldera and Alberto de Toro" },
+      { cite: "d0" },
+      { cite: "d1" },
+      { text: "." },
+    ]);
+  });
 });

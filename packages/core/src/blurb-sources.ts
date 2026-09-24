@@ -36,7 +36,8 @@ export function resolveBlurbSources(sources: BlurbSource[], title: { synopsis: s
   });
 }
 
-const CITATION_RE = /\s*\[([a-z]\d+)\]/g;
+// One marker may cite several sources: "[d0, d1]" (seen live on Valley of the Dead).
+const CITATION_RE = /\s*\[([a-z]\d+(?:\s*,\s*[a-z]\d+)*)\]/g;
 
 /** Blurb text without inline citation markers - for teasers and anywhere footnotes can't render. */
 export function stripCitations(text: string): string {
@@ -49,7 +50,7 @@ export function splitCitations(text: string): ({ text: string } | { cite: string
   let last = 0;
   for (const m of text.matchAll(CITATION_RE)) {
     if (m.index > last) parts.push({ text: text.slice(last, m.index) });
-    parts.push({ cite: m[1]! });
+    for (const id of m[1]!.split(/\s*,\s*/)) parts.push({ cite: id });
     last = m.index + m[0].length;
   }
   if (last < text.length) parts.push({ text: text.slice(last) });

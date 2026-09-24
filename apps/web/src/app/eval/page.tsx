@@ -1,4 +1,4 @@
-import { GROUNDEDNESS_JUDGE_VERSION, type EvalRun } from "@latino-canon/core";
+import { GROUNDEDNESS_MIN_VALID_JUDGE_VERSION, type EvalRun } from "@latino-canon/core";
 import { listEvalRuns } from "@/lib/api";
 import { Badge } from "@/components/ui/Badge";
 
@@ -22,8 +22,12 @@ function formatDate(iso: string): string {
  * judge was handed each source's `ref` (a title slug, a director's name) instead of its
  * text, so it never saw the synopsis it was meant to check claims against.
  */
+function judgeVersion(r: EvalRun): number {
+  return r.metrics.judgeVersion ?? 1;
+}
+
 function isInvalid(r: EvalRun): boolean {
-  return r.evalType === "groundedness" && (r.metrics.judgeVersion ?? 0) < GROUNDEDNESS_JUDGE_VERSION;
+  return r.evalType === "groundedness" && judgeVersion(r) < GROUNDEDNESS_MIN_VALID_JUDGE_VERSION;
 }
 
 export default async function EvalPage() {
@@ -52,6 +56,7 @@ export default async function EvalPage() {
                 <tr className="border-b border-border bg-surface text-left text-muted">
                   <th className="px-4 py-2.5 font-medium">Run</th>
                   <th className="px-4 py-2.5 font-medium">Type</th>
+                  <th className="px-4 py-2.5 font-medium">Judge</th>
                   <th className="px-4 py-2.5 font-medium">n</th>
                   <th className="px-4 py-2.5 font-medium">Failed</th>
                   <th className="px-4 py-2.5 font-medium">Mean score</th>
@@ -62,6 +67,7 @@ export default async function EvalPage() {
                   <tr key={r.id} className="border-b border-border last:border-0 odd:bg-surface/40">
                     <td className="px-4 py-2.5">{formatDate(r.runAt)}</td>
                     <td className="px-4 py-2.5">{r.evalType}</td>
+                    <td className="px-4 py-2.5 text-muted">{r.evalType === "groundedness" ? `v${judgeVersion(r)}` : "—"}</td>
                     <td className="px-4 py-2.5">{r.n}</td>
                     <td className={`px-4 py-2.5 ${r.failed > 0 ? "text-accent" : ""}`}>{r.failed}</td>
                     <td className="px-4 py-2.5 font-medium">
@@ -85,7 +91,8 @@ export default async function EvalPage() {
               <strong className="text-text">Runs marked invalid are kept for the record, not deleted.</strong>{" "}
               Their judge was given each source&apos;s reference (a title slug and a director&apos;s name) instead
               of its text, so it never saw the synopsis the blurbs were written from, and it ran at a non-zero
-              temperature. Their scores don&apos;t measure groundedness.
+              temperature. Their scores don&apos;t measure groundedness. Scores are only comparable within the
+              same judge version (see <code>GROUNDEDNESS_JUDGE_VERSION</code> in packages/core).
               {!latest && " A valid run will appear here after the next groundedness workflow run."}
             </p>
           )}
