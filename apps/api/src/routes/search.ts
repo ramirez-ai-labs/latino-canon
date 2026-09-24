@@ -6,10 +6,8 @@ import {
   type SearchResponse,
 } from "@latino-canon/core";
 import type { Env } from "../bindings.js";
-import { retrieve } from "../search/hybrid.js";
-import { isFillerQuery, relaxedFilterSets } from "../search/query-plan.js";
+import { runSearch } from "../search/run-search.js";
 import { hydrateCards } from "../db/cards.js";
-import { browseByPopularity } from "../db/browse.js";
 import { rewriteQuery } from "../ai/rewrite-query.js";
 import { makeLlmClient } from "../llm/index.js";
 
@@ -51,41 +49,33 @@ searchRoute.get("/", async (c) => {
   // page happened to be cached last (page 1's data, or page 4's, depending on timing),
   // not its own. Found live: pagination let you click "Next" well past where the real
   // title count justified it, and pages didn't reliably show their own titles.
-  const cacheKey = `search:${input.mode}:${effectiveQuery}:${JSON.stringify(filters)}:${input.limit}:${input.offset}`;
+  // v2: inferred filters became ranking boosts for content queries (run-search.ts) - a new
+  // prefix so results cached under the old strict semantics are never served.
+  const cacheKey = `search:v2:${input.mode}:${effectiveQuery}:${JSON.stringify(filters)}:${input.limit}:${input.offset}`;
   const cached = await c.env.CACHE.get<SearchResponse>(cacheKey, "json");
   if (cached) return c.json({ ...cached, tookMs: Date.now() - started });
 
-  // When the filters carry the whole ask ("animation films" -> genre=Animation, kind=film,
-  // text "films"), the leftover text only adds noise - list what matches the filters,
-  // by popularity, the same way an empty query does. See isFillerQuery.
-  const textQuery =
-    effectiveQuery && !(Object.keys(filters).length > 0 && isFillerQuery(effectiveQuery)) ? effectiveQuery : "";
-  const run = (f: SearchFilters) =>
-    textQuery
-      ? retrieve(c.env, { query: textQuery, mode: input.mode, filters: f, limit: input.limit })
-      : browseByPopularity(c.env, f, input.limit, input.offset);
-
-  let hits = await run(filters);
-
-  // An inferred filter can be wrong in a way that zeroes out an otherwise-good match -
-  // a decade that's the story's *setting* (docs/ROADMAP.md #16, Zoot Suit), or a country
-  // guessed from a Spanish phrase. Explicit filters (UI facets) stay strict; inferred
-  // ones are relaxed one at a time, least trustworthy first, so a bad country doesn't
-  // take a good genre down with it. The interpretation is updated to what was actually
-  // applied, so the UI never claims a filter the results don't honor.
-  if (hits.length === 0 && interpretation) {
-    for (const relaxed of relaxedFilterSets(filters, explicitFilters)) {
-      hits = await run(relaxed);
-      if (hits.length > 0) {
-        const dropped = Object.keys(filters).filter((k) => !(k in relaxed));
-        interpretation = {
-          ...interpretation,
-          filters: Object.fromEntries(Object.entries(interpretation.filters).filter(([k]) => k in relaxed)),
-          rationale: `${interpretation.rationale} No matches with ${dropped.join(" + ")}, so ${dropped.length > 1 ? "those filters were" : "that filter was"} dropped.`,
-        };
-        break;
-      }
-    }
+  // How inferred filters are applied - strict for a filter-only query, a ranking boost
+  // otherwise - lives in runSearch, shared with the curation agent.
+  const plan = await runSearch(c.env, {
+    query: effectiveQuery,
+    mode: input.mode,
+    explicit: explicitFilters,
+    inferred: interpretation?.filters ?? {},
+    limit: input.limit,
+    offset: input.offset,
+  });
+  const hits = plan.hits;
+  if (interpretation) {
+    interpretation = {
+      ...interpretation,
+      // Only what was actually applied, so the UI never claims a filter the results don't honor.
+      filters: Object.fromEntries(Object.entries(interpretation.filters).filter(([k]) => k in plan.applied)),
+      filterMode: plan.filterMode,
+      rationale: plan.dropped.length
+        ? `${interpretation.rationale} No matches with ${plan.dropped.join(" + ")}, so ${plan.dropped.length > 1 ? "those filters were" : "that filter was"} dropped.`
+        : interpretation.rationale,
+    };
   }
 
   const results = await hydrateCards(c.env, hits);

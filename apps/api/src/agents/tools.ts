@@ -1,9 +1,7 @@
 import { detectDirectorGender, detectLeadGender, detectTone, type LlmClient, type SearchFilters, type TitleCard } from "@latino-canon/core";
 import { rewriteQuery } from "../ai/rewrite-query.js";
-import { retrieve } from "../search/hybrid.js";
 import { hydrateCards } from "../db/cards.js";
-import { browseByPopularity } from "../db/browse.js";
-import { isFillerQuery } from "../search/query-plan.js";
+import { runSearch } from "../search/run-search.js";
 import type { Env } from "../bindings.js";
 import type { ExtractedIntent } from "./types.js";
 
@@ -41,12 +39,9 @@ export async function searchWithFilters(
   filters: SearchFilters,
   limit: number,
 ): Promise<TitleCard[]> {
-  // Same rule as /search: filler text plus filters means "list what matches the filters".
-  const definedFilters = Object.values(filters).some((v) => v !== undefined);
-  const hits =
-    definedFilters && isFillerQuery(query)
-      ? await browseByPopularity(env, filters, limit)
-      : await retrieve(env, { query, mode: "hybrid", filters, limit });
+  // Every intent filter is inferred from free text, so the same rule as /search applies:
+  // strict only for a filter-only query, otherwise a ranking boost (see runSearch).
+  const { hits } = await runSearch(env, { query, mode: "hybrid", explicit: {}, inferred: filters, limit, offset: 0 });
   return hydrateCards(env, hits);
 }
 

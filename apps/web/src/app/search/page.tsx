@@ -92,7 +92,7 @@ export default async function SearchPage({
           <p>
             Interpreting as <code className="rounded bg-surface-raised px-1.5 py-0.5 text-text">{((res as SearchResponse).interpretation!).cleanedQuery || "(browse)"}</code>
             {Object.entries(((res as SearchResponse).interpretation!).filters).length > 0 && (
-              <> · {Object.entries(((res as SearchResponse).interpretation!).filters).map(([k, v]) => `${k}:${v}`).join(" · ")}</>
+              <> · {((res as SearchResponse).interpretation!).filterMode === "boost" ? "favoring " : ""}{Object.entries(((res as SearchResponse).interpretation!).filters).map(([k, v]) => `${k}:${v}`).join(" · ")}</>
             )}
             <span className="opacity-60"> ({((res as SearchResponse).interpretation!).source})</span>
           </p>
