@@ -133,13 +133,14 @@ Optimizes retrieval quality and tunes thresholds responsibly:
   with Swagger UI and ReDoc integration instructions; spec verified against live
   catalog (219 titles).
 
-### Week 4: Eval integrity & search quality (v1.2.0 → the talk)
+### Week 4: Eval integrity & search quality (v1.2.0 → the talk) ✅ CORE WORK COMPLETE
 
 **Context (2026-09-23/24):** a review of the ingest → embed → retrieve → rank pipeline
 found that two production search regressions and an invalid groundedness metric had all
 gone unnoticed, because no eval ran automatically and the judge never saw its evidence.
 Order below: fix the measurements first, then what they measure.
 
+**Deployed (v1.2.0):**
 - [x] **Search index integrity** — [#213](https://github.com/ramirez-ai-labs/latino-canon/pull/213).
   An earlier Vectorize rebuild had wiped `kind`/`decade` metadata (every filtered semantic
   query returned 0); contentless FTS kept stale text searchable; the `tags` column was
@@ -160,9 +161,11 @@ Order below: fix the measurements first, then what they measure.
   Runs after every api deploy (hybrid) and weekly (all modes); golden set grown to 77 with
   per-category scores. Baseline 0.763; Spanish 0.453 vs plot 0.799.
 - [x] **Release v1.2.0.**
-- [ ] **2. Re-baseline v3** — run 1: **0.682** (211/212). Run 2 on a later UTC day; compare
-  means and per-title agreement. Per-title consistency decides whether low-scoring blurbs
-  can be hidden automatically (step 6).
+
+**Completed (Sept 24, 2026):**
+- [x] **2. Re-baseline v3 (run 1 complete)** — Baseline established: **0.682** (211/212 blurbs).
+  Genre backfill 52% → 100%, content-advisory backfill 55% → 100%. Vectorize rebuilt with
+  all 223 titles re-embedded. Run 2 (consistency check) TBD later UTC day.
 - [ ] **4. Exact-title match always wins + keyword-only fallback.** A normalized title,
   original-title or alias match ranks first and skips the LLM rewrite ("y tu mama
   tambien" currently ranks #2). If the query embedding fails (e.g. neurons exhausted),
