@@ -8,7 +8,7 @@
  * Env:
  *   MODES=hybrid           comma list (default lexical,semantic,hybrid). The deploy gate
  *                          runs hybrid only - it's the mode users get, and a third of the
- *                          AI budget of all three.
+ *                          Workers AI neurons of all three. All modes run weekly.
  *   RECORD=1               write .eval-out/insert.sql for eval_runs (applied by CI).
  *   GATE=1                 exit 1 if hybrid recall@5 dropped more than MAX_DROP against
  *                          the last recorded run on the same golden set.
