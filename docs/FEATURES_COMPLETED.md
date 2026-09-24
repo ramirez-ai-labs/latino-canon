@@ -1,6 +1,6 @@
 # Post-Week 3 Major Features
 
-All features listed below have been implemented, tested, and deployed to production (v1.0.0+).
+All features listed below have been implemented, tested, and deployed to production (v1.0.0 through v1.2.0).
 
 ## Feature Inventory
 
@@ -101,6 +101,28 @@ All features listed below have been implemented, tested, and deployed to product
 
 ---
 
+### 8. Curation Agent in the search UI (#178, #188)
+Multi-step search with a visible reasoning trail, for signals plain search can't act on:
+director gender, lead-actor gender ("female lead", #199), and tone. Rate-limited (10/min/IP).
+
+### 9. Genre and content-advisory facets (#206, #207)
+TMDB genres backfilled onto every title; a `general`/`mature` content advisory classified by
+the 8B model. Both are search filters and keyword-searchable.
+
+### 10. UI redesign, phases 1–3 (#195, #196, #202)
+Design system and home page; search animations and agent reasoning; title detail, collections
+and catalog pages. See [DESIGN_SYSTEM_ROADMAP.md](DESIGN_SYSTEM_ROADMAP.md).
+
+### 11. Search integrity and filter semantics (#213, #214, #215)
+One embedding contract for every Vectorize writer; a keyword index that never keeps stale
+text; filter-only queries list what matches; inferred filters re-rank instead of excluding.
+
+### 12. Evals that measure something (#216, #217, #219)
+Groundedness judge that sees each source's real text (v3, 70B); blurb citations as footnotes;
+retrieval eval after every api deploy with per-category scores on the Eval page.
+
+---
+
 ## Summary
 
 | Feature | PR | Status | Deployment |
@@ -112,6 +134,12 @@ All features listed below have been implemented, tested, and deployed to product
 | Validation gates | #143, #144 | ✅ Complete | v1.0.0 |
 | OpenAPI spec | #170 | ✅ Complete | v1.0.0 |
 | ESLint wiring | #169 | ✅ Complete | v1.0.0 |
+| Curation agent in UI | #178, #188, #199 | ✅ Complete | v1.2.0 |
+| Genre + content advisory | #206, #207 | ✅ Complete | v1.2.0 |
+| UI redesign phases 1–3 | #195, #196, #202 | ✅ Complete | v1.2.0 |
+| Search integrity + filter semantics | #213–#215 | ✅ Complete | v1.2.0 |
+| Valid groundedness eval | #216, #217 | ✅ Complete | v1.2.0 |
+| Retrieval eval after every deploy | #219 | ✅ Complete | main (unreleased) |
 
 **All features including the two v1.0.0 nice-to-haves (OpenAPI + ESLint) are production-ready and live.**
 
@@ -122,7 +150,7 @@ Each feature has been:
 - ✅ Tested against production data (219 titles)
 - ✅ Reviewed in PR
 - ✅ Deployed to production
-- ✅ Verified live at [latino-canon.ai-builders-studio-latinx.workers.dev](https://latino-canon.ai-builders-studio-latinx.workers.dev)
+- ✅ Verified live at [latino-canon-web.ai-builders-studio-latinx.workers.dev](https://latino-canon-web.ai-builders-studio-latinx.workers.dev)
 
 ---
 

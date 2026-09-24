@@ -2,17 +2,19 @@
 
 This project has no dashboard, no alerting, and no Analytics Engine wired up — that's
 an honest gap, not an oversight to paper over (see [What's not here](#whats-not-here)).
-What it does have is three real incidents that already happened in production, each
+What it does have is six real incidents that already happened in production, each
 of which would have been caught in minutes by someone actually watching the right
 signal instead of stumbling into it days later. This doc exists so the next person
-(including future-you) doesn't have to rediscover the same three failure modes by hand.
+(including future-you) doesn't have to rediscover the same failure modes by hand. The
+one automated check that exists came out of incidents #4 and #5: a retrieval eval that
+runs after every api deploy.
 
 Read this before a big ingest batch, when `GET /search` looks wrong, or when
 onboarding someone else to operate this project.
 
 ---
 
-## The three incidents this doc is built around
+## The incidents this doc is built around
 
 ### 1. Blurb approval silently reset on every re-ingest
 
@@ -106,6 +108,55 @@ section but not enforced anywhere in code. See
 **What should have caught this sooner:** a pre-batch neuron-usage check. See
 [Alert: neuron budget](#alert-neuron-budget-headroom).
 
+### 4. A Vectorize rebuild wiped the metadata every filtered search depends on
+
+**What happened:** an api endpoint added to re-embed the catalog (`POST
+/admin/rebuild-vectorize`, #211) upserted every vector with metadata `{title, year}`.
+Vectorize replaces metadata on upsert, so `kind` and `decade` - the two fields
+`filterToVectorize` pushes down - disappeared. Every semantic query with a `kind` or
+`decade` filter returned 0 results. "animation films" (inferred `kind=film`) fell back to
+an unfiltered keyword search for "films" and showed live-action dramas and a comedy
+special. The endpoint was also unauthenticated.
+
+**Root cause:** the embedding text and metadata were defined in three places (ingest, an
+unused api helper, the rebuild endpoint), and they had drifted.
+
+**Fix:** #213. One embedding contract in `packages/core/src/embedding.ts` used by every
+writer; the api endpoint removed; a token-protected, paged `POST /rebuild-vectors` on the
+ingest worker (`pnpm --filter @latino-canon/ingest rebuild:vectors`). The same PR fixed the
+keyword index keeping stale text after a re-ingest (contentless FTS5) and its always-empty
+`tags` column.
+
+**What should have caught this sooner:** a filtered semantic spot-check (see the runbook
+below) - and now the post-deploy retrieval eval.
+
+### 5. Inferred filters silently dropped search quality from 0.83 to 0.68
+
+**What happened:** adding genre and content-advisory inference (#206) let the LLM query
+rewrite emit 4-5 filters per query, each enforced as a hard `WHERE`. One wrong guess
+excluded the right answer before ranking ran: `genre=Music` removed *In the Heights*
+(TMDB: Drama, Romance), `kind=film` removed *Money Heist* (a series). Hybrid recall@5 fell
+from 0.832 to 0.680; nothing noticed until a manual eval run.
+
+**Fix:** #214 (filter-only queries list what matches; relax one filter at a time) and #215
+(inferred filters re-rank instead of excluding) - back to 0.806. #219 made the retrieval
+eval run after every api deploy and fail on a drop of more than 0.03.
+
+### 6. The groundedness eval never saw its evidence
+
+**What happened:** every published groundedness score (0.43-0.53, including the README's
+0.486) measured nothing. Ingest stored each blurb source as `{kind, ref, quote: null}`
+and the judge was given `quote ?? ref` - a title slug and a director's name, never the
+synopsis. Claims copied from the synopsis scored 0.00. The judge also ran without a fixed
+temperature, so identical inputs scored 0.525 and 0.431 two days apart.
+
+**Fix:** #216 (sources store their id and text; the api resolves them; judge at temperature
+0) and #217 (70B judge, claim-focused prompt). First valid baseline: 0.682. Old runs are
+kept, labeled invalid, on the Eval page.
+
+**What should have caught this sooner:** reading a handful of the judge's 0.00 verdicts
+against the synopsis. An eval's inputs need checking as much as its outputs.
+
 ---
 
 ## Resource reference
@@ -163,7 +214,12 @@ budget on a given day.
   per-project.
 - **Check current usage before a large ingest batch**, not after — this is the
   single practical lesson from incident #3 above. Cloudflare dashboard → AI →
-  Workers AI → Analytics shows today's usage so far.
+  Workers AI shows today's usage so far (see the alert below for a CLI query).
+- **Measured costs (2026-09-24):** live search ~0.5–0.7k/day; ingest batch days
+  3–11k (70B); groundedness eval ~2.8k per run (70B); retrieval eval ~0.15k hybrid /
+  ~0.4k all modes.
+- **Rules:** at most one 70B job (groundedness run, blurb regeneration) per day, never
+  on an ingest day; sample before full runs; weekly, not nightly, schedules.
 - `classify` and `blurb` (both on the 70B model) are the expensive calls, run
   twice per title during ingest. Query rewrite and embeddings (both on cheaper
   models, and embeddings only run once per title) are comparatively negligible.
@@ -237,8 +293,10 @@ actually does:
   would need this wired up; right now it isn't. If this project outgrows manual
   checks, this is the next real investment, not a dashboard that already exists
   and just needs a link.
-- **No alerting.** Every "alert" below is a manual check someone has to
-  remember to run. There is no PagerDuty/email/Slack hook anywhere in this
+- **No alerting**, with one exception: `eval-retrieval.yml` runs after every api
+  deploy and fails (a red run on the commit) when hybrid recall@5 drops more than
+  0.03. It checks search quality, not uptime or errors. Every "alert" below is a manual
+  check someone has to remember to run. There is no PagerDuty/email/Slack hook anywhere in this
   stack.
 - **No uptime monitoring.** Nothing pings the live endpoints on a schedule.
 - **No quota alerting beyond Cloudflare's own account-level emails** (KV, D1,
@@ -255,8 +313,15 @@ this is automated — that's the honest state, not a design choice.
 
 ### Alert: neuron budget headroom
 
-No CLI for this — check the dashboard: **Cloudflare dashboard → AI → Workers AI →
-Analytics**, filtered to today. Check before starting any batch larger than a
+Dashboard: **Cloudflare dashboard → AI → Workers AI** shows "Neurons used today". Or
+per day and model from the CLI, using wrangler's login (after `npx wrangler whoami`):
+
+```bash
+TOKEN=$(grep -m1 '^oauth_token' ~/Library/Preferences/.wrangler/config/default.toml | cut -d'"' -f2)
+curl -s https://api.cloudflare.com/client/v4/graphql -H "Authorization: Bearer $TOKEN" \
+  -d '{"query":"{viewer{accounts(filter:{accountTag:\"<ACCOUNT_ID>\"}){aiInferenceAdaptiveGroups(limit:100,filter:{date_geq:\"2026-09-20\"},orderBy:[date_ASC]){dimensions{date modelId}sum{totalNeurons}}}}}"}'
+```
+ Check before starting any batch larger than a
 handful of titles. If same-day
 usage from other sources is already high, spread the batch across more than one
 day (incident #3).
@@ -290,7 +355,9 @@ site's search results actually gate on.
 
 ### Alert: search latency / error rate
 
-No automated tracking exists. Spot-check:
+Latency and errors have no automated tracking; ranking quality does (the post-deploy
+retrieval eval - check its latest run under **Actions → Run retrieval eval**, or the Eval
+page). Spot-check latency:
 
 ```bash
 curl -s -w "\n%{http_code} %{time_total}s\n" \
@@ -309,11 +376,18 @@ See [Performance targets](#performance-targets) for what "normal" looks like.
 1. Check neuron budget first (incident #3's exact symptom — search calls Workers
    AI on every request for query rewrite + embedding). If exhausted, nothing
    fixes this except waiting for the 00:00 UTC reset, or upgrading to paid.
-2. Check whether it's mode-specific (`&mode=lexical` bypasses Workers AI
-   entirely, `&mode=semantic`/`&mode=hybrid` don't). If only lexical works,
+2. Check whether it's mode-specific. `&mode=lexical` doesn't need Workers AI to
+   succeed (the query rewrite falls back to keyword rules when the LLM call fails);
+   `&mode=semantic`/`&mode=hybrid` need the query embedding. If only lexical works,
    it's almost certainly the neuron budget.
-3. Check AI Gateway logs for the actual error Workers AI returned.
-4. Check D1 directly (`wrangler d1 execute latino-canon --remote --command
+3. Empty or wrong results **only when a filter applies**? Check the vector metadata
+   (incident #4): `?q=coco&mode=semantic&kind=film` must return Coco. If it returns
+   nothing, re-embed with `pnpm --filter @latino-canon/ingest rebuild:vectors`, then
+   `POST /rebuild-search-cache`.
+4. Results look worse after a deploy? Check the latest **Run retrieval eval** run
+   (incident #5) - its per-category table shows which kind of query regressed.
+5. Check AI Gateway logs for the actual error Workers AI returned.
+6. Check D1 directly (`wrangler d1 execute latino-canon --remote --command
    "SELECT 1"`) to rule out a D1-side outage.
 
 ### An ingest job is stuck in `error`

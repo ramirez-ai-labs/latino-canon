@@ -138,11 +138,18 @@ pnpm dev                 # web :3000, api :8787, ingest :8788 (wrangler dev --re
 Evaluate:
 
 ```bash
-pnpm eval:retrieval      # Recall@k / MRR / nDCG@10 vs packages/eval/src/datasets/queries.jsonl
-                         # (needs a running api with real seeded data — hybrid/semantic
-                         # modes are only as good as the ingest pipeline behind them)
-pnpm eval:groundedness   # LLM-as-judge over generated blurbs (needs CF_ACCOUNT_ID, CLOUDFLARE_API_TOKEN)
+pnpm eval:retrieval      # Recall@k / MRR / nDCG@10 vs packages/eval/src/datasets/queries.jsonl,
+                         # overall and per query type (known-item, person, plot, facet, spanish).
+                         # Needs a running api with real data. MODES=hybrid runs one mode.
+pnpm eval:groundedness   # 70B LLM judge checks each blurb's claims against its sources
+                         # (needs CF_ACCOUNT_ID, CLOUDFLARE_API_TOKEN; ~2.8k neurons per run)
 ```
+
+In CI, `.github/workflows/eval-retrieval.yml` runs the retrieval eval against the live api
+after every api deploy (hybrid) and weekly (all modes), records it to `eval_runs`, and fails
+when hybrid recall@5 drops more than 0.03 against the last passing run on the same golden
+set. Groundedness runs are triggered by hand (`eval-groundedness.yml`), since each costs
+about a quarter of the daily Workers AI allocation. Both histories are on the site's Eval page.
 
 A narrower, CI-enforced version of the retrieval eval runs on every PR with zero setup:
 `apps/api/src/search/lexical.eval.test.ts` seeds a small hand-authored fixture into a
@@ -180,8 +187,9 @@ ones are skipped) before deploying, so a migration added under
 manual follow-up step. That step runs with `continue-on-error` — a migration
 failure still shows up as a failed job (so it doesn't go unnoticed), but can no
 longer block the Worker from deploying, the way it did the first time this ran.
-Each workflow can also be started manually from **Actions**. Add these repository
-secrets in GitHub:
+A successful api deploy then triggers the retrieval eval above, as a post-deploy
+regression check (it can't block the deploy that triggered it). Each workflow can also
+be started manually from **Actions**. Add these repository secrets in GitHub:
 
 ```text
 CLOUDFLARE_API_TOKEN
@@ -200,8 +208,8 @@ Worker** / **Deploy ingest Worker** manually.
 
 Pull requests are labeled automatically by changed area and conventional title
 prefix. Releases are created manually from **Actions -> Release** using the next
-semantic version (current: `0.2.0`); the workflow creates a tag like
-`latino-canon-v0.2.0`, generates release notes from merged PRs since the last tag,
+semantic version (current: `1.2.0`); the workflow creates a tag like
+`latino-canon-v1.2.0`, generates release notes from merged PRs since the last tag,
 and supports prereleases.
 
 Adding a title to the canon is a normal PR: edit
@@ -222,7 +230,7 @@ already live, it never redeploys the Worker's own code.
 | Resource | Free/day | This project's expected load |
 |---|---|---|
 | Workers requests | 100,000 | search + page views |
-| Workers AI neurons | 10,000 | ~10/embedding query, ~50–200/rewrite; classification & blurbs run offline in batches |
+| Workers AI neurons | 10,000 | live search ~0.5–0.7k/day; ingest batch days 3–11k; evals below (measured 2026-09-24) |
 | D1 rows read | 5,000,000 | search + detail pages |
 | D1 rows written | 100,000 | ingestion + feedback |
 | Vectorize queried dims | 30M/mo | 1024 dims × topK 20 × queries |
@@ -255,6 +263,19 @@ Two things worth being deliberate about going forward:
    real users until the daily reset at **00:00 UTC**, not just new titles failing to
    classify.
 
+Measured costs (2026-09-24, Workers AI analytics, `aiInferenceAdaptiveGroups`):
+
+| Job | Model | Neurons |
+|---|---|---|
+| Live search (query rewrite + embedding) | 8B + bge-m3 | ~0.5–0.7k/day |
+| Ingest classify + blurb | 70B | 3–11k per batch day |
+| Groundedness eval, 212 blurbs | 70B | ~2.8k per run |
+| Retrieval eval, 77 queries | 8B + bge-m3 | ~0.15k hybrid / ~0.4k all modes |
+
+Rules this project follows: at most one 70B job (groundedness run, blurb regeneration) per
+day and never on an ingest day; validate on a sample before full runs; schedules are weekly,
+not nightly, unless a deploy triggers them.
+
 Practical guidance: when growing the catalog by more than a handful of titles, spread
 large batches across more than one day rather than running them all at once, and treat
 "is there other Workers AI activity in this account today" as a real input before
@@ -267,71 +288,77 @@ by accident.
 
 ## Evaluation results
 
-*(Last refreshed 2026-09-20, against the live catalog of 219 titles. See below for
-what changed since the original 16-title numbers — the scores moved, and the reason
-why is itself part of the story.)*
+*(Last refreshed 2026-09-24, against the live catalog of 219 titles. Both evals now run
+from CI and record to `eval_runs`; the live history is on the site's Eval page.)*
 
-`pnpm eval:retrieval` run for real against the deployed `api` worker, all 219 titles
-ingested through the live Workflow (real TMDB/OMDb data, real `bge-m3` embeddings,
-real classify/blurb output) — not a fixture, and now a 62-query golden set
-(`packages/eval/src/datasets/queries.jsonl`, grown from the original 15):
+### Retrieval
 
-| mode | recall@5 | recall@10 | P@5 | MRR | nDCG@10 |
-|---|---|---|---|---|---|
-| lexical | 0.824 | 0.848 | 0.177 | 0.737 | 0.756 |
-| semantic | 0.784 | 0.849 | 0.174 | 0.774 | 0.782 |
-| **hybrid** | **0.832** | **0.872** | 0.181 | 0.789 | 0.799 |
+`pnpm eval:retrieval` runs the golden query set (`packages/eval/src/datasets/queries.jsonl`,
+77 queries) against the deployed `api` worker, after every api deploy (hybrid mode) and
+weekly (all modes). A run fails when hybrid recall@5 drops more than 0.03 against the last
+passing run on the same golden set. Current baseline, hybrid, by query type:
 
-**This is honestly lower than the numbers this section used to show** (hybrid
-recall@5 was 0.889, recall@10 was 0.967) — and that's not a regression, it's the
-eval catching up to reality. Those numbers were measured against the original
-16-title catalog and 15-query set; re-running the *same* 15 queries against today's
-219-title catalog alone drops hybrid recall@5 to 0.744, because there's now real
-room for a plausible-but-wrong title to outrank the true match. A 16-title corpus is
-an easy test. A 219-title one is a real one.
+| query type | n | recall@5 | MRR |
+|---|---|---|---|
+| known-item (exact titles, typos, aliases) | 7 | 1.000 | 0.857 |
+| person (director/actor named) | 10 | 0.800 | 0.783 |
+| plot (half-remembered descriptions) | 44 | 0.799 | 0.774 |
+| facet (genre, kind, decade asks) | 8 | 0.616 | 0.650 |
+| **spanish** | 8 | **0.453** | 0.445 |
+| **all** | 77 | **0.763** | 0.736 |
 
-`hybrid.ts`'s RRF weights are tuned against the 62-query set — `[2, 1]` (favor
-lexical), found by replaying the golden set offline against the live API's raw
-per-retriever rank order rather than redeploying repeatedly to sweep. It's a clean
-win over the previous `[1, 1]`: better recall@5/MRR/nDCG@10, recall@10 unchanged,
-zero newly-broken queries. `semantic.ts`'s `MIN_SEMANTIC_SCORE` was tested at a
-stricter 0.45 (better recall@5, worse recall@10 — a real trade-off, not a clean win)
-and deliberately left at 0.35, since this project's discovery-oriented use case
-weighs recall@10 higher. A separate bug also found via the golden set — a decade
-mentioned in the query ("1940s Los Angeles pachuco riots stage musical") was read as
-a hard filter on release year rather than story setting, zeroing every result for a
-film released in 1981 but set in the 1940s — is fixed: an inferred filter (not one
-the caller explicitly asked for) is now retried without it when it zeroes results
-(`docs/ROADMAP.md` item #16). 9 of 62 queries still miss in hybrid's top 5 — real
-ranking misses to keep tuning against as the golden set grows further.
+The Spanish queries are mostly translations of English plot queries that pass - the
+clearest gap against this project's bilingual-search goal, and next on the
+[roadmap](docs/ROADMAP.md). Exact titles always land in the top 5 but not always first
+("y tu mama tambien" ranks #2), which is the next retrieval fix.
 
-`pnpm eval:groundedness` (LLM-as-judge over generated blurbs) has now actually been
-run against the whole canon: **mean score 0.486 across all 216 blurbs, 0 failures.**
-Getting a real number required fixing a real bug first: every blurb in the catalog
-was sitting at `approved: false` — a `writeBlurb` upsert was unconditionally
-resetting a blurb's approval on *any* re-ingest of that title, even an unrelated
-metadata fix, which meant the live site was showing zero editorial blurbs to real
-users despite them existing in the database. Fixed (approval now only resets when
-the blurb's actual text/sources change) and the existing backlog was reviewed and
-approved. 0.486 is a moderate score, not a high one — an honest one, and the
-starting point for the next round of blurb-quality work, not a number to hide.
+How the number got here is part of the story. Hybrid recall@5 was 0.889 on the original
+16-title catalog and 15 queries; the same queries against the 219-title catalog drop to
+0.744, because there's now real room for a plausible-but-wrong title to outrank the true
+match. Tuning RRF weights to `[2, 1]` (favor lexical) brought the 62-query set to 0.832.
+Adding genre inference then silently dropped it to 0.680: the query rewrite routinely
+guessed 4-5 filters and each was enforced as a hard requirement, so one wrong guess
+(genre=Music for *In the Heights*, tagged Drama/Romance) excluded the answer before
+ranking ran. Making inferred filters a ranking boost instead restored 0.806
+([#215](https://github.com/ramirez-ai-labs/latino-canon/pull/215)) - and that regression,
+found by hand, is why the eval now runs on every deploy.
+
+### Groundedness
+
+`pnpm eval:groundedness` has an LLM judge (70B) check each approved blurb's claims against
+the sources it was written from. **Current baseline: 0.682** (211 of 212 blurbs scored,
+judge v3). About 120 of the ~140 flagged blurbs fail on a single "It matters…" sentence
+that no source supports - the target of the next blurb work.
+
+Earlier published numbers (0.486 and similar) were invalid: until
+[#216](https://github.com/ramirez-ai-labs/latino-canon/pull/216) the judge was given each
+source's reference (a title slug, a director's name) instead of its text, so it never saw
+the synopsis it was checking against. Those runs are kept, labeled invalid, on the Eval
+page. Scores are only comparable within the same judge version.
+
+Getting any groundedness number at all first required fixing a separate bug: a
+`writeBlurb` upsert reset every blurb's approval on *any* re-ingest of its title, so the
+live site was showing zero editorial blurbs. Approval now only resets when the blurb's text
+or sources actually change.
 
 ## Status
 
-**v1.0.0 milestone complete.** All major features shipped; ESLint and OpenAPI wired into
-production CI/CD. See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind
+**v1.2.0.** Curation agent, female-lead search, genre and content-advisory facets, and a
+full UI redesign shipped after v1.0.0; v1.2.0 adds search index integrity fixes, a
+post-deploy retrieval eval, and a groundedness judge that actually sees its evidence (see
+the [release notes](https://github.com/ramirez-ai-labs/latino-canon/releases/tag/latino-canon-v1.2.0)). See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind
 what's built vs. what's next, and a prioritized backlog. See [docs/operations/monitoring.md](docs/operations/monitoring.md)
 for how to operate this in production — resource names, AI Gateway/neuron-budget checks, and an
-incident response runbook built around three real production incidents. See [docs/FEATURES_COMPLETED.md](docs/FEATURES_COMPLETED.md)
+incident response runbook built around six real production incidents. See [docs/FEATURES_COMPLETED.md](docs/FEATURES_COMPLETED.md)
 for a summary of all shipped features through v1.0.0.
 
 The ingest resolve → fetch → normalize → persist → classify → embed → blurb path
 is implemented and has been run end-to-end against live TMDB/OMDb and a deployed
-Workflow (`pnpm --filter ingest seed`) — all 16 seed titles are ingested, classified,
-embedded, and blurbed in production D1/Vectorize, not just covered by fixture tests.
+Workflow — all 219 canon titles are ingested, classified, embedded, and blurbed in
+production D1/Vectorize, not just covered by fixture tests.
 
 `GET /titles/:id` hydrates the full `Title` (metadata + credits + tags + approved
-blurb) from D1 rather than returning a raw row, and poster images are served from R2
+blurb, with each source's cited id and text) from D1 rather than returning a raw row, and poster images are served from R2
 via a dedicated `/posters` route (`apps/api/src/routes/titles.ts`,
 `apps/api/src/routes/posters.ts`).
 
@@ -339,10 +366,9 @@ Other open scaffold items: `semantic.ts`'s minimum score floor (`MIN_SEMANTIC_SC
 = 0.35`) is still a hand-picked heuristic — tested at 0.45 against the 62-query
 golden set and deliberately kept at 0.35 (a real recall@5-vs-recall@10 trade-off,
 not a clean win); `/titles/:id/similar` still returns a stub instead of Vectorize
-nearest-neighbors. `apps/api/src/ai/classify.ts` and `blurb.ts` (plus the
-`LlmClient` provider abstraction under them) are unused dead code — the real
-classify/blurb calls live in `apps/ingest/src/ai.ts` instead, calling Workers AI
-directly.
+nearest-neighbors. Classify and blurb calls live in `apps/ingest/src/ai.ts`, calling
+Workers AI directly; the api's `LlmClient` abstraction serves the runtime calls (query
+rewrite, the curation agent's tone scoring).
 
 The nightly cron's retry/refresh logic (`apps/ingest/src/maintenance.ts`) is now
 implemented for real: `retryErroredJobs` replays the exact `IngestParams` stored on

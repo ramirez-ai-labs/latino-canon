@@ -1,12 +1,21 @@
 /**
  * OpenAPI 3.0 specification for Latino Canon API.
- * Generated statically from route documentation.
+ * Written by hand from the routes and packages/core/src/schema.ts - keep in sync with both.
  */
+const filterParam = (name: string, description: string, schema: Record<string, unknown>) => ({
+  name,
+  in: "query",
+  required: false,
+  description,
+  schema,
+});
+
 export const OPENAPI_SPEC = {
   openapi: "3.0.0",
   info: {
     title: "Latino Canon API",
-    description: "Hybrid semantic + lexical search over a curated catalog of Latino films and series.",
+    description:
+      "Hybrid semantic + lexical search, in English and Spanish, over a curated catalog of Latino films and series.",
     version: "1.0.0",
     contact: {
       name: "Latino Canon",
@@ -23,78 +32,37 @@ export const OPENAPI_SPEC = {
     "/search": {
       get: {
         operationId: "search",
-        summary: "Search the film catalog",
-        description: "Hybrid search combining BM25 lexical + semantic retrieval with RRF ranking.",
+        summary: "Search the catalog",
+        description:
+          "Hybrid search: BM25 keyword + bge-m3 semantic retrieval fused with Reciprocal Rank Fusion. " +
+          "Filters passed as parameters always exclude. A natural-language `q` may also yield LLM-inferred " +
+          "filters: for a filter-only query (\"animation films\") they exclude, relaxed one at a time if " +
+          "nothing matches; for a query with real content they only boost matching titles. " +
+          "`interpretation.filterMode` says which. Empty `q` lists titles by popularity.",
         tags: ["Search"],
         parameters: [
           {
             name: "q",
             in: "query",
-            description: "Search query (natural language or keywords)",
-            required: true,
-            schema: { type: "string", minLength: 1 },
-            example: "border crossing",
-          },
-          {
-            name: "mode",
-            in: "query",
-            description: "Retrieval mode: 'hybrid' (default), 'lexical' (BM25), or 'semantic' (embeddings)",
+            description: "Search query, English or Spanish (natural language or keywords). Empty = browse.",
             required: false,
-            schema: { type: "string", enum: ["hybrid", "lexical", "semantic"], default: "hybrid" },
+            schema: { type: "string", maxLength: 200, default: "" },
+            example: "animation films",
           },
-          {
-            name: "limit",
-            in: "query",
-            description: "Maximum results to return (1-100, default 20)",
-            required: false,
-            schema: { type: "integer", minimum: 1, maximum: 100, default: 20 },
-          },
-          {
-            name: "offset",
-            in: "query",
-            description: "Pagination offset (for infinite scroll)",
-            required: false,
-            schema: { type: "integer", minimum: 0, default: 0 },
-          },
-          {
-            name: "country",
-            in: "query",
-            description: "Filter by ISO 3166-1 country code (e.g., 'MX', 'AR', 'BR')",
-            required: false,
-            schema: { type: "string" },
-          },
-          {
-            name: "decade",
-            in: "query",
-            description: "Filter by decade (e.g., 1980, 1990, 2000)",
-            required: false,
-            schema: { type: "integer" },
-          },
-          {
-            name: "theme",
-            in: "query",
-            description: "Filter by theme (e.g., 'family', 'identity', 'activism')",
-            required: false,
-            schema: { type: "string" },
-          },
-          {
-            name: "inclusionType",
-            in: "query",
-            description: "Filter by inclusion type (e.g., 'led_by', 'created_by', 'about_community')",
-            required: false,
-            schema: { type: "string" },
-          },
-          {
-            name: "kind",
-            in: "query",
-            description: "Filter by media type (film or series)",
-            required: false,
-            schema: { type: "string", enum: ["film", "series"] },
-          },
+          filterParam("mode", "Retrieval mode", { type: "string", enum: ["hybrid", "lexical", "semantic"], default: "hybrid" }),
+          filterParam("limit", "Maximum results to return", { type: "integer", minimum: 1, maximum: 51, default: 50 }),
+          filterParam("offset", "Pagination offset", { type: "integer", minimum: 0, default: 0 }),
+          filterParam("kind", "Media type", { type: "string", enum: ["film", "series", "special"] }),
+          filterParam("decade", "Release decade (start year, e.g. 1990)", { type: "integer" }),
+          filterParam("country", "Production country, ISO 3166-1 alpha-2 (e.g. 'MX')", { type: "string", minLength: 2, maxLength: 2 }),
+          filterParam("theme", "Theme slug (e.g. 'family', 'immigration')", { type: "string" }),
+          filterParam("inclusionType", "Inclusion type (e.g. 'led_by', 'created_by', 'about_community')", { type: "string" }),
+          filterParam("genre", "TMDB genre (e.g. 'Animation', 'Documentary')", { type: "string" }),
+          filterParam("contentAdvisory", "'general' for family-appropriate titles", { type: "string", enum: ["general", "mature"] }),
         ],
         responses: {
           "200": {
-            description: "Search results with ranked films/series",
+            description: "Ranked results with the query's interpretation",
             content: {
               "application/json": {
                 schema: {
@@ -102,61 +70,46 @@ export const OPENAPI_SPEC = {
                   properties: {
                     query: { type: "string", description: "Original search query" },
                     mode: { type: "string", enum: ["hybrid", "lexical", "semantic"] },
-                    results: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        properties: {
-                          id: { type: "string", example: "el-norte-1983" },
-                          title: { type: "string", example: "El Norte" },
-                          year: { type: "integer", example: 1983 },
-                          kind: { type: "string", enum: ["film", "series"] },
-                          synopsis: { type: "string" },
-                          posterKey: { type: "string", nullable: true },
-                          themes: { type: "array", items: { type: "string" } },
-                          inclusionTypes: { type: "array", items: { type: "string" } },
+                    interpretation: {
+                      type: "object",
+                      nullable: true,
+                      description: "Set when the query rewrite interpreted a natural-language query",
+                      properties: {
+                        cleanedQuery: { type: "string" },
+                        filters: { type: "object", description: "Inferred filters actually applied" },
+                        rationale: { type: "string" },
+                        source: { type: "string", enum: ["llm", "rules"] },
+                        filterMode: {
+                          type: "string",
+                          enum: ["strict", "boost"],
+                          description: "strict = inferred filters excluded titles; boost = they only re-ranked",
                         },
                       },
                     },
+                    results: { type: "array", items: { $ref: "#/components/schemas/TitleCard" } },
                     tookMs: { type: "number", description: "Query execution time in milliseconds" },
                   },
                 },
               },
             },
           },
-          "400": {
-            description: "Invalid query parameters",
-          },
+          "400": { description: "Invalid query parameters" },
         },
       },
     },
     "/titles": {
       get: {
         operationId: "listTitles",
-        summary: "List all titles in the catalog",
-        description: "Get a paginated list of all titles with optional filtering.",
+        summary: "List title ids",
         tags: ["Catalog"],
         parameters: [
-          {
-            name: "limit",
-            in: "query",
-            schema: { type: "integer", default: 100, maximum: 10000 },
-          },
-          {
-            name: "offset",
-            in: "query",
-            schema: { type: "integer", default: 0 },
-          },
-          {
-            name: "hasBlurb",
-            in: "query",
-            description: "Filter to only titles with AI-generated blurbs (for eval pipelines)",
-            schema: { type: "integer", enum: [0, 1] },
-          },
+          filterParam("limit", "Maximum ids", { type: "integer", default: 1000, maximum: 10000 }),
+          filterParam("hasBlurb", "Only titles with an approved blurb (used by the groundedness eval)", { type: "integer", enum: [0, 1] }),
+          filterParam("recent", "Most recently added titles first", { type: "integer", enum: [0, 1] }),
         ],
         responses: {
           "200": {
-            description: "List of titles",
+            description: "Title ids",
             content: {
               "application/json": {
                 schema: {
@@ -173,10 +126,33 @@ export const OPENAPI_SPEC = {
         },
       },
     },
+    "/titles/{id}": {
+      get: {
+        operationId: "getTitle",
+        summary: "Get a full title",
+        description:
+          "Metadata, credits, tags with confidence, and the 'why it matters' blurb. Each blurb source carries the " +
+          "id the blurb cites inline ([s1] synopsis, [d0] first director) and the text the blurb model was given.",
+        tags: ["Catalog"],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", example: "coco-2017" } }],
+        responses: {
+          "200": { description: "Full title" },
+          "404": { description: "No such title in the canon" },
+        },
+      },
+    },
+    "/collections": {
+      get: {
+        operationId: "listCollections",
+        summary: "List collections",
+        tags: ["Collections"],
+        responses: { "200": { description: "Collections" } },
+      },
+    },
     "/collections/{slug}": {
       get: {
         operationId: "getCollection",
-        summary: "Get a curated collection",
+        summary: "Get a curated or smart collection",
         tags: ["Collections"],
         parameters: [
           {
@@ -184,6 +160,7 @@ export const OPENAPI_SPEC = {
             in: "path",
             required: true,
             schema: { type: "string", example: "core-canon" },
+            description: "e.g. core-canon, border-stories, latina-directors, breakthrough-firsts",
           },
         ],
         responses: {
@@ -199,7 +176,7 @@ export const OPENAPI_SPEC = {
                     title: { type: "string" },
                     description: { type: "string" },
                     kind: { type: "string", enum: ["curated", "smart"] },
-                    items: { type: "array", items: { type: "object" } },
+                    items: { type: "array", items: { $ref: "#/components/schemas/TitleCard" } },
                   },
                 },
               },
@@ -209,37 +186,77 @@ export const OPENAPI_SPEC = {
         },
       },
     },
+    "/agents/curate": {
+      post: {
+        operationId: "curate",
+        summary: "Curation agent",
+        description:
+          "Multi-step search with a visible reasoning trail, for signals /search can't act on: director gender, " +
+          "lead-actor gender, tone. Rate-limited to 10 requests per minute per IP.",
+        tags: ["Search"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["query"],
+                properties: {
+                  query: { type: "string", example: "films directed by women with a female lead" },
+                  limit: { type: "integer", default: 5, maximum: 20 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "topResults, extractedIntent, and a step-by-step reasoning array" },
+          "400": { description: "Missing or invalid query" },
+          "429": { description: "Rate limited" },
+        },
+      },
+    },
+    "/eval-runs": {
+      get: {
+        operationId: "listEvalRuns",
+        summary: "Recorded eval runs",
+        description: "Retrieval and groundedness eval runs, newest first. Written only by CI.",
+        tags: ["Evaluation"],
+        parameters: [
+          filterParam("type", "Eval type", { type: "string", enum: ["retrieval", "groundedness"] }),
+          filterParam("limit", "Maximum runs", { type: "integer", default: 20, maximum: 100 }),
+        ],
+        responses: { "200": { description: "Eval runs" } },
+      },
+    },
   },
   components: {
     schemas: {
-      Title: {
+      TitleCard: {
         type: "object",
         properties: {
-          id: { type: "string", description: "URL-safe title slug" },
+          id: { type: "string", description: "URL-safe title slug", example: "coco-2017" },
+          kind: { type: "string", enum: ["film", "series", "special"] },
           title: { type: "string" },
-          year: { type: "integer" },
-          kind: { type: "string", enum: ["film", "series"] },
-          countries: { type: "array", items: { type: "string" } },
-          synopsis: { type: "string" },
-          themes: { type: "array", items: { type: "string" } },
-          inclusionTypes: { type: "array", items: { type: "string" } },
+          yearStart: { type: "integer" },
+          yearEnd: { type: "integer", nullable: true },
+          director: { type: "string", nullable: true },
+          leadActor: { type: "string", nullable: true },
           posterKey: { type: "string", nullable: true },
+          blurbTeaser: { type: "string", nullable: true },
+          inclusionTypes: { type: "array", items: { type: "string" } },
+          themes: { type: "array", items: { type: "string" } },
+          genres: { type: "array", items: { type: "string" } },
+          contentAdvisory: { type: "string", enum: ["general", "mature"], nullable: true },
+          score: { type: "number" },
         },
       },
     },
   },
   tags: [
-    {
-      name: "Search",
-      description: "Hybrid semantic + lexical search endpoints",
-    },
-    {
-      name: "Catalog",
-      description: "Browse and query the title catalog",
-    },
-    {
-      name: "Collections",
-      description: "Curated and smart collections",
-    },
+    { name: "Search", description: "Hybrid search and the curation agent" },
+    { name: "Catalog", description: "Titles" },
+    { name: "Collections", description: "Curated and smart collections" },
+    { name: "Evaluation", description: "Recorded retrieval and groundedness eval runs" },
   ],
 };

@@ -32,12 +32,15 @@ Response (200): {"inserted":31,"skipped":0,"details":{"inserted":[...],"skipped"
 
 ---
 
-## Option 2: Full Ingest Pipeline (Quota Cost: ~2 calls/film)
+## Option 2: Full Ingest Pipeline (Quota Cost: ~100–150 neurons/title)
 
 **Use case:** Complete ingestion with TMDB metadata, AI classification, and blurb generation.
 
-**Cost:** ~2 Workers AI neurons per title (classification + blurb generation)
-- 31 films = ~62 neurons (well within 10k daily limit)
+**Cost:** roughly **100–150 Workers AI neurons per title**: two 70B calls (classify,
+blurb) plus a small 8B content-advisory call and one embedding. Measured: an ~85-title
+session burned ~11k neurons, over the 10k daily allocation (see
+[monitoring.md incident #3](operations/monitoring.md)). Keep a day's batch well under ~60
+titles, and don't ingest on a day that also runs the groundedness eval (~2.8k).
 
 **Run:**
 
@@ -49,16 +52,25 @@ INGEST_ADMIN_TOKEN=dev-only-change-me pnpm --filter @latino-canon/ingest seed
 INGEST_ADMIN_TOKEN=<your-token> INGEST_URL=https://latino-canon-ingest.<account>.workers.dev pnpm --filter @latino-canon/ingest seed
 ```
 
-**What it does (per title):**
-1. Resolve TMDB ID (search or use pinned `tmdbId` from seed)
-2. Fetch full metadata from TMDB (credits, ratings, poster URL)
-3. Fetch IMDb ratings from OMDB
-4. Normalize title data
-5. **[QUOTA]** Run Workers AI classifier (inclusion_types + themes)
-6. **[QUOTA]** Generate blurb using Workers AI
-7. Persist everything: title, tags, embeddings, blurb
-8. Cache poster to R2
-9. Route low-confidence results to manual review queue
+**What it does (per title, each a durable, independently retried Workflow step):**
+1. Resolve the TMDB id (search, or the seed's pinned `tmdbId`)
+2. Fetch TMDB details (credits, genres, poster) and OMDb ratings
+3. **Validation gates:** skip TMDB `adult` titles; reject a pinned `tmdbId` whose release
+   year is more than 2 years off the seed's (it points at the wrong title)
+4. Normalize, then persist the title, people and credits. Every write re-indexes the
+   title's keyword-search row (`titles_fts`) from D1: title, original title, synopsis,
+   people, confident tag labels + genres, aliases
+5. Cache the poster to R2
+6. **[70B]** Classify inclusion types + themes, then write tags with editor > seed > model
+   precedence (a title with no inclusion type is never shown)
+7. **[8B]** Classify content advisory (`general` / `mature`)
+8. **[embedding]** Embed and upsert to Vectorize, using the shared contract in
+   `packages/core/src/embedding.ts` (text: title, original title, synopsis, genres, themes
+   at ≥ 0.6 confidence; metadata: `kind`, `decade`)
+9. **[70B]** Generate the "why it matters" blurb, stored unapproved, with each source's
+   cited id and text (`s1` synopsis, `d0…` directors) so it can be checked later
+10. Route to the review queue when no seed inclusion type exists and the model isn't
+    confident
 
 **Workflow batching:**
 - Posts in batches of 4 titles with 5-second delays between batches (keeps neuron usage steady)
@@ -200,6 +212,8 @@ INGEST_URL=https://latino-canon-ingest.<account>.workers.dev
 - Quota resets at 00:00 UTC
 - Can continue with seed:only loads (zero quota)
 - Full ingest (classify + blurb) paused until reset
+- Live search degrades too: the query rewrite falls back to keyword rules, but vector
+  search needs the query embedding
 
 **Any script (`seed`, `seed:only`, `backfill:gender`) fails with `401 unauthorized`:**
 - Most common cause: the command was run from inside `apps/ingest/` instead of the repo
