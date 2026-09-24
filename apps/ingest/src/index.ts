@@ -386,10 +386,10 @@ export default {
 
     if (req.method === "POST" && url.pathname === "/rebuild-search-cache") {
       try {
-        // Clear all search-related cache keys from CACHE KV.
-        // The cache key pattern is: search:${mode}:${query}:${filters}:${limit}:${offset}
-        // We delete all keys matching "search:*" prefix to invalidate genre, theme,
-        // and other filter results after a backfill.
+        // Clear all search-related cache keys from CACHE KV. Keys look like
+        // search:${deployVersion}:${mode}:${query}:${filters}:${limit}:${offset} (see the
+        // api's routes/search.ts) - deploys already start cold, so this is for data changes
+        // (backfills, vector rebuilds) that make cached results stale.
         const result = await env.CACHE.list({ prefix: "search:" });
         let deletedCount = 0;
         for (const key of result.keys) {

@@ -367,7 +367,8 @@ deferred rather than bundled in:
     latter is now written down as a manual check in
     [monitoring.md](operations/monitoring.md#alert-neuron-budget-headroom), which
     closes the "at least document the discipline" half of this item. A real
-    in-code tracker is still open.
+    in-code tracker is still open. Measured per-job costs and a CLI usage query are now in
+    monitoring.md's "Neuron budget" section (Week 4).
 16. ~~**Decade filter matches release year, not story setting — found via the golden-set
     expansion above.**~~ **Done.** A query mentioning a decade the story is *set in*
     ("1940s Los Angeles pachuco riots stage musical" → *Zoot Suit*, released 1981) got
@@ -380,6 +381,11 @@ deferred rather than bundled in:
     *Zoot Suit* at #1. Re-running the full 62-query eval after this fix improved every
     metric with zero new regressions (hybrid recall@5 0.816→0.832, recall@10
     0.856→0.872).
+    **Superseded (2026-09-23):** dropping *every* inferred filter on zero results also
+    dropped the correct ones ("películas animadas": a bad `country=MX` took the good
+    `genre=Animation` down with it). Now filter-only queries relax one inferred filter at a
+    time, least trustworthy first (#214), and inferred filters on queries with real
+    content only re-rank (#215) - see Week 4.
 
 ## Post-v1.0.0 Nice-to-Haves (Completed)
 

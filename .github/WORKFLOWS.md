@@ -73,20 +73,38 @@ All workflows are organized by category below. Each entry includes the trigger c
 
 ---
 
-## Evaluation (Manual trigger)
+## Evaluation
+
+### eval-retrieval.yml
+- **Trigger**: automatically after every successful `deploy-api` run on `main` (`workflow_run`);
+  weekly on Sundays 09:30 UTC; manual (`workflow_dispatch`, choose modes)
+- **Purpose**: post-deploy regression check for search quality
+- **What it does**:
+  - Runs the 77-query golden set (`packages/eval/src/datasets/queries.jsonl`) against the live api:
+    hybrid only after a deploy, all three modes weekly
+  - Reports recall@5 / recall@10 / MRR / nDCG@10, overall and per query type
+    (known-item, person, plot, facet, spanish)
+  - Records the run in D1 (`eval_runs`), including when it fails
+  - **Fails** when hybrid recall@5 drops more than 0.03 against the last *passing* run on the
+    same golden set (a failed run never becomes the baseline)
+- **Limit**: checks a deploy after it's live; it can't block it
+- **Duration**: ~1-2 minutes
+- **Requires**: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+- **Cost**: ~0.15k Workers AI neurons (hybrid) / ~0.4k (all modes), measured
 
 ### eval-groundedness.yml
 - **Trigger**: Manual (`workflow_dispatch` from GitHub Actions UI)
 - **Purpose**: Run blurb groundedness evaluation against live catalog
 - **What it does**:
   - Enumerates all titles with approved blurbs via `GET /titles?hasBlurb=1`
-  - Calls Workers AI REST API judge for each blurb
+  - Calls the 70B Workers AI judge for each blurb, with each source's real text (judge v3)
   - Records metrics + scores in D1 (eval_runs table)
   - Uploads results to GitHub Actions artifacts
   - Displays results at `/eval` page on website
 - **Duration**: ~2-3 minutes (depending on blurb count)
 - **Requires**: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
-- **Cost**: ~2 neurons per title (Workers AI billing)
+- **Cost**: ~2.8k Workers AI neurons per full run (~13 per blurb, 70B), measured. Run at
+  most once a day and never on an ingest day
 - **How to run**:
   1. Go to GitHub Actions tab
   2. Select "Run groundedness eval"
@@ -122,6 +140,8 @@ All workflows are organized by category below. Each entry includes the trigger c
 | Commit to main + ingest changes | deploy-ingest | ✅ | — | Deploy ingest |
 | Commit to main + web changes | deploy-web | ✅ | — | Deploy frontend |
 | Commit to main + seed.json changes | ingest-new-titles | ✅ | — | Ingest data |
+| deploy-api succeeds | eval-retrieval (hybrid) | ✅ | — | Catch search regressions |
+| Sundays 09:30 UTC | eval-retrieval (all modes) | ✅ | ✅ | Weekly search baseline |
 | Manual trigger from Actions UI | eval-groundedness | — | ✅ | Evaluate blurbs |
 | Manual trigger from Actions UI | release | — | ✅ | Cut release |
 
@@ -139,7 +159,11 @@ All workflows are organized by category below. Each entry includes the trigger c
 → Check `ingest-new-titles` logs; seeds are ingested async via workflow
 
 ### "Eval results aren't showing on /eval page"
-→ Check `eval-groundedness` logs for D1 insert errors
+→ Check the `eval-retrieval` / `eval-groundedness` logs for D1 insert errors
+
+### "The retrieval eval failed after my deploy"
+→ Open the run: the per-category table and the "hybrid misses" list show which queries
+dropped out of the top 5. See incident #5 in `docs/operations/monitoring.md`.
 
 ### "Which workflows trigger on my commit?"
 → Use the Decision Matrix above; only PRs trigger CI gates

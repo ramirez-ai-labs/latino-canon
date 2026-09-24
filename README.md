@@ -138,11 +138,18 @@ pnpm dev                 # web :3000, api :8787, ingest :8788 (wrangler dev --re
 Evaluate:
 
 ```bash
-pnpm eval:retrieval      # Recall@k / MRR / nDCG@10 vs packages/eval/src/datasets/queries.jsonl
-                         # (needs a running api with real seeded data — hybrid/semantic
-                         # modes are only as good as the ingest pipeline behind them)
-pnpm eval:groundedness   # LLM-as-judge over generated blurbs (needs CF_ACCOUNT_ID, CLOUDFLARE_API_TOKEN)
+pnpm eval:retrieval      # Recall@k / MRR / nDCG@10 vs packages/eval/src/datasets/queries.jsonl,
+                         # overall and per query type (known-item, person, plot, facet, spanish).
+                         # Needs a running api with real data. MODES=hybrid runs one mode.
+pnpm eval:groundedness   # 70B LLM judge checks each blurb's claims against its sources
+                         # (needs CF_ACCOUNT_ID, CLOUDFLARE_API_TOKEN; ~2.8k neurons per run)
 ```
+
+In CI, `.github/workflows/eval-retrieval.yml` runs the retrieval eval against the live api
+after every api deploy (hybrid) and weekly (all modes), records it to `eval_runs`, and fails
+when hybrid recall@5 drops more than 0.03 against the last passing run on the same golden
+set. Groundedness runs are triggered by hand (`eval-groundedness.yml`), since each costs
+about a quarter of the daily Workers AI allocation. Both histories are on the site's Eval page.
 
 A narrower, CI-enforced version of the retrieval eval runs on every PR with zero setup:
 `apps/api/src/search/lexical.eval.test.ts` seeds a small hand-authored fixture into a
@@ -180,8 +187,9 @@ ones are skipped) before deploying, so a migration added under
 manual follow-up step. That step runs with `continue-on-error` — a migration
 failure still shows up as a failed job (so it doesn't go unnoticed), but can no
 longer block the Worker from deploying, the way it did the first time this ran.
-Each workflow can also be started manually from **Actions**. Add these repository
-secrets in GitHub:
+A successful api deploy then triggers the retrieval eval above, as a post-deploy
+regression check (it can't block the deploy that triggered it). Each workflow can also
+be started manually from **Actions**. Add these repository secrets in GitHub:
 
 ```text
 CLOUDFLARE_API_TOKEN
@@ -200,8 +208,8 @@ Worker** / **Deploy ingest Worker** manually.
 
 Pull requests are labeled automatically by changed area and conventional title
 prefix. Releases are created manually from **Actions -> Release** using the next
-semantic version (current: `0.2.0`); the workflow creates a tag like
-`latino-canon-v0.2.0`, generates release notes from merged PRs since the last tag,
+semantic version (current: `1.2.0`); the workflow creates a tag like
+`latino-canon-v1.2.0`, generates release notes from merged PRs since the last tag,
 and supports prereleases.
 
 Adding a title to the canon is a normal PR: edit
@@ -222,7 +230,7 @@ already live, it never redeploys the Worker's own code.
 | Resource | Free/day | This project's expected load |
 |---|---|---|
 | Workers requests | 100,000 | search + page views |
-| Workers AI neurons | 10,000 | ~10/embedding query, ~50–200/rewrite; classification & blurbs run offline in batches |
+| Workers AI neurons | 10,000 | live search ~0.5–0.7k/day; ingest batch days 3–11k; evals below (measured 2026-09-24) |
 | D1 rows read | 5,000,000 | search + detail pages |
 | D1 rows written | 100,000 | ingestion + feedback |
 | Vectorize queried dims | 30M/mo | 1024 dims × topK 20 × queries |
@@ -254,6 +262,19 @@ Two things worth being deliberate about going forward:
    every request. Once the account hits the cap, `GET /search` starts erroring for
    real users until the daily reset at **00:00 UTC**, not just new titles failing to
    classify.
+
+Measured costs (2026-09-24, Workers AI analytics, `aiInferenceAdaptiveGroups`):
+
+| Job | Model | Neurons |
+|---|---|---|
+| Live search (query rewrite + embedding) | 8B + bge-m3 | ~0.5–0.7k/day |
+| Ingest classify + blurb | 70B | 3–11k per batch day |
+| Groundedness eval, 212 blurbs | 70B | ~2.8k per run |
+| Retrieval eval, 77 queries | 8B + bge-m3 | ~0.15k hybrid / ~0.4k all modes |
+
+Rules this project follows: at most one 70B job (groundedness run, blurb regeneration) per
+day and never on an ingest day; validate on a sample before full runs; schedules are weekly,
+not nightly, unless a deploy triggers them.
 
 Practical guidance: when growing the catalog by more than a handful of titles, spread
 large batches across more than one day rather than running them all at once, and treat
@@ -322,20 +343,22 @@ or sources actually change.
 
 ## Status
 
-**v1.0.0 milestone complete.** All major features shipped; ESLint and OpenAPI wired into
-production CI/CD. See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind
+**v1.2.0.** Curation agent, female-lead search, genre and content-advisory facets, and a
+full UI redesign shipped after v1.0.0; v1.2.0 adds search index integrity fixes, a
+post-deploy retrieval eval, and a groundedness judge that actually sees its evidence (see
+the [release notes](https://github.com/ramirez-ai-labs/latino-canon/releases/tag/latino-canon-v1.2.0)). See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind
 what's built vs. what's next, and a prioritized backlog. See [docs/operations/monitoring.md](docs/operations/monitoring.md)
 for how to operate this in production — resource names, AI Gateway/neuron-budget checks, and an
-incident response runbook built around three real production incidents. See [docs/FEATURES_COMPLETED.md](docs/FEATURES_COMPLETED.md)
+incident response runbook built around six real production incidents. See [docs/FEATURES_COMPLETED.md](docs/FEATURES_COMPLETED.md)
 for a summary of all shipped features through v1.0.0.
 
 The ingest resolve → fetch → normalize → persist → classify → embed → blurb path
 is implemented and has been run end-to-end against live TMDB/OMDb and a deployed
-Workflow (`pnpm --filter ingest seed`) — all 16 seed titles are ingested, classified,
-embedded, and blurbed in production D1/Vectorize, not just covered by fixture tests.
+Workflow — all 219 canon titles are ingested, classified, embedded, and blurbed in
+production D1/Vectorize, not just covered by fixture tests.
 
 `GET /titles/:id` hydrates the full `Title` (metadata + credits + tags + approved
-blurb) from D1 rather than returning a raw row, and poster images are served from R2
+blurb, with each source's cited id and text) from D1 rather than returning a raw row, and poster images are served from R2
 via a dedicated `/posters` route (`apps/api/src/routes/titles.ts`,
 `apps/api/src/routes/posters.ts`).
 
@@ -343,10 +366,9 @@ Other open scaffold items: `semantic.ts`'s minimum score floor (`MIN_SEMANTIC_SC
 = 0.35`) is still a hand-picked heuristic — tested at 0.45 against the 62-query
 golden set and deliberately kept at 0.35 (a real recall@5-vs-recall@10 trade-off,
 not a clean win); `/titles/:id/similar` still returns a stub instead of Vectorize
-nearest-neighbors. `apps/api/src/ai/classify.ts` and `blurb.ts` (plus the
-`LlmClient` provider abstraction under them) are unused dead code — the real
-classify/blurb calls live in `apps/ingest/src/ai.ts` instead, calling Workers AI
-directly.
+nearest-neighbors. Classify and blurb calls live in `apps/ingest/src/ai.ts`, calling
+Workers AI directly; the api's `LlmClient` abstraction serves the runtime calls (query
+rewrite, the curation agent's tone scoring).
 
 The nightly cron's retry/refresh logic (`apps/ingest/src/maintenance.ts`) is now
 implemented for real: `retryErroredJobs` replays the exact `IngestParams` stored on

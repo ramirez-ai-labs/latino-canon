@@ -19,12 +19,21 @@ Must match the embedding model: **bge-m3 → 1024 dims, cosine.**
 wrangler vectorize create latino-canon-titles --dimensions=1024 --metric=cosine
 
 # metadata indexes for filter push-down (create BEFORE inserting vectors).
-# Only kind/decade: Vectorize metadata values must be scalar (string/number/boolean/null),
-# and countries/themes/inclusionTypes are stored as arrays (a title can have more than
-# one) - there's no "array contains" filter operator, so `$eq` against them never
-# matches. apps/api/src/search/semantic.ts re-checks those three against D1 instead.
+# Only kind/decade: they're the only metadata each vector carries
+# (packages/core/src/embedding.ts, titleVectorMetadata). Vectorize metadata values must be
+# scalar and has no "array contains" operator, so country/theme/inclusionType/genre filters
+# are re-checked against D1 instead (apps/api/src/search/semantic.ts).
 wrangler vectorize create-metadata-index latino-canon-titles --property-name=kind   --type=string
 wrangler vectorize create-metadata-index latino-canon-titles --property-name=decade --type=number
+```
+
+To re-embed the whole catalog (after changing what a vector is built from, or if metadata
+was ever lost - see incident #4 in docs/operations/monitoring.md), use the ingest worker's
+paged endpoint rather than any one-off script, so the text and metadata match ingest exactly:
+
+```bash
+INGEST_URL=https://latino-canon-ingest.<account>.workers.dev INGEST_ADMIN_TOKEN=... \
+  pnpm --filter @latino-canon/ingest rebuild:vectors
 ```
 
 ## 3. KV (search cache)
