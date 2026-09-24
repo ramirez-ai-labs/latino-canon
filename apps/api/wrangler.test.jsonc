@@ -15,6 +15,9 @@
 			"database_id": "test-fixture-db"
 		}
 	],
+	// search.ts reads/writes its result cache here (local Miniflare KV, nothing remote).
+	"kv_namespaces": [{ "binding": "CACHE", "id": "test-search-cache" }],
+	"vars": { "SEARCH_CACHE_TTL_SECONDS": "60" },
 	"r2_buckets": [
 		{
 			"binding": "POSTERS",

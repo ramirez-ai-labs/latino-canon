@@ -7,6 +7,7 @@ import {
 } from "@latino-canon/core";
 import type { Env } from "../bindings.js";
 import { retrieve } from "../search/hybrid.js";
+import { isFillerQuery, relaxedFilterSets } from "../search/query-plan.js";
 import { hydrateCards } from "../db/cards.js";
 import { browseByPopularity } from "../db/browse.js";
 import { rewriteQuery } from "../ai/rewrite-query.js";
@@ -54,21 +55,36 @@ searchRoute.get("/", async (c) => {
   const cached = await c.env.CACHE.get<SearchResponse>(cacheKey, "json");
   if (cached) return c.json({ ...cached, tookMs: Date.now() - started });
 
-  let hits = effectiveQuery
-    ? await retrieve(c.env, { query: effectiveQuery, mode: input.mode, filters, limit: input.limit })
-    : await browseByPopularity(c.env, filters, input.limit, input.offset);
+  // When the filters carry the whole ask ("animation films" -> genre=Animation, kind=film,
+  // text "films"), the leftover text only adds noise - list what matches the filters,
+  // by popularity, the same way an empty query does. See isFillerQuery.
+  const textQuery =
+    effectiveQuery && !(Object.keys(filters).length > 0 && isFillerQuery(effectiveQuery)) ? effectiveQuery : "";
+  const run = (f: SearchFilters) =>
+    textQuery
+      ? retrieve(c.env, { query: textQuery, mode: input.mode, filters: f, limit: input.limit })
+      : browseByPopularity(c.env, f, input.limit, input.offset);
+
+  let hits = await run(filters);
 
   // An inferred filter can be wrong in a way that zeroes out an otherwise-good match -
-  // e.g. a decade mentioned as a film's *setting* ("1940s Los Angeles pachuco riots
-  // stage musical" -> Zoot Suit, released 1981) gets read as a release-year filter and
-  // excludes the correct title entirely (docs/ROADMAP.md #16). A filter the caller
-  // explicitly asked for (a UI facet) should stay strict and just return zero; only an
-  // inferred one gets retried without it, on the same "return something over nothing"
-  // logic hybrid.ts already uses for an empty browse query.
-  if (hits.length === 0 && effectiveQuery && interpretation) {
-    const hasInferredFilter = Object.keys(interpretation.filters).some((k) => !(k in explicitFilters));
-    if (hasInferredFilter) {
-      hits = await retrieve(c.env, { query: effectiveQuery, mode: input.mode, filters: explicitFilters, limit: input.limit });
+  // a decade that's the story's *setting* (docs/ROADMAP.md #16, Zoot Suit), or a country
+  // guessed from a Spanish phrase. Explicit filters (UI facets) stay strict; inferred
+  // ones are relaxed one at a time, least trustworthy first, so a bad country doesn't
+  // take a good genre down with it. The interpretation is updated to what was actually
+  // applied, so the UI never claims a filter the results don't honor.
+  if (hits.length === 0 && interpretation) {
+    for (const relaxed of relaxedFilterSets(filters, explicitFilters)) {
+      hits = await run(relaxed);
+      if (hits.length > 0) {
+        const dropped = Object.keys(filters).filter((k) => !(k in relaxed));
+        interpretation = {
+          ...interpretation,
+          filters: Object.fromEntries(Object.entries(interpretation.filters).filter(([k]) => k in relaxed)),
+          rationale: `${interpretation.rationale} No matches with ${dropped.join(" + ")}, so ${dropped.length > 1 ? "those filters were" : "that filter was"} dropped.`,
+        };
+        break;
+      }
     }
   }
 

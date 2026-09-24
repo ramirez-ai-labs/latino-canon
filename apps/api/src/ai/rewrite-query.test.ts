@@ -85,3 +85,23 @@ describe("rewriteQuery (Spanish natural-language gate)", () => {
     expect(r?.source).toBe("llm");
   });
 });
+
+describe("rewriteQuery (genre keywords)", () => {
+  it("lifts a genre from a short query the LLM gate would otherwise skip", async () => {
+    const r = await rewriteQuery(brokenLlm, "kids cartoons");
+    expect(r?.filters.genre).toBe("Animation");
+    expect(r?.cleanedQuery).toBe("kids");
+  });
+
+  it("recognizes Spanish genre words, accented or not", async () => {
+    expect((await rewriteQuery(brokenLlm, "películas animadas"))?.filters.genre).toBe("Animation");
+    expect((await rewriteQuery(brokenLlm, "documentales de musica"))?.filters.genre).toBe("Documentary");
+  });
+
+  it("keeps the rules' genre when the LLM leaves it out", async () => {
+    const { llm } = workingLlm({ cleanedQuery: "kids", filters: { contentAdvisory: "general" }, rationale: "n/a" });
+    const r = await rewriteQuery(llm, "kids cartoons");
+    expect(r?.source).toBe("llm");
+    expect(r?.filters).toEqual({ contentAdvisory: "general", genre: "Animation" });
+  });
+});

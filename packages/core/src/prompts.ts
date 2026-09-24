@@ -20,7 +20,10 @@ export const QUERY_REWRITE_SYSTEM = `You convert a movie/TV search phrase into a
 Filters you may set (all optional):
 - kind: "film" | "series" | "special" (a stand-up comedy special)
 - decade: a year like 1990 (the START of the decade)
-- country: ISO 3166-1 alpha-2 (e.g. MX, US, CL)
+- country: ISO 3166-1 alpha-2 (e.g. MX, US, CL) - the country that PRODUCED the work. Only set it
+  when the phrase names a production origin ("made in Argentina", "Mexican cinema industry").
+  Never infer it from the language the phrase is written in, or from a heritage word describing
+  characters ("Mexican family", "Cuban-American") - most titles here are US productions.
 - theme: one of ${themeList}
 - inclusionType: led_by | created_by | about_community | breakthrough
 - genre: one of ${genreList} (a format/style tag - "animation", "documentary" - distinct from theme)
