@@ -64,6 +64,7 @@ export default [
         D1Database: "readonly",
         KVNamespace: "readonly",
         R2Bucket: "readonly",
+        WorkerVersionMetadata: "readonly",
         Blob: "readonly",
         Headers: "readonly",
         Response: "readonly",
