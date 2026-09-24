@@ -63,3 +63,49 @@ export function relaxedFilterSets(filters: SearchFilters, explicit: SearchFilter
   }
   return sets;
 }
+
+/** What a title carries, for checking it against inferred filters. */
+export interface TitleFacets {
+  kind: string;
+  yearStart: number;
+  countries: string[];
+  genres: string[];
+  contentAdvisory: string | null;
+  /** "theme:slug" / "inclusion_type:slug", confidence-gated like the visibility gate. */
+  tags: string[];
+}
+
+/** How many of the inferred filters a title satisfies. */
+export function countFacetMatches(facets: TitleFacets, inferred: SearchFilters): number {
+  let n = 0;
+  if (inferred.kind && facets.kind === inferred.kind) n++;
+  if (inferred.decade && Math.floor(facets.yearStart / 10) * 10 === inferred.decade) n++;
+  if (inferred.country && facets.countries.includes(inferred.country)) n++;
+  if (inferred.genre && facets.genres.includes(inferred.genre)) n++;
+  if (inferred.contentAdvisory && facets.contentAdvisory === inferred.contentAdvisory) n++;
+  if (inferred.theme && facets.tags.includes(`theme:${inferred.theme}`)) n++;
+  if (inferred.inclusionType && facets.tags.includes(`inclusion_type:${inferred.inclusionType}`)) n++;
+  return n;
+}
+
+/**
+ * Per matched inferred filter, in reciprocal-rank units (1/(60+rank)): 0.002 is worth
+ * roughly 8 rank positions near the top of the list. Enough to lift a title that matches
+ * what the rewrite understood above one that doesn't, not enough for a pile of wrong
+ * guesses (the rewrite often emits 4-5 filters) to bury the text's best match.
+ */
+export const BOOST_PER_MATCH = 0.002;
+
+/**
+ * Re-rank retrieval hits so inferred filters count as evidence rather than requirements.
+ * Uses rank, not the retriever's raw score, so the same boost means the same thing for
+ * BM25, cosine, and RRF-fused lists alike.
+ */
+export function rerankWithBoosts<T extends { titleId: string }>(
+  hits: T[],
+  matchesFor: (titleId: string) => number,
+): (T & { score: number })[] {
+  return hits
+    .map((h, rank) => ({ ...h, score: 1 / (60 + rank + 1) + BOOST_PER_MATCH * matchesFor(h.titleId) }))
+    .sort((a, b) => b.score - a.score);
+}

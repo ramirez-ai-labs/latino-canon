@@ -172,6 +172,9 @@ export interface QueryInterpretation {
   filters: SearchFilters;
   rationale: string;
   source: "llm" | "rules";
+  /** Set by /search: "strict" = these filters excluded titles; "boost" = they only
+   * re-ranked (a query with real content - see apps/api run-search.ts). */
+  filterMode?: "strict" | "boost";
 }
 
 export interface Collection {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isFillerQuery, relaxedFilterSets } from "./query-plan.js";
+import { BOOST_PER_MATCH, countFacetMatches, isFillerQuery, relaxedFilterSets, rerankWithBoosts } from "./query-plan.js";
 
 describe("isFillerQuery", () => {
   it("treats a bare 'a title' word as filler, in English and Spanish", () => {
@@ -30,5 +30,37 @@ describe("relaxedFilterSets", () => {
 
   it("has nothing to retry when every filter is explicit", () => {
     expect(relaxedFilterSets({ genre: "Animation" }, { genre: "Animation" })).toEqual([]);
+  });
+});
+
+describe("countFacetMatches", () => {
+  const facets = {
+    kind: "film",
+    yearStart: 2014,
+    countries: ["US"],
+    genres: ["Animation", "Family"],
+    contentAdvisory: "general",
+    tags: ["theme:family", "inclusion_type:created_by"],
+  };
+
+  it("counts each inferred filter the title satisfies", () => {
+    expect(countFacetMatches(facets, { genre: "Animation", decade: 2010, theme: "family", inclusionType: "created_by" })).toBe(4);
+  });
+
+  it("counts nothing for wrong guesses", () => {
+    expect(countFacetMatches(facets, { genre: "Music", kind: "series", country: "MX", theme: "borderlands" })).toBe(0);
+  });
+});
+
+describe("rerankWithBoosts", () => {
+  const hits = Array.from({ length: 12 }, (_, i) => ({ titleId: `t${i}` }));
+
+  it("lifts a boosted title several places, but not past the text's best match from ten down", () => {
+    const ranked = rerankWithBoosts(hits, (id) => (id === "t10" ? 1 : 0)).map((h) => h.titleId);
+    expect(ranked.indexOf("t10")).toBeGreaterThan(0);
+    expect(ranked.indexOf("t10")).toBeLessThan(10);
+    expect(ranked[0]).toBe("t0");
+    // One match is worth less than ten rank positions near the top.
+    expect(BOOST_PER_MATCH).toBeLessThan(1 / 61 - 1 / 71);
   });
 });
