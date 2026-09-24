@@ -212,6 +212,16 @@ No API key required. Only `POST /agents/curate` is rate-limited: **10 requests p
 
 ---
 
+## Admin Endpoints
+
+The API also provides operational admin routes for search-index maintenance (no auth required; deployed as Cloudflare Workers):
+
+- **`POST /admin/rebuild-vectorize`** — Re-embed all titles with current genre/content-advisory metadata and upsert to Vectorize. Use after backfill operations or when embedding logic changes. Returns `{ "embedded": 223, "total": 223, "status": "success" }`.
+
+For a complete list of admin and backfill operations (ingest worker), see [INGEST_API.md](INGEST_API.md).
+
+---
+
 ## Useful Links
 
 - **GitHub:** https://github.com/ramirez-ai-labs/latino-canon
@@ -219,6 +229,7 @@ No API key required. Only `POST /agents/curate` is rate-limited: **10 requests p
 - **Evaluation:** the site's `/eval` page (retrieval by query type, groundedness history)
 - **Architecture:** See [README.md](../README.md) for system design
 - **Ingest Pipeline:** See [INGEST.md](INGEST.md) for data ingestion
+- **Admin APIs:** See [INGEST_API.md](INGEST_API.md) for backfill + rebuild endpoints
 
 ---
 
