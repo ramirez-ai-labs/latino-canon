@@ -63,6 +63,11 @@ export interface BlurbSource {
   kind: "synopsis" | "loc_filmography" | "ucla_guide" | "credit" | "award" | "criticism" | "news";
   ref: string;
   quote: string | null;
+  /** The id the blurb cites inline ("s1", "d0"). Absent on rows written before it was stored. */
+  id?: string;
+  /** The exact text the blurb model was given for this source. Absent on older rows -
+   * see resolveBlurbSources, which rebuilds both. */
+  text?: string;
 }
 
 /**

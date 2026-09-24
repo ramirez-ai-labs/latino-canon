@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import {
   MODEL_TAG_DISPLAY_THRESHOLD,
+  resolveBlurbSources,
+  type BlurbSource,
   type ContentAdvisory,
   type ContextNote,
   type ContextNoteCategory,
@@ -187,7 +189,9 @@ titlesRoute.get("/:id", async (c) => {
     blurb: blurb
       ? {
           text: blurb.text,
-          sources: JSON.parse(blurb.sources),
+          // Every source gets the id the blurb cites and the text the model saw -
+          // rebuilt for rows stored before ingest kept them (see resolveBlurbSources).
+          sources: resolveBlurbSources(JSON.parse(blurb.sources) as BlurbSource[], title),
           model: blurb.model,
           approved: Boolean(blurb.approved),
         }

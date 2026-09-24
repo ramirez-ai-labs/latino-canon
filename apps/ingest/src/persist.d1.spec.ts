@@ -208,6 +208,37 @@ describe("writeBlurb", () => {
   });
 });
 
+describe("writeBlurb source format", () => {
+  const text = "A gardener works for wealthy landowners in East L.A. [s1]. It is directed by Chris Weitz [d0].";
+  const legacySources = [
+    { kind: "synopsis" as const, ref: "blurb-format-2020", quote: null },
+    { kind: "credit" as const, ref: "Chris Weitz", quote: null },
+  ];
+  const newSources = [
+    { kind: "synopsis" as const, ref: "blurb-format-2020", quote: null, id: "s1", text: "A gardener in East L.A." },
+    { kind: "credit" as const, ref: "Chris Weitz", quote: null, id: "d0", text: "Directed by Chris Weitz." },
+  ];
+
+  it("stores each source's id and text", async () => {
+    await persistTitle(env, makeTitle({ id: "blurb-format-2020" }));
+    await writeBlurb(env, "blurb-format-2020", { result: { text, claims: [] }, sources: newSources, model: "m" });
+    const row = await env.DB.prepare("SELECT sources FROM blurbs WHERE title_id = ?").bind("blurb-format-2020").first<{ sources: string }>();
+    expect(JSON.parse(row!.sources)).toEqual(newSources);
+  });
+
+  it("re-ingesting the same blurb in the new source format keeps an existing approval", async () => {
+    await persistTitle(env, makeTitle({ id: "blurb-format-2020", tmdbId: 77 }));
+    await env.DB.prepare(
+      "INSERT INTO blurbs (title_id, text, sources, model, approved) VALUES (?1, ?2, ?3, 'm', 1)",
+    )
+      .bind("blurb-format-2020", text, JSON.stringify(legacySources))
+      .run();
+    await writeBlurb(env, "blurb-format-2020", { result: { text, claims: [] }, sources: newSources, model: "m" });
+    const row = await env.DB.prepare("SELECT approved FROM blurbs WHERE title_id = ?").bind("blurb-format-2020").first<{ approved: number }>();
+    expect(row?.approved).toBe(1);
+  });
+});
+
 describe("writeAliases", () => {
   it("indexes an alias into titles_fts so it becomes lexically searchable", async () => {
     await persistTitle(env, makeTitle({ id: "alias-index-2020", title: "Original Title Here" }));

@@ -259,11 +259,19 @@ export async function writeBlurb(env: Env, titleId: string, blurb: BlurbGroundin
        sources=excluded.sources,
        model=excluded.model,
        approved = CASE
-         WHEN blurbs.text = excluded.text AND blurbs.sources = excluded.sources THEN blurbs.approved
+         WHEN blurbs.text = excluded.text AND blurbs.sources IN (excluded.sources, ?5) THEN blurbs.approved
          ELSE 0
        END`,
   )
-    .bind(titleId, blurb.result.text, JSON.stringify(blurb.sources), blurb.model)
+    // ?5: the same sources in the pre-id/text format ({kind, ref, quote}) - storing id +
+    // text changed the serialization, not the grounding, so it mustn't reset approval.
+    .bind(
+      titleId,
+      blurb.result.text,
+      JSON.stringify(blurb.sources),
+      blurb.model,
+      JSON.stringify(blurb.sources.map(({ kind, ref, quote }) => ({ kind, ref, quote }))),
+    )
     .run();
 }
 

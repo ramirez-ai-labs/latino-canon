@@ -131,7 +131,9 @@ export async function blurbForIngest(
   void classification;
   return {
     result,
-    sources: sources.map(({ id: _id, kind, ref, quote }) => ({ kind, ref, quote })),
+    // id + text are what the blurb cites and what the model saw - both needed for the
+    // groundedness judge and for rendering citations (see core resolveBlurbSources).
+    sources: sources.map(({ id, kind, ref, quote, text }) => ({ kind, ref, quote, id, text })),
     model: MODELS.blurb,
   };
 }
