@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isYearMismatch, jobIdFor, needsHumanReview } from "./workflow-rules.js";
+import { confidentThemes, isYearMismatch, jobIdFor, needsHumanReview } from "./workflow-rules.js";
 
 describe("jobIdFor", () => {
   it("slugifies a title ref into a stable job id", () => {
@@ -59,5 +59,21 @@ describe("needsHumanReview", () => {
     expect(needsHumanReview([], [{ type: "starring", confidence: 0.1 }, { type: "led_by", confidence: 0.9 }])).toBe(
       false,
     );
+  });
+});
+
+describe("confidentThemes", () => {
+  it("keeps only themes at or above the display threshold", () => {
+    expect(
+      confidentThemes([
+        { theme: "family", confidence: 0.9 },
+        { theme: "faith", confidence: 0.3 },
+        { theme: "music", confidence: 0.6 },
+      ]),
+    ).toEqual(["family", "music"]);
+  });
+
+  it("treats a missing themes array as none", () => {
+    expect(confidentThemes(undefined)).toEqual([]);
   });
 });

@@ -13,7 +13,8 @@
     "seed:only": "tsx scripts/seed-only.ts",
     "backfill:gender": "tsx scripts/backfill-gender.ts",
     "backfill:genres": "tsx scripts/backfill-genres.ts",
-    "backfill:content-advisory": "tsx scripts/backfill-content-advisory.ts"
+    "backfill:content-advisory": "tsx scripts/backfill-content-advisory.ts",
+    "rebuild:vectors": "tsx scripts/rebuild-vectors.ts"
   },
   "dependencies": {
     "@latino-canon/core": "workspace:*",

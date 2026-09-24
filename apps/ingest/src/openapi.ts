@@ -276,6 +276,49 @@ export const ingestOpenApiSpec = {
         },
       },
     },
+    "/rebuild-vectors": {
+      post: {
+        summary: "Re-embed a page of titles into Vectorize",
+        description:
+          "Re-embeds titles from D1 with the same text and metadata as ingest and upserts them to Vectorize. Call repeatedly with the returned nextOffset until it is null.",
+        tags: ["Admin"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  offset: { type: "number", default: 0 },
+                  limit: { type: "number", default: 50, maximum: 100 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Page result",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    embedded: { type: "number" },
+                    total: { type: "number" },
+                    nextOffset: { type: "number", nullable: true },
+                  },
+                },
+              },
+            },
+          },
+          "401": {
+            description: "Unauthorized",
+          },
+        },
+      },
+    },
     "/backfill-genres": {
       post: {
         summary: "Backfill title genres from TMDB",
