@@ -59,9 +59,6 @@ router.post("/rebuild-vectorize", async (c) => {
 
       totalEmbedded += rows.length;
       offset += pageSize;
-
-      // Delay to avoid rate limiting
-      await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
     return c.json({ embedded: totalEmbedded, total, status: "success" });
