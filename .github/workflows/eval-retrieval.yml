@@ -1,0 +1,94 @@
+name: Run retrieval eval
+
+# Post-deploy regression check for search. Runs the golden query set against the live api
+# after every successful "Deploy api Worker" on main, and weekly. Fails (red run, visible on
+# the commit) when hybrid recall@5 drops more than MAX_DROP against the last passing run on
+# the same golden set - see packages/eval/src/gate.ts.
+#
+# This checks a deploy after it's live; it can't block it. Scoring unmerged code needs a
+# preview of the api with production data, which isn't set up yet. Search results cached by
+# the previous deploy are never graded: search.ts keys its cache by deployed version id.
+#
+# MAX_DROP 0.03 is ~2 of 77 queries falling out of the top 5 (one query = 0.013). Back-to-back
+# runs can't measure noise - both the KV result cache and AI Gateway's cache of the LLM
+# rewrite make them identical - so the run history is how noise gets measured. Revisit
+# once there are a few weeks of it.
+#
+# Budget (conservative by design - the account's 10k neurons/day also cover live search
+# and ingest): the post-deploy run is hybrid only, ~100-150 neurons uncached (measured
+# 2026-09-24 via Workers AI analytics); the weekly run covers all three modes, ~300-400.
+# No daily schedule: every api deploy already triggers a run, and the weekly run catches
+# slower drift from data changes (ingested titles, backfills) between deploys.
+
+on:
+  workflow_run:
+    workflows: ["Deploy api Worker"]
+    types: [completed]
+    branches: [main]
+  schedule:
+    - cron: "30 9 * * 0" # Sundays 09:30 UTC, after the ingest cron (08:00 UTC)
+  workflow_dispatch:
+    inputs:
+      modes:
+        description: "Comma-separated search modes"
+        default: "hybrid"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eval-retrieval
+  cancel-in-progress: false
+
+jobs:
+  retrieval:
+    # Only after a deploy that actually succeeded.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      API_URL: https://latino-canon-api.ai-builders-studio-latinx.workers.dev
+      MODES: ${{ github.event_name == 'schedule' && 'lexical,semantic,hybrid' || inputs.modes || 'hybrid' }}
+      RECORD: "1"
+      GATE: "1"
+      MAX_DROP: "0.03"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.28.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run retrieval eval (${{ env.MODES }})
+        id: eval
+        run: pnpm --filter @latino-canon/eval run retrieval
+
+      # Recorded even when the gate fails, so the history shows the regression. A failed run
+      # is never used as the next baseline (lastComparableRecall skips it).
+      - name: Record eval run in D1
+        if: always() && hashFiles('packages/eval/.eval-out/insert.sql') != ''
+        run: npx wrangler d1 execute latino-canon --remote --file=packages/eval/.eval-out/insert.sql
+
+      - name: Upload eval output
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: retrieval-eval-output
+          path: packages/eval/.eval-out/
+          if-no-files-found: warn
+          include-hidden-files: true

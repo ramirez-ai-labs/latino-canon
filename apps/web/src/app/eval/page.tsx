@@ -5,6 +5,12 @@ import { Badge } from "@/components/ui/Badge";
 export const metadata = { title: "Eval" };
 export const dynamic = "force-dynamic";
 
+interface RetrievalDetails {
+  goldenSetHash?: string;
+  gate?: { pass: boolean; baseline: number | null; current: number; delta: number | null } | null;
+  misses?: { id: string; category: string; got: string[] }[];
+}
+
 interface GroundednessDetails {
   worst?: { titleId: string; score: number; unsupported: string[] }[];
   failures?: { titleId: string; error: string }[];
@@ -32,18 +38,25 @@ function isInvalid(r: EvalRun): boolean {
 
 export default async function EvalPage() {
   const { runs } = await listEvalRuns(20);
-  const latest = runs.find((r) => !isInvalid(r));
+  const latest = runs.find((r) => r.evalType === "groundedness" && !isInvalid(r));
   const details = latest?.details as GroundednessDetails | null;
+  const retrieval = runs.find((r) => r.evalType === "retrieval");
+  const retrievalDetails = retrieval?.details as RetrievalDetails | null;
+  const categories = retrieval
+    ? Object.entries(retrieval.metrics)
+        .filter(([k]) => k.startsWith("hybrid.recall@5."))
+        .map(([k, v]) => ({ category: k.slice("hybrid.recall@5.".length), recall5: v, mrr: retrieval.metrics[`hybrid.mrr.${k.slice("hybrid.recall@5.".length)}`] }))
+    : [];
   const hasInvalid = runs.some(isInvalid);
 
   return (
     <article className="max-w-3xl">
       <h1 className="mb-1 text-2xl font-bold tracking-tight">Eval History</h1>
       <p className="mb-6 text-sm text-muted">
-        Results from <code className="rounded bg-surface-raised px-1.5 py-0.5">packages/eval</code>&apos;s groundedness judge. This history only
-        grows when someone manually triggers{" "}
-        <code className="rounded bg-surface-raised px-1.5 py-0.5">.github/workflows/eval-groundedness.yml</code> from GitHub Actions — it does
-        not run automatically on every PR or commit.
+        Retrieval runs (recall@k over the golden query set) run automatically after every api deploy and
+        nightly, and flag a deploy that drops hybrid recall@5 by more than 0.03. Groundedness runs (an LLM
+        judge checking each blurb against its sources) are triggered manually from{" "}
+        <code className="rounded bg-surface-raised px-1.5 py-0.5">.github/workflows/eval-groundedness.yml</code>.
       </p>
 
       {runs.length === 0 ? (
@@ -59,7 +72,9 @@ export default async function EvalPage() {
                   <th className="px-4 py-2.5 font-medium">Judge</th>
                   <th className="px-4 py-2.5 font-medium">n</th>
                   <th className="px-4 py-2.5 font-medium">Failed</th>
-                  <th className="px-4 py-2.5 font-medium">Mean score</th>
+                  <th className="px-4 py-2.5 font-medium" title="Retrieval: hybrid recall@5. Groundedness: mean share of supported claims.">
+                    Score
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -85,6 +100,43 @@ export default async function EvalPage() {
               </tbody>
             </table>
           </div>
+
+          {retrieval && categories.length > 0 && (
+            <section className="mb-10">
+              <h2 className="mb-1.5 text-lg font-semibold">Search quality by query type (latest retrieval run)</h2>
+              <p className="mb-3 text-sm text-muted">
+                Hybrid search, recall@5: the share of each query&apos;s correct titles found in the top 5.
+                {retrievalDetails?.gate?.baseline != null && (
+                  <>
+                    {" "}
+                    Deploy check: <strong className={retrievalDetails.gate.pass ? "text-text" : "text-accent"}>{retrievalDetails.gate.pass ? "passed" : "failed"}</strong>{" "}
+                    ({retrievalDetails.gate.delta! >= 0 ? "+" : ""}
+                    {retrievalDetails.gate.delta!.toFixed(3)} vs the last passing run).
+                  </>
+                )}
+              </p>
+              <div className="overflow-hidden rounded-xl border border-border">
+                <table className="w-full border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-surface text-left text-muted">
+                      <th className="px-4 py-2.5 font-medium">Query type</th>
+                      <th className="px-4 py-2.5 font-medium">recall@5</th>
+                      <th className="px-4 py-2.5 font-medium">MRR</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {categories.map((c) => (
+                      <tr key={c.category} className="border-b border-border last:border-0 odd:bg-surface/40">
+                        <td className="px-4 py-2.5">{c.category}</td>
+                        <td className="px-4 py-2.5 font-medium">{c.recall5.toFixed(3)}</td>
+                        <td className="px-4 py-2.5">{c.mrr?.toFixed(3) ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
 
           {hasInvalid && (
             <p className="mb-8 rounded-lg bg-surface px-4 py-3 text-sm text-muted">

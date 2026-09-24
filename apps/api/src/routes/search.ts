@@ -49,9 +49,11 @@ searchRoute.get("/", async (c) => {
   // page happened to be cached last (page 1's data, or page 4's, depending on timing),
   // not its own. Found live: pagination let you click "Next" well past where the real
   // title count justified it, and pages didn't reliably show their own titles.
-  // v2: inferred filters became ranking boosts for content queries (run-search.ts) - a new
-  // prefix so results cached under the old strict semantics are never served.
-  const cacheKey = `search:v2:${input.mode}:${effectiveQuery}:${JSON.stringify(filters)}:${input.limit}:${input.offset}`;
+  // Keyed by deployed version: a deploy that changes ranking must never serve results the
+  // previous code computed. This replaced a hand-bumped "v2" prefix and the manual
+  // POST /rebuild-search-cache after each deploy (index rebuilds still need that one).
+  const version = c.env.CF_VERSION_METADATA?.id ?? "local";
+  const cacheKey = `search:${version}:${input.mode}:${effectiveQuery}:${JSON.stringify(filters)}:${input.limit}:${input.offset}`;
   const cached = await c.env.CACHE.get<SearchResponse>(cacheKey, "json");
   if (cached) return c.json({ ...cached, tookMs: Date.now() - started });
 
