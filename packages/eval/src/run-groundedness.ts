@@ -14,7 +14,7 @@
  * no closed-model provider in this project.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
-import { coerceLlmText, extractJson, GROUNDEDNESS_JUDGE_SYSTEM, MODELS } from "@latino-canon/core";
+import { coerceLlmText, extractJson, GROUNDEDNESS_JUDGE_SYSTEM, GROUNDEDNESS_JUDGE_VERSION, MODELS } from "@latino-canon/core";
 import { writeEvalRunSql } from "./record-run.js";
 
 const API_URL = process.env.API_URL ?? "http://localhost:8787";
@@ -39,6 +39,9 @@ async function judge(blurb: string, sources: { id: string; text: string }[]): Pr
       authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
     },
     body: JSON.stringify({
+      // Deterministic judge: without it, identical blurbs + sources scored 0.525 on one run
+      // and 0.431 two days later - run-to-run noise, not a change in the blurbs.
+      temperature: 0,
       messages: [
         { role: "system", content: GROUNDEDNESS_JUDGE_SYSTEM },
         { role: "user", content: user },
@@ -81,10 +84,14 @@ async function main() {
   const failures: { titleId: string; error: string }[] = [];
   for (const id of titleIds) {
     const t = (await fetch(`${API_URL}/titles/${id}`).then((r) => r.json())) as {
-      blurb?: { text: string; sources: { id?: string; ref: string; quote: string | null }[] };
+      blurb?: { text: string; sources: { id: string; text: string }[] };
     };
     if (!t.blurb) continue;
-    const sources = t.blurb.sources.map((s, i) => ({ id: s.id ?? `s${i}`, text: s.quote ?? s.ref }));
+    // GET /titles/:id resolves each source to the id the blurb cites and the text the
+    // blurb model saw (core resolveBlurbSources). This used to send `quote ?? ref` - with
+    // quote always null, that was a title slug and a director's name, never the synopsis,
+    // so every run before GROUNDEDNESS_JUDGE_VERSION 2 scored blurbs against evidence the judge never had.
+    const sources = t.blurb.sources.map((s) => ({ id: s.id, text: s.text }));
     try {
       const j = await judge(t.blurb.text, sources);
       results.push({ titleId: id, ...j });
@@ -116,7 +123,7 @@ async function main() {
     n: results.length,
     failed: failures.length,
     meanScore: results.length > 0 ? mean : null,
-    metrics: { mean },
+    metrics: { mean, judgeVersion: GROUNDEDNESS_JUDGE_VERSION },
     details: { worst, failures },
   });
 }

@@ -4,8 +4,13 @@ import { SearchBar } from "@/components/SearchBar";
 import { TitleCard } from "@/components/TitleCard";
 import { Rail, RailItem } from "@/components/ui/Rail";
 import { getCollection, listCollections, listRecentTitles } from "@/lib/api";
-import { MODEL_TAG_DISPLAY_THRESHOLD, primaryCreativeLead } from "@latino-canon/core";
+import { MODEL_TAG_DISPLAY_THRESHOLD, primaryCreativeLead, stripCitations } from "@latino-canon/core";
 import type { TitleCard as TitleCardType } from "@latino-canon/core";
+
+/** Same 140-char cut as the api's card teaser (db/cards.ts). */
+function teaser(text: string): string {
+  return text.length <= 140 ? text : `${text.substring(0, 140)}…`;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +37,7 @@ function titleToCard(title: any): TitleCardType {
       .filter((c: any) => c.role === "cast")
       .sort((a: any, b: any) => (a.order ?? 999) - (b.order ?? 999))[0]?.person.gender ?? null,
     posterKey: title.posterKey,
-    blurbTeaser: title.blurb?.text ? title.blurb.text.substring(0, 140) + (title.blurb.text.length > 140 ? "…" : "") : null,
+    blurbTeaser: title.blurb?.text ? teaser(stripCitations(title.blurb.text)) : null,
     inclusionTypes: inclusionTypesWithConfidence.map((t: any) => t.slug),
     inclusionTypesWithConfidence,
     themes: title.tags

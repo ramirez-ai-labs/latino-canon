@@ -1,4 +1,4 @@
-import type { EvalRun } from "@latino-canon/core";
+import { GROUNDEDNESS_JUDGE_VERSION, type EvalRun } from "@latino-canon/core";
 import { listEvalRuns } from "@/lib/api";
 import { Badge } from "@/components/ui/Badge";
 
@@ -17,10 +17,20 @@ function formatDate(iso: string): string {
   });
 }
 
+/**
+ * Groundedness runs recorded before judge version 2 are kept but labeled invalid: that
+ * judge was handed each source's `ref` (a title slug, a director's name) instead of its
+ * text, so it never saw the synopsis it was meant to check claims against.
+ */
+function isInvalid(r: EvalRun): boolean {
+  return r.evalType === "groundedness" && (r.metrics.judgeVersion ?? 0) < GROUNDEDNESS_JUDGE_VERSION;
+}
+
 export default async function EvalPage() {
   const { runs } = await listEvalRuns(20);
-  const latest = runs[0];
+  const latest = runs.find((r) => !isInvalid(r));
   const details = latest?.details as GroundednessDetails | null;
+  const hasInvalid = runs.some(isInvalid);
 
   return (
     <article className="max-w-3xl">
@@ -54,16 +64,35 @@ export default async function EvalPage() {
                     <td className="px-4 py-2.5">{r.evalType}</td>
                     <td className="px-4 py-2.5">{r.n}</td>
                     <td className={`px-4 py-2.5 ${r.failed > 0 ? "text-accent" : ""}`}>{r.failed}</td>
-                    <td className="px-4 py-2.5 font-medium">{r.meanScore?.toFixed(3) ?? "—"}</td>
+                    <td className="px-4 py-2.5 font-medium">
+                      {isInvalid(r) ? (
+                        <span className="flex items-center gap-2">
+                          <span className="text-muted line-through">{r.meanScore?.toFixed(3) ?? "—"}</span>
+                          <Badge title="Judge never saw the source text - see note below">invalid</Badge>
+                        </span>
+                      ) : (
+                        (r.meanScore?.toFixed(3) ?? "—")
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
+          {hasInvalid && (
+            <p className="mb-8 rounded-lg bg-surface px-4 py-3 text-sm text-muted">
+              <strong className="text-text">Runs marked invalid are kept for the record, not deleted.</strong>{" "}
+              Their judge was given each source&apos;s reference (a title slug and a director&apos;s name) instead
+              of its text, so it never saw the synopsis the blurbs were written from, and it ran at a non-zero
+              temperature. Their scores don&apos;t measure groundedness.
+              {!latest && " A valid run will appear here after the next groundedness workflow run."}
+            </p>
+          )}
+
           {latest && details?.worst && details.worst.length > 0 && (
             <>
-              <h2 className="mb-1.5 text-lg font-semibold">Lowest-scoring titles (latest run)</h2>
+              <h2 className="mb-1.5 text-lg font-semibold">Lowest-scoring titles (latest valid run)</h2>
               <p className="mb-3 text-sm text-muted">
                 A low score usually flags a claim the judge couldn&apos;t match to a cited
                 source — not necessarily a factual error. See{" "}
@@ -91,7 +120,7 @@ export default async function EvalPage() {
 
           {latest && details?.failures && details.failures.length > 0 && (
             <>
-              <h2 className="mb-2 mt-8 text-lg font-semibold">Failed judge calls (latest run)</h2>
+              <h2 className="mb-2 mt-8 text-lg font-semibold">Failed judge calls (latest valid run)</h2>
               <ul className="grid gap-1.5">
                 {details.failures.map((f) => (
                   <li key={f.titleId} className="text-sm">

@@ -128,6 +128,13 @@ export function blurbUser(sources: { id: string; kind: string; text: string }[])
   ].join("\n");
 }
 
+/**
+ * Bump when a judge change makes new groundedness scores incomparable with old ones; the
+ * Eval page labels runs recorded below it as invalid. 2 = the judge sees each source's
+ * real text (it was given a title slug + director name before) at temperature 0.
+ */
+export const GROUNDEDNESS_JUDGE_VERSION = 2;
+
 /** LLM-as-judge for the eval harness. */
 export const GROUNDEDNESS_JUDGE_SYSTEM = `You score whether a blurb is fully supported by its sources.
 Return JSON {"score": number (0-1), "unsupported": string[]} where "unsupported" lists any

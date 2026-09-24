@@ -1,5 +1,6 @@
 import {
   MODEL_TAG_DISPLAY_THRESHOLD,
+  stripCitations,
   type ContentAdvisory,
   type InclusionType,
   type PersonGender,
@@ -97,7 +98,7 @@ export async function hydrateCards(env: Env, hits: RankedHit[]): Promise<TitleCa
         leadActor: r.lead_actor,
         leadActorGender: r.lead_actor_gender,
         posterKey: r.poster_key,
-        blurbTeaser: r.blurb ? truncate(r.blurb, 140) : null,
+        blurbTeaser: r.blurb ? truncate(stripCitations(r.blurb), 140) : null,
         inclusionTypes: inclusionTagsWithConf.map((t) => t.slug) as InclusionType[],
         inclusionTypesWithConfidence: inclusionTagsWithConf,
         themes: parseTags(r.themes) as Theme[],

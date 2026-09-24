@@ -102,6 +102,11 @@ describe("GET /titles/:id", () => {
     ]);
     expect(body.blurb?.text).toBe("A Latino-led superhero story.");
     expect(body.blurb?.approved).toBe(true);
+    // Stored in the pre-id/text format: the synopsis source comes back with the real
+    // synopsis text, not its ref (a title slug) - what the groundedness judge scores against.
+    expect(body.blurb?.sources).toEqual([
+      { kind: "synopsis", ref: "blue-beetle-2023", quote: null, id: "s1", text: "Jaime Reyes finds an alien relic." },
+    ]);
   });
 
   it("returns an unapproved blurb (auto-approved)", async () => {
