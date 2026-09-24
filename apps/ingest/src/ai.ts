@@ -47,12 +47,19 @@ function parseLlm<T>(schema: { parse: (v: unknown) => T }, value: unknown, conte
  */
 
 export async function embedText(env: Env, text: string): Promise<number[]> {
+  const [v] = await embedTexts(env, [text]);
+  return v!;
+}
+
+/** One Workers AI call for the whole batch - rebuildVectors pages through the catalog with this. */
+export async function embedTexts(env: Env, texts: string[]): Promise<number[][]> {
   const res = (await env.AI.run(EMBEDDING_MODEL as Parameters<Ai["run"]>[0], {
-    text: [text],
+    text: texts,
   } as Parameters<Ai["run"]>[1])) as { data: number[][] };
-  const v = res.data[0];
-  if (!v) throw new Error("embedText: empty embedding");
-  return v;
+  if (res.data.length !== texts.length || res.data.some((v) => !v?.length)) {
+    throw new Error(`embedTexts: expected ${texts.length} embeddings, got ${res.data.length}`);
+  }
+  return res.data;
 }
 
 export async function classifyForIngest(env: Env, t: Title): Promise<ClassificationResult> {

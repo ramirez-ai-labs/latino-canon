@@ -11,19 +11,3 @@ export async function embed(ai: Ai, texts: string[]): Promise<number[][]> {
   return res.data;
 }
 
-/** Canonical text used to embed a title. Keep in sync with apps/ingest. */
-export function titleEmbeddingText(t: {
-  title: string;
-  originalTitle: string | null;
-  synopsis: string | null;
-  themes: string[];
-}): string {
-  return [
-    t.title,
-    t.originalTitle && t.originalTitle !== t.title ? t.originalTitle : null,
-    t.synopsis,
-    t.themes.length ? `Themes: ${t.themes.join(", ")}` : null,
-  ]
-    .filter(Boolean)
-    .join("\n");
-}

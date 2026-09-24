@@ -1,7 +1,8 @@
 import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import type { Title } from "@latino-canon/core";
-import { persistTitle, setJob, writeAliases, writeBlurb, writeContentAdvisory, writeTags } from "./persist.js";
+import type { Env } from "./bindings.js";
+import { persistTitle, rebuildVectors, setJob, writeAliases, writeBlurb, writeContentAdvisory, writeTags } from "./persist.js";
 
 function makeTitle(overrides: Partial<Title> = {}): Title {
   return {
@@ -318,5 +319,119 @@ describe("writeContentAdvisory", () => {
       .bind("advisory-no-tags-2020")
       .all();
     expect(results).toEqual([]);
+  });
+});
+
+// titles_fts regressions (migration 0022): the old contentless table kept a title's
+// previous text searchable after every re-write, and never filled the tags column.
+const ftsRowCount = async (id: string) =>
+  (await env.DB.prepare("SELECT COUNT(*) AS n FROM titles_fts WHERE rowid = (SELECT rowid FROM titles WHERE id = ?)")
+    .bind(id)
+    .first<{ n: number }>())?.n;
+const ftsMatches = async (id: string, match: string) =>
+  Boolean(
+    await env.DB.prepare(
+      "SELECT 1 FROM titles_fts WHERE titles_fts MATCH ?2 AND rowid = (SELECT rowid FROM titles WHERE id = ?1)",
+    )
+      .bind(id, match)
+      .first(),
+  );
+
+describe("titles_fts index integrity", () => {
+  it("a re-persist replaces the old synopsis instead of keeping it searchable", async () => {
+    await persistTitle(env, makeTitle({ id: "fts-stale-2020", synopsis: "A story about dogs." }));
+    await persistTitle(env, makeTitle({ id: "fts-stale-2020", synopsis: "A story about cats." }));
+    expect(await ftsMatches("fts-stale-2020", "cats")).toBe(true);
+    expect(await ftsMatches("fts-stale-2020", "dogs")).toBe(false);
+    expect(await ftsRowCount("fts-stale-2020")).toBe(1);
+  });
+
+  it("writeAliases keeps exactly one index row per title", async () => {
+    await persistTitle(env, makeTitle({ id: "fts-alias-dup-2020" }));
+    await writeAliases(env, "fts-alias-dup-2020", [{ alias: "Old Alias", kind: "alt_title" }]);
+    await writeAliases(env, "fts-alias-dup-2020", [{ alias: "New Alias", kind: "alt_title" }]);
+    expect(await ftsRowCount("fts-alias-dup-2020")).toBe(1);
+    expect(await ftsMatches("fts-alias-dup-2020", "old")).toBe(false);
+  });
+
+  it("indexes genres and confident tag labels, but not a low-confidence model theme", async () => {
+    await persistTitle(env, makeTitle({ id: "fts-tags-2020", genres: ["Animation", "Family"] }));
+    await writeTags(env, "fts-tags-2020", {
+      classification: {
+        inclusionTypes: [{ type: "led_by", confidence: 0.9 }],
+        themes: [
+          { theme: "music", confidence: 0.9 },
+          { theme: "faith", confidence: 0.2 },
+        ],
+      },
+      seedInclusionTypes: [],
+    });
+    expect(await ftsMatches("fts-tags-2020", "tags:animation")).toBe(true);
+    expect(await ftsMatches("fts-tags-2020", "tags:music")).toBe(true);
+    expect(await ftsMatches("fts-tags-2020", "tags:faith")).toBe(false);
+  });
+});
+
+describe("rebuildVectors", () => {
+  function fakeEnv() {
+    const embedded: string[][] = [];
+    const upserted: { id: string; metadata: unknown }[] = [];
+    const fake = {
+      ...env,
+      AI: {
+        run: (_model: string, input: { text: string[] }) => {
+          embedded.push(input.text);
+          return Promise.resolve({ data: input.text.map(() => [0.1, 0.2]) });
+        },
+      },
+      VECTORIZE: {
+        upsert: (vectors: { id: string; metadata: unknown }[]) => {
+          upserted.push(...vectors.map(({ id, metadata }) => ({ id, metadata })));
+          return Promise.resolve({ mutationId: "m" });
+        },
+      },
+    } as unknown as Env;
+    return { fake, embedded, upserted };
+  }
+
+  it("writes the kind/decade metadata filter push-down depends on, with genres and only confident themes", async () => {
+    await persistTitle(env, makeTitle({ id: "zz-rebuild-2014", yearStart: 2014, genres: ["Animation"] }));
+    await writeTags(env, "zz-rebuild-2014", {
+      classification: {
+        inclusionTypes: [{ type: "led_by", confidence: 0.9 }],
+        themes: [
+          { theme: "family", confidence: 0.9 },
+          { theme: "faith", confidence: 0.2 },
+        ],
+      },
+      seedInclusionTypes: [],
+    });
+    const total = (await env.DB.prepare("SELECT COUNT(*) AS n FROM titles").first<{ n: number }>())!.n;
+    const { fake, embedded, upserted } = fakeEnv();
+
+    // "zz-" sorts last, so it's the final row of the id-ordered catalog.
+    const page = await rebuildVectors(fake, total - 1, 50);
+
+    expect(page).toEqual({ embedded: 1, total, nextOffset: null });
+    expect(upserted).toEqual([{ id: "zz-rebuild-2014", metadata: { kind: "film", decade: 2010 } }]);
+    expect(embedded[0]![0]).toContain("Genres: Animation");
+    expect(embedded[0]![0]).toContain("Themes: Family");
+    expect(embedded[0]![0]).not.toContain("Faith");
+  });
+
+  it("pages with one embed call and one upsert per page", async () => {
+    for (const [i, id] of ["page-a-2020", "page-b-2020", "page-c-2020"].entries()) {
+      await persistTitle(env, makeTitle({ id, tmdbId: 9000 + i }));
+    }
+    const total = (await env.DB.prepare("SELECT COUNT(*) AS n FROM titles").first<{ n: number }>())!.n;
+    const { fake, embedded, upserted } = fakeEnv();
+
+    const first = await rebuildVectors(fake, 0, 2);
+    expect(first).toEqual({ embedded: 2, total, nextOffset: 2 });
+    expect(embedded).toHaveLength(1);
+    expect(upserted).toHaveLength(2);
+
+    const last = await rebuildVectors(fake, total - 1, 2);
+    expect(last.nextOffset).toBeNull();
   });
 });

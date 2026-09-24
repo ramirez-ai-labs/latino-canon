@@ -6,3 +6,4 @@ export * from "./prompts.js";
 export * from "./llm.js";
 export * from "./agents.js";
 export * from "./query-signals.js";
+export * from "./embedding.js";

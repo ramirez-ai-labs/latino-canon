@@ -42,3 +42,12 @@ export function needsHumanReview(
       modelInclusionTypes.every((t) => t.confidence < MODEL_TAG_DISPLAY_THRESHOLD))
   );
 }
+
+/**
+ * Themes the classifier is confident enough about to display - the only ones that go
+ * into the embedding text. Same threshold (and same source of truth) as rebuildVectors'
+ * D1 query and titles_fts's tags column, so a re-embed never disagrees with ingest.
+ */
+export function confidentThemes(themes: { theme: string; confidence: number }[] | undefined): string[] {
+  return (themes ?? []).filter((t) => t.confidence >= MODEL_TAG_DISPLAY_THRESHOLD).map((t) => t.theme);
+}

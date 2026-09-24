@@ -6,7 +6,7 @@ import { normalizeTitle } from "./normalize.js";
 import { persistTitle, upsertVector, writeTags, writeAliases, writeBlurb, writeContentAdvisory, setJob } from "./persist.js";
 import { cachePoster } from "./poster.js";
 import { classifyForIngest, classifyContentAdvisory, blurbForIngest } from "./ai.js";
-import { jobIdFor, isYearMismatch, needsHumanReview } from "./workflow-rules.js";
+import { jobIdFor, isYearMismatch, needsHumanReview, confidentThemes } from "./workflow-rules.js";
 
 /**
  * Durable ingestion pipeline. Each step is independently retried; a failure in
@@ -121,7 +121,7 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
 
       stage = "embed";
       await step.do("embed + upsert vector", { retries: { limit: 3, delay: "10 seconds" } }, () =>
-        upsertVector(this.env, title, (classification.themes ?? []).map((t) => t.theme)),
+        upsertVector(this.env, title, confidentThemes(classification.themes)),
       );
 
       stage = "blurb";

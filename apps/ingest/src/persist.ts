@@ -1,8 +1,15 @@
-import type { ClassificationResult, ContentAdvisory, Title } from "@latino-canon/core";
+import {
+  MODEL_TAG_DISPLAY_THRESHOLD,
+  titleEmbeddingText,
+  titleVectorMetadata,
+  type ClassificationResult,
+  type ContentAdvisory,
+  type Title,
+} from "@latino-canon/core";
+import type { D1PreparedStatement } from "@cloudflare/workers-types";
 import type { BlurbGroundingResult } from "./ai.js";
-import { EMBEDDING_MODEL } from "@latino-canon/core";
 import type { AliasKind, Env } from "./bindings.js";
-import { embedText } from "./ai.js";
+import { embedText, embedTexts } from "./ai.js";
 
 /** Upsert the row + rebuild its FTS entry + upsert people/credits. */
 export async function persistTitle(env: Env, t: Title): Promise<void> {
@@ -18,15 +25,6 @@ export async function persistTitle(env: Env, t: Title): Promise<void> {
       JSON.stringify(t.country), JSON.stringify(t.language), t.synopsis, t.popularity, t.runtime,
       JSON.stringify(t.genres),
     ),
-    // contentless FTS5: delete-then-insert by rowid keyed on titles.rowid. `aliases`
-    // is read live from title_aliases (via subquery, not the in-memory Title) so a
-    // re-persist here never clobbers aliases written separately by writeAliases.
-    env.DB.prepare(
-      `INSERT INTO titles_fts (rowid, title, original_title, synopsis, people, tags, aliases)
-       SELECT rowid, ?2, ?3, ?4, ?5, ?6,
-         COALESCE((SELECT GROUP_CONCAT(a.alias, ', ') FROM title_aliases a WHERE a.title_id = ?1), '')
-       FROM titles WHERE id = ?1`,
-    ).bind(t.id, t.title, t.originalTitle ?? "", t.synopsis ?? "", peopleText(t), ""),
     // re-ingest is idempotent: drop this title's credits and rebuild from the fresh fetch
     env.DB.prepare(`DELETE FROM credits WHERE title_id = ?1`).bind(t.id),
   ];
@@ -51,33 +49,103 @@ export async function persistTitle(env: Env, t: Title): Promise<void> {
     );
   }
 
+  // Last, so the people subquery sees the credits just rewritten above.
+  statements.push(...reindexFts(env, t.id));
   await env.DB.batch(statements);
 }
 
-function peopleText(t: Title): string {
-  return t.credits.map((c) => c.person.name).join(", ");
+/**
+ * Rebuild one title's titles_fts row entirely from D1 - title/synopsis from `titles`,
+ * people from credits, confident tag labels + genres, aliases - so no writer has to
+ * know about the columns it isn't changing. Delete-then-insert, which only works on a
+ * regular (not contentless) FTS5 table; see migration 0022 for why a contentless one
+ * kept stale text searchable. Call it after any write to data the index includes.
+ */
+export function reindexFts(env: Env, titleId: string): D1PreparedStatement[] {
+  return [
+    env.DB.prepare(`DELETE FROM titles_fts WHERE rowid = (SELECT rowid FROM titles WHERE id = ?1)`).bind(titleId),
+    env.DB.prepare(
+      `INSERT INTO titles_fts (rowid, title, original_title, synopsis, people, tags, aliases)
+       SELECT
+         t.rowid, t.title, COALESCE(t.original_title, ''), COALESCE(t.synopsis, ''),
+         COALESCE((SELECT GROUP_CONCAT(p.name, ', ') FROM credits c JOIN people p ON p.id = c.person_id WHERE c.title_id = t.id), ''),
+         TRIM(
+           COALESCE((
+             SELECT GROUP_CONCAT(g.label, ', ') FROM title_tags tt JOIN tags g ON g.id = tt.tag_id
+             WHERE tt.title_id = t.id AND (tt.source != 'model' OR tt.confidence >= ?2)
+           ), '')
+           || ' ' ||
+           COALESCE((SELECT GROUP_CONCAT(value, ', ') FROM json_each(t.genres)), '')
+         ),
+         COALESCE((SELECT GROUP_CONCAT(a.alias, ', ') FROM title_aliases a WHERE a.title_id = t.id), '')
+       FROM titles t WHERE t.id = ?1`,
+    ).bind(titleId, MODEL_TAG_DISPLAY_THRESHOLD),
+  ];
 }
 
-/** Embed with bge-m3 and upsert into Vectorize with metadata for filter push-down. */
+/** Embed with bge-m3 and upsert into Vectorize. `themes` must already be confidence-gated. */
 export async function upsertVector(env: Env, t: Title, themes: string[]): Promise<void> {
-  const text = [t.title, t.originalTitle, t.synopsis, themes.length ? `Themes: ${themes.join(", ")}` : null]
-    .filter(Boolean)
-    .join("\n");
-  const values = await embedText(env, text);
-  await env.VECTORIZE.upsert([
-    {
-      id: t.id,
-      values,
-      metadata: {
-        kind: t.kind,
-        decade: Math.floor(t.yearStart / 10) * 10,
-        countries: t.country,
-        themes,
-        // inclusionTypes filled by writeTags via a follow-up upsert, or recompute here
-      },
-    },
-  ]);
-  void EMBEDDING_MODEL;
+  const values = await embedText(
+    env,
+    titleEmbeddingText({ title: t.title, originalTitle: t.originalTitle, synopsis: t.synopsis, themes, genres: t.genres }),
+  );
+  await env.VECTORIZE.upsert([{ id: t.id, values, metadata: titleVectorMetadata(t) }]);
+}
+
+/**
+ * Re-embed one page of the catalog from D1, the same way ingest does. Paged because the
+ * ingest worker has a per-request subrequest budget: one D1 read, one batched embed call
+ * and one batched upsert per page, not a Vectorize call per title (which is what hit
+ * VECTOR_UPSERT_ERROR 40041 "Too Many Requests" in the old api-side rebuild).
+ */
+export async function rebuildVectors(
+  env: Env,
+  offset: number,
+  limit: number,
+): Promise<{ embedded: number; total: number; nextOffset: number | null }> {
+  const { results: rows } = await env.DB.prepare(
+    `SELECT t.id, t.kind, t.title, t.original_title, t.synopsis, t.year_start, t.genres,
+       (SELECT json_group_array(g.slug) FROM title_tags tt JOIN tags g ON g.id = tt.tag_id
+        WHERE tt.title_id = t.id AND g.kind = 'theme'
+          AND (tt.source != 'model' OR tt.confidence >= ?3)) AS themes
+     FROM titles t ORDER BY t.id LIMIT ?1 OFFSET ?2`,
+  )
+    .bind(limit, offset, MODEL_TAG_DISPLAY_THRESHOLD)
+    .all<{
+      id: string;
+      kind: Title["kind"];
+      title: string;
+      original_title: string | null;
+      synopsis: string | null;
+      year_start: number;
+      genres: string | null;
+      themes: string;
+    }>();
+  const total = (await env.DB.prepare("SELECT COUNT(*) AS n FROM titles").first<{ n: number }>())?.n ?? 0;
+  if (rows.length === 0) return { embedded: 0, total, nextOffset: null };
+
+  const vectors = await embedTexts(
+    env,
+    rows.map((r) =>
+      titleEmbeddingText({
+        title: r.title,
+        originalTitle: r.original_title,
+        synopsis: r.synopsis,
+        themes: JSON.parse(r.themes) as string[],
+        genres: JSON.parse(r.genres ?? "[]") as string[],
+      }),
+    ),
+  );
+  await env.VECTORIZE.upsert(
+    rows.map((r, i) => ({
+      id: r.id,
+      values: vectors[i]!,
+      metadata: titleVectorMetadata({ kind: r.kind, yearStart: r.year_start }),
+    })),
+  );
+
+  const next = offset + rows.length;
+  return { embedded: rows.length, total, nextOffset: next < total ? next : null };
 }
 
 /**
@@ -135,7 +203,9 @@ export async function writeTags(
     if (id) statements.push(upsert(id, t.confidence, "model", "= 'model'"));
   }
 
-  if (statements.length) await env.DB.batch(statements);
+  // Tag labels feed titles_fts's `tags` column.
+  statements.push(...reindexFts(env, titleId));
+  await env.DB.batch(statements);
 }
 
 /**
@@ -161,7 +231,6 @@ export async function writeAliases(
   titleId: string,
   aliases: { alias: string; kind: AliasKind }[],
 ): Promise<void> {
-  const aliasesText = aliases.map((a) => a.alias).join(", ");
   const statements = [
     env.DB.prepare(`DELETE FROM title_aliases WHERE title_id = ?1`).bind(titleId),
     ...aliases.map((a) =>
@@ -171,15 +240,7 @@ export async function writeAliases(
         a.kind,
       ),
     ),
-    env.DB.prepare(
-      `INSERT INTO titles_fts (rowid, title, original_title, synopsis, people, tags, aliases)
-       SELECT
-         t.rowid, t.title, COALESCE(t.original_title, ''), COALESCE(t.synopsis, ''),
-         COALESCE((SELECT GROUP_CONCAT(p.name, ', ') FROM credits c JOIN people p ON p.id = c.person_id WHERE c.title_id = t.id), ''),
-         '',
-         ?2
-       FROM titles t WHERE t.id = ?1`,
-    ).bind(titleId, aliasesText),
+    ...reindexFts(env, titleId),
   ];
   await env.DB.batch(statements);
 }

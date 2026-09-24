@@ -3,7 +3,7 @@ import { retryErroredJobs, refreshPopularity } from "./maintenance.js";
 import { fetchTmdbPersonGender, fetchTmdbDetails } from "./sources/tmdb.js";
 import { slugId } from "./normalize.js";
 import { removeInvalidTmdbEntries } from "./cleanup/index.js";
-import { writeAliases, writeContentAdvisory } from "./persist.js";
+import { rebuildVectors, reindexFts, writeAliases, writeContentAdvisory } from "./persist.js";
 import { classifyContentAdvisory } from "./ai.js";
 import { ingestOpenApiSpec } from "./openapi.js";
 
@@ -19,6 +19,8 @@ export default {
    *   POST /backfill-content-advisory { limit?: number }      → LLM classification (small model)
    *   POST /aliases         { titleId, aliases: {alias, kind}[] } → backfill aliases for a
    *                                                               title already ingested
+   *   POST /rebuild-vectors  { offset?, limit? }              → re-embed a page of titles into
+   *                                                               Vectorize (returns nextOffset)
    *   POST /rebuild-search-cache                              → clear search result cache
    *                                                               (needed after backfill)
    */
@@ -290,7 +292,11 @@ export default {
         try {
           const details = await fetchTmdbDetails(env, t.tmdb_id, t.kind);
           if (details.genres.length > 0) {
-            await env.DB.prepare("UPDATE titles SET genres = ? WHERE id = ?").bind(JSON.stringify(details.genres), t.id).run();
+            // genres feed titles_fts's tags column, so re-index in the same batch.
+            await env.DB.batch([
+              env.DB.prepare("UPDATE titles SET genres = ? WHERE id = ?").bind(JSON.stringify(details.genres), t.id),
+              ...reindexFts(env, t.id),
+            ]);
             updated++;
           }
         } catch (err) {
@@ -327,6 +333,15 @@ export default {
       }
 
       return Response.json({ checked: titles.length, updated, errors });
+    }
+
+    // Re-embeds one page of titles from D1 and upserts them to Vectorize with the same
+    // text + metadata ingest writes (packages/core embedding.ts). Call repeatedly,
+    // passing back nextOffset until it's null - scripts/rebuild-vectors.ts does that.
+    if (req.method === "POST" && url.pathname === "/rebuild-vectors") {
+      const { offset, limit } = (await req.json().catch(() => ({}))) as { offset?: number; limit?: number };
+      const pageSize = Math.min(Math.max(limit ?? 50, 1), 100);
+      return Response.json(await rebuildVectors(env, Math.max(offset ?? 0, 0), pageSize));
     }
 
     if (req.method === "POST" && url.pathname === "/aliases") {
