@@ -106,6 +106,10 @@ Hardens untested critical paths (8 bugs caught in recent phases, all in untested
   mean score 0.486 — only reachable after fixing the blurb-approval-reset bug
   (#138) that had every blurb sitting unapproved; see
   [monitoring.md](operations/monitoring.md#1-blurb-approval-silently-reset-on-every-re-ingest).
+  **Correction (2026-09-24):** that 0.486, and every groundedness run before
+  [#216](https://github.com/ramirez-ai-labs/latino-canon/pull/216), measured nothing: the
+  judge was given each source's `ref` (a title slug, a director's name), never the synopsis
+  text. The first valid baseline is **0.682** (judge v3, see Week 4 below).
 
 - [x] **Add ESLint configuration** — **Done** ([PR #169](https://github.com/ramirez-ai-labs/latino-canon/pull/169)).
   ESLint v9 flat config (`eslint.config.js`) wired across all workspaces with
@@ -129,6 +133,66 @@ Optimizes retrieval quality and tunes thresholds responsibly:
   with Swagger UI and ReDoc integration instructions; spec verified against live
   catalog (219 titles).
 
+### Week 4: Eval integrity & search quality (v1.2.0 → the talk)
+
+**Context (2026-09-23/24):** a review of the ingest → embed → retrieve → rank pipeline
+found that two production search regressions and an invalid groundedness metric had all
+gone unnoticed, because no eval ran automatically and the judge never saw its evidence.
+Order below: fix the measurements first, then what they measure.
+
+- [x] **Search index integrity** — [#213](https://github.com/ramirez-ai-labs/latino-canon/pull/213).
+  An earlier Vectorize rebuild had wiped `kind`/`decade` metadata (every filtered semantic
+  query returned 0); contentless FTS kept stale text searchable; the `tags` column was
+  always empty. One embedding contract in `packages/core`.
+- [x] **Filter-only queries + one-at-a-time relaxation** —
+  [#214](https://github.com/ramirez-ai-labs/latino-canon/pull/214). "animation films" lists
+  all 8 animated titles.
+- [x] **Inferred filters re-rank instead of excluding** —
+  [#215](https://github.com/ramirez-ai-labs/latino-canon/pull/215). Hybrid recall@5 on the
+  original 62 queries 0.680 → 0.806 (baseline before genre inference: 0.832).
+- [x] **1. Blurb integrity** — [#216](https://github.com/ramirez-ai-labs/latino-canon/pull/216).
+  The groundedness judge now scores against real source text; citations render as
+  footnotes; pre-fix runs are labeled invalid (kept) on the Eval page.
+- [x] **1b. Judge accuracy (v3)** — [#217](https://github.com/ramirez-ai-labs/latino-canon/pull/217).
+  70B judge, claim-focused prompt. **The judge is frozen from here** so blurb changes can
+  be measured before/after.
+- [x] **3. Retrieval eval as a deploy check** — [#219](https://github.com/ramirez-ai-labs/latino-canon/pull/219).
+  Runs after every api deploy (hybrid) and weekly (all modes); golden set grown to 77 with
+  per-category scores. Baseline 0.763; Spanish 0.453 vs plot 0.799.
+- [x] **Release v1.2.0.**
+- [ ] **2. Re-baseline v3** — run 1: **0.682** (211/212). Run 2 on a later UTC day; compare
+  means and per-title agreement. Per-title consistency decides whether low-scoring blurbs
+  can be hidden automatically (step 6).
+- [ ] **4. Exact-title match always wins + keyword-only fallback.** A normalized title,
+  original-title or alias match ranks first and skips the LLM rewrite ("y tu mama
+  tambien" currently ranks #2). If the query embedding fails (e.g. neurons exhausted),
+  search falls back to keyword results instead of a 500. No neurons.
+- [ ] **6. Better blurbs.** ~120 of ~140 blurbs the v3 judge flags fail on one "It
+  matters…" sentence no source supports. Add the OMDb awards/ratings the workflow already
+  fetches (and discards) as sources; second sentence factual or source-backed; name the
+  work by its title (the Linha de Passe blurb called the film by its character's name).
+  Validate on a ~30-title sample, then roll out in daily batches. **Decide the approval
+  path first** - `writeBlurb` resets `approved` when text changes and cards show only
+  approved blurbs.
+- [ ] **5. Rewrite rework.** Check the cache before the LLM call (keyed on the raw
+  query); search on the user's original words (the rewrite drops content words like
+  "telenovela"); LLM extracts filters only; lower the `tags` column's BM25 weight.
+  Saves neurons.
+- [ ] **5b. Spanish search.** Spanish recall@5 0.453 vs 0.799 for the same queries in
+  English. Diagnose first: rewrite, embeddings, or the English-only keyword index.
+- [ ] **7. Embedding drift detection.** Store a hash of each title's embedding text; the
+  nightly cron re-embeds titles whose hash changed.
+- [ ] **8. Classifier eval.** Precision/recall per `inclusion_type` against seed labels.
+  Seed tags overwrite the model's own output, so this re-classifies seed titles - on a
+  sample.
+
+**Workers AI budget** (10k neurons/day, resets 00:00 UTC; measured 2026-09-24 via the
+`aiInferenceAdaptiveGroups` analytics dataset). Live search ~0.5–0.7k/day; ingest batch
+days 3–11k (70B); groundedness judge ~2.8k/run; retrieval eval ~0.15k (hybrid) /
+~0.4k (all modes). Rules: at most one 70B job (judge, blurb regeneration) per day and
+never on an ingest day; sample before full runs; no ad-hoc production eval runs; weekly,
+not nightly, schedules.
+
 ---
 
 ## Immediate (do first — small, high-visibility)
@@ -147,6 +211,8 @@ Optimizes retrieval quality and tunes thresholds responsibly:
    Not only works — running it surfaced the blurb-approval-reset bug (#138) and,
    once fixed, produced a real full-catalog score (mean 0.486, n=216, 0 failures),
    now published in README.
+   **Correction (2026-09-24):** the judge did run, but it never saw the source text, so
+   0.486 wasn't a real score - see Week 4 item 1.
 
 ~~D1 migrations were entirely manual.~~ **Done.** Every migration in this project had
 to be applied to production by hand via `wrangler d1 migrations apply --remote`

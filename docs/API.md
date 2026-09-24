@@ -134,14 +134,15 @@ curl "https://latino-canon-api.ai-builders-studio-latinx.workers.dev/collections
 
 ## Retrieval Quality
 
-**Golden Query Set:** 62 curated queries, 219 titles
-- **Recall@5:** 0.832 (83% of correct answers in top 5 results)
-- **Recall@10:** 0.856 (86% in top 10)
-- **MRR (Mean Reciprocal Rank):** 0.789 (average rank position of first correct result)
+**Golden Query Set:** 77 curated queries in five categories, 219 titles (hybrid mode, 2026-09-24)
+- **Recall@5:** 0.763 (76% of correct answers in the top 5 results)
+- **Recall@10:** 0.849 (85% in the top 10)
+- **MRR (Mean Reciprocal Rank):** 0.736 (how high the first correct result ranks, on average)
+- Runs after every api deploy and weekly; per-category scores are on the site's Eval page.
 
-**Blurb Groundedness:** Mean 0.486 (216 titles evaluated)
-- Measures how well AI-generated blurbs match their films' actual plots
-- Honest baseline; foundation for iterative quality improvement
+**Blurb Groundedness:** Mean 0.682 (211 blurbs, judge v3)
+- Share of each blurb's claims supported by the sources it was written from (synopsis, credits)
+- Earlier published scores (e.g. 0.486) were invalid: the judge never saw the source text before #216
 
 ---
 
