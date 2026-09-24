@@ -14,7 +14,13 @@
  * no closed-model provider in this project.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
-import { coerceLlmText, extractJson, GROUNDEDNESS_JUDGE_SYSTEM, GROUNDEDNESS_JUDGE_VERSION, MODELS } from "@latino-canon/core";
+import {
+  coerceLlmText,
+  extractJson,
+  GROUNDEDNESS_JUDGE_MODEL,
+  GROUNDEDNESS_JUDGE_SYSTEM,
+  GROUNDEDNESS_JUDGE_VERSION,
+} from "@latino-canon/core";
 import { writeEvalRunSql } from "./record-run.js";
 
 const API_URL = process.env.API_URL ?? "http://localhost:8787";
@@ -32,7 +38,7 @@ async function judge(blurb: string, sources: { id: string; text: string }[]): Pr
     throw new Error("set CF_ACCOUNT_ID and CLOUDFLARE_API_TOKEN for the judge (Workers AI REST API)");
   }
   const user = `BLURB:\n${blurb}\n\nSOURCES:\n${sources.map((s) => `[${s.id}] ${s.text}`).join("\n")}`;
-  const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/${MODELS.judge}`, {
+  const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/${GROUNDEDNESS_JUDGE_MODEL}`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -42,6 +48,9 @@ async function judge(blurb: string, sources: { id: string; text: string }[]): Pr
       // Deterministic judge: without it, identical blurbs + sources scored 0.525 on one run
       // and 0.431 two days later - run-to-run noise, not a change in the blurbs.
       temperature: 0,
+      // Without it the provider default clipped long "unsupported" lists mid-JSON (No Hands
+      // on the Clock, 2nd v2 run), which then failed to parse and dropped out of the mean.
+      max_tokens: 512,
       messages: [
         { role: "system", content: GROUNDEDNESS_JUDGE_SYSTEM },
         { role: "user", content: user },
@@ -105,7 +114,9 @@ async function main() {
   }
 
   const mean = results.reduce((s, r) => s + r.score, 0) / (results.length || 1);
-  console.log(`groundedness mean: ${mean.toFixed(3)}  (n=${results.length}, failed=${failures.length})`);
+  console.log(
+    `groundedness mean: ${mean.toFixed(3)}  (n=${results.length}, failed=${failures.length}, judge v${GROUNDEDNESS_JUDGE_VERSION} ${GROUNDEDNESS_JUDGE_MODEL})`,
+  );
   for (const f of failures) {
     console.log(`  FAILED  ${f.titleId}  ${f.error.slice(0, 120)}`);
   }
@@ -124,7 +135,7 @@ async function main() {
     failed: failures.length,
     meanScore: results.length > 0 ? mean : null,
     metrics: { mean, judgeVersion: GROUNDEDNESS_JUDGE_VERSION },
-    details: { worst, failures },
+    details: { worst, failures, judgeModel: GROUNDEDNESS_JUDGE_MODEL },
   });
 }
 

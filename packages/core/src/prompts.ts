@@ -129,14 +129,37 @@ export function blurbUser(sources: { id: string; kind: string; text: string }[])
 }
 
 /**
- * Bump when a judge change makes new groundedness scores incomparable with old ones; the
- * Eval page labels runs recorded below it as invalid. 2 = the judge sees each source's
- * real text (it was given a title slug + director name before) at temperature 0.
+ * Bump when a judge change makes new groundedness scores incomparable with old ones. The
+ * Eval page shows each run's version and labels runs below GROUNDEDNESS_MIN_VALID_JUDGE_VERSION
+ * as invalid.
+ *   1 - given each source's ref (a title slug, a director's name), never its text: invalid.
+ *   2 - real source text, temperature 0, 8B model. Mean ~0.77 +/- 0.01 across two runs, but
+ *       it flagged claims its sources state verbatim (Tlayucan, The Secret in Their Eyes)
+ *       and ~15 per-title scores flipped between identical runs.
+ *   3 - 70B model (GROUNDEDNESS_JUDGE_MODEL), prompt that separates blurb claims from
+ *       source text, room for the full JSON reply.
  */
-export const GROUNDEDNESS_JUDGE_VERSION = 2;
+export const GROUNDEDNESS_JUDGE_VERSION = 3;
+export const GROUNDEDNESS_MIN_VALID_JUDGE_VERSION = 2;
+
+/**
+ * Its own constant, not MODELS.judge: that task also drives the curation agent's live
+ * tone scoring, which should stay on the fast 8B model. This one runs offline, a few
+ * times a week. Rough cost: ~5k neurons per 212-blurb run (~350 input / ~70 output
+ * tokens per call) - two runs in one day is about the whole 10k/day free allocation.
+ */
+export const GROUNDEDNESS_JUDGE_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
 /** LLM-as-judge for the eval harness. */
-export const GROUNDEDNESS_JUDGE_SYSTEM = `You score whether a blurb is fully supported by its sources.
-Return JSON {"score": number (0-1), "unsupported": string[]} where "unsupported" lists any
-claim in the blurb not backed by a source. 1.0 = every claim supported.
+export const GROUNDEDNESS_JUDGE_SYSTEM = `You check whether each claim in a BLURB is supported by its SOURCES.
+
+- Only evaluate sentences from the BLURB. Never list text copied from the SOURCES.
+- A claim is supported if a source states it or clearly paraphrases it - wording can differ.
+  "It's directed by X" is supported by a source saying "Directed by X."
+- A claim is unsupported if no source states it: added facts, and judgments of significance
+  or meaning ("It matters because...") that no source makes.
+- Inline markers like [s1] or [d0, d1] are citations, not claims - ignore them.
+
+Return JSON {"score": number (0-1), "unsupported": string[]}: score = the share of the blurb's
+claims that are supported (1.0 = all), "unsupported" = the unsupported claims, quoted from the BLURB.
 Respond with ONLY the JSON object - no explanation, no markdown fences, no other text.`;
