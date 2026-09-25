@@ -288,6 +288,13 @@ exact title, it is accepted whatever its year: the ±2-year guard (`isYearMismat
   day with `pnpm --filter @latino-canon/ingest ingest:refs "<ref>" ...`.
 - [ ] **4c. Delete the 14 wrong films** (the 11 from bad pins, plus `los-olvidados-2014`,
   `manuel-rodriguez-1910`, `a-queda-2025`), their vectors, and clear the search cache.
+- [x] **4e. Daily ingest queue.** Merging a seed PR no longer ingests; the ingest worker's
+  cron takes the next 5 pinned, not-live seed entries per day (`ingest-queue.ts`,
+  `GET /queue`). Two content PRs merged on one UTC day (#240, #242) had doubled that
+  day's 70B spend. Dry run against production: 35 eligible (the 31 re-pinned films plus
+  four more), ~7 days to drain. Migration 0024 backfills three live titles loaded without
+  a `tmdb_id`. *Colada* (2026) is live as a different TMDB film under the same slug; the
+  queue will surface it as held - needs a force re-ingest with the right pin.
 - [ ] **5. Phase 1 tag audit.** All 15 were tagged `breakthrough` without a citation;
   CRITERIA.md requires a documented, citable first.
 - [ ] **6. Phase 2, one PR.** The remaining CSV titles, each run through CRITERIA.md

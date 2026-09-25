@@ -126,6 +126,36 @@ export const ingestOpenApiSpec = {
         },
       },
     },
+    "/queue": {
+      get: {
+        summary: "Preview the daily ingest queue",
+        description:
+          "What the 08:00 UTC cron will ingest next: seed entries that pin a tmdbId no live title has, in seed order, up to INGEST_QUEUE_PER_DAY. `held` lists entries whose current pin a job already tried.",
+        tags: ["Admin"],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "Queue plan",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    next: { type: "array", items: { type: "string" }, description: "Seed refs the next run starts" },
+                    eligible: { type: "number", description: "All eligible entries, including past today's limit" },
+                    held: {
+                      type: "array",
+                      items: { type: "object", properties: { ref: { type: "string" }, reason: { type: "string" } } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "401": { description: "Missing or invalid bearer token" },
+        },
+      },
+    },
     "/jobs": {
       get: {
         summary: "List pending and errored jobs",

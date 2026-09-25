@@ -1,9 +1,8 @@
 name: Deploy ingest Worker
 
-# This deploys the ingest Workflow's *code*. It's separate from
-# ingest-new-titles.yml, which only POSTs newly added canon.seed.json entries to
-# whichever code is already live - it never runs `wrangler deploy`, so a change to
-# apps/ingest's own source never reached production without this.
+# This deploys the ingest Workflow's *code* - including canon.seed.json, which the
+# worker bundles for its daily ingest queue (src/ingest-queue.ts). A merged seed change
+# reaches the queue through this deploy; ingestion itself happens on the next cron.
 
 on:
   workflow_dispatch:

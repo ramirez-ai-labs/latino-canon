@@ -9,6 +9,8 @@ export interface Env {
   CACHE: KVNamespace;
 
   AI_GATEWAY_ID: string;
+  /** Seed titles the daily cron ingests - see ingest-queue.ts. Default 5. */
+  INGEST_QUEUE_PER_DAY?: string;
 
   // secrets
   TMDB_API_KEY: string;
