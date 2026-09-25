@@ -286,8 +286,9 @@ exact title, it is accepted whatever its year: the ±2-year guard (`isYearMismat
   *La vendedora de rosas*), each checked against TMDB credits for the director.
   *Manuel Rodríguez* (1977) moved to `removed`. Re-ingest the 31 not yet live a few per
   day with `pnpm --filter @latino-canon/ingest ingest:refs "<ref>" ...`.
-- [ ] **4c. Delete the 14 wrong films** (the 11 from bad pins, plus `los-olvidados-2014`,
-  `manuel-rodriguez-1910`, `a-queda-2025`), their vectors, and clear the search cache.
+- [x] **4c. Deleted the 14 wrong films** (#245, migration 0023): the 11 from bad pins plus
+  `los-olvidados-2014`, `manuel-rodriguez-1910`, `a-queda-2025`, with their vectors and
+  the search cache. Verified live: all 14 return 404; the catalog is 226 titles.
 - [ ] **5. Phase 1 tag audit.** All 15 were tagged `breakthrough` without a citation;
   CRITERIA.md requires a documented, citable first.
 - [ ] **6. Phase 2, one PR.** The remaining CSV titles, each run through CRITERIA.md
@@ -298,9 +299,8 @@ exact title, it is accepted whatever its year: the ±2-year guard (`isYearMismat
   Cary Joji Fukunaga's); *The Comedians* (Peter Glenville) and *Walker* (Alex Cox) have
   British directors; *Lumumba: Death of a Prophet* is about the Congo.
 
-**Open decision:** the CSV's 7 Haiti titles fall outside the current scope in
-CRITERIA.md (Hispanic heritage broadly, plus Brazil). Either keep them out, or widen the
-scope in CRITERIA.md in its own PR before Phase 2.
+**Decided (2026-09-25): Haiti is out of scope** - recorded in CRITERIA.md's "Scope of
+'Latino'". The CSV's 7 Haiti titles are marked `OUT_OF_SCOPE` and dropped from Phase 2.
 
 ---
 
