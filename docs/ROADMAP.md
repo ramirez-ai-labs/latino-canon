@@ -198,6 +198,68 @@ days 3–11k (70B); groundedness judge ~2.8k/run; retrieval eval ~0.15k (hybrid)
 never on an ingest day; sample before full runs; no ad-hoc production eval runs; weekly,
 not nightly, schedules.
 
+### Week 5: Latin American cinema expansion (in progress)
+
+**Context (2026-09-24):** Phase 1 added 15 titles from Brazil, Mexico, Argentina, Chile
+and Colombia, sourced from `docs/LATIN_AMERICAN_CINEMA_95_TITLES.csv`. A post-merge check
+against the live API found only 8 of the 15 ingested correctly: 2 resolved to the wrong
+film and 5 never ingested. The CSV itself is a generated list and had wrong director
+credits and some non-Latino titles. Order below: stop wrong-film ingests, repair Phase 1,
+then expand.
+
+**Done:**
+- [x] **Phase 1 seed entries** — [#226](https://github.com/ramirez-ai-labs/latino-canon/pull/226)
+  (Brazil), [#227](https://github.com/ramirez-ai-labs/latino-canon/pull/227) (Mexico),
+  [#229](https://github.com/ramirez-ai-labs/latino-canon/pull/229)/[#232](https://github.com/ramirez-ai-labs/latino-canon/pull/232)
+  (Chile), [#231](https://github.com/ramirez-ai-labs/latino-canon/pull/231) (Argentina + Colombia).
+- [x] **The Wolf House director corrected** (Cristóbal León & Joaquín Cociña, not the
+  name the CSV gave) — [#233](https://github.com/ramirez-ai-labs/latino-canon/pull/233).
+- [x] **Duplicate *The Maid* (2009) seed entry removed** — [#234](https://github.com/ramirez-ai-labs/latino-canon/pull/234).
+  `/seed-load` skips existing slug ids, so no duplicate row reached production.
+
+**Phase 1 live status** (checked 2026-09-24 against `/search` and `/titles/:id`):
+
+| Status | Titles |
+|---|---|
+| Correct (8) | Limite, Pixote, The Exterminating Angel, Zama, The Wolf House, The Strategy of the Snail, Birds of Passage, Monos |
+| Wrong film (2) | *Los olvidados* → `los-olvidados-2014` (a 2014 film, not Buñuel's 1950); *Manuel Rodríguez* → `manuel-rodriguez-1910` (a 1910 silent film) |
+| Not ingested (5) | Terra em Transe, Canoa, Rojo amanecer, The Battle of Chile, La vendedora de rosas |
+
+**Root cause:** a seed entry without a `tmdbId` resolves through TMDB title search, which
+requires an exact title match (`resolveTmdbId`, `apps/ingest/src/sources/tmdb.ts`).
+TMDB returns English titles ("Entranced Earth", "The Rose Seller"), so Spanish and
+Portuguese seed titles find no exact match and fail. When a *different* film shares the
+exact title, it is accepted whatever its year: the ±2-year guard (`isYearMismatch`,
+`apps/ingest/src/workflow-rules.ts`) only covers pinned ids.
+
+**Next (in order):**
+- [ ] **1. Year guard on search matches** (bug PR). Reject a search match more than 2
+  years from the seed year, the same bar pinned ids already meet; unit test for the
+  *Los olvidados* case.
+- [ ] **2. Phase 1 data repair.** Pin verified `tmdbId`s for Los olvidados (1950),
+  Terra em Transe, Canoa, Rojo amanecer, The Battle of Chile and La vendedora de rosas.
+  Remove *Manuel Rodríguez* (1977): the film's existence isn't confirmed (CRITERIA rule #6).
+- [ ] **3. Production cleanup** (needs sign-off: changes live data). Delete
+  `los-olvidados-2014` and `manuel-rodriguez-1910`, re-ingest the pinned titles, rebuild
+  Vectorize.
+- [ ] **4. Catalog-wide year audit.** Compare every live title's year with its seed
+  entry. Search surfaced likely older wrong matches
+  (`national-geographic-meister-der-naturfotographie-2009`, `no-hands-on-the-clock-1941`).
+  Report first; fixes go in separate PRs.
+- [ ] **5. Phase 1 tag audit.** All 15 were tagged `breakthrough` without a citation;
+  CRITERIA.md requires a documented, citable first.
+- [ ] **6. Phase 2, one PR.** The remaining CSV titles, each run through CRITERIA.md
+  individually (rule #8: a generated list is a research source, not an import queue):
+  director heritage confirmed from a source, only earned tags, a citable `breakthrough`,
+  and a pinned `tmdbId`. Rows with an unconfirmable ("Unknown") director are dropped.
+  Known CSV errors to correct on the way: *Embrace of the Serpent* is Ciro Guerra's (not
+  Cary Joji Fukunaga's); *The Comedians* (Peter Glenville) and *Walker* (Alex Cox) have
+  British directors; *Lumumba: Death of a Prophet* is about the Congo.
+
+**Open decision:** the CSV's 7 Haiti titles fall outside the current scope in
+CRITERIA.md (Hispanic heritage broadly, plus Brazil). Either keep them out, or widen the
+scope in CRITERIA.md in its own PR before Phase 2.
+
 ---
 
 ## Immediate (do first — small, high-visibility)
