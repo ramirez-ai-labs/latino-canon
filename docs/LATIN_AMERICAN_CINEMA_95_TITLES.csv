@@ -2,8 +2,8 @@ country,title,year,kind,director,why_it_matters,status
 Argentina,Zama,2017,film,Lucrecia Martel,Regional influence and aesthetic innovation,needs_verification
 Argentina,La Ciénaga,2001,film,Lucrecia Martel,Martel's directorial debut and regional significance,IN_CANON
 Bolivia,Blood of the Condor,1969,film,Jorge Sanjinés,Indigenous/community-centered cinema pioneer,IN_CANON
-Bolivia,The Principal Enemy,1974,film,Jorge Sanjinés,Sanjinés's critical documentary work,IN_CANON
-Bolivia,The Courage of the People,1971,film,Jorge Sanjinés,Indigenous activism documentary,IN_CANON
+Bolivia,The Principal Enemy,1974,film,Jorge Sanjinés,Sanjinés's critical documentary work,needs_verification
+Bolivia,The Courage of the People,1971,film,Jorge Sanjinés,Indigenous activism documentary,needs_verification
 Bolivia,Cuestión de fe,1995,film,Unknown,Emerging Bolivian cinema,needs_verification
 Bolivia,I Am the Other,1986,film,Unknown,Indigenous representation,needs_verification
 Bolivia,Utama,2022,film,Alejandro Fuentes,Contemporary Andean cinema,needs_verification
@@ -26,14 +26,14 @@ Costa Rica,The Return,2011,film,Álvaro Jiménez,Emerging Central American cinem
 Costa Rica,Caribe,2004,film,Unknown,Central American identity,needs_verification
 Costa Rica,Viaje,2015,film,Unknown,Rural life and travel,needs_verification
 Costa Rica,The Sound of Things,2016,film,Unknown,Contemporary Costa Rican cinema,needs_verification
-Costa Rica,Clara Sola,2021,film,Nathalie Álvarez Mesén,Gender and rural life,IN_CANON
+Costa Rica,Clara Sola,2021,film,Nathalie Álvarez Mesén,Gender and rural life,needs_verification
 Costa Rica,Domingo and the Mist,2022,film,Unknown,Contemporary narrative,needs_verification
 Cuba,Lucía,1968,film,Humberto Solás,ICAIC-era revolutionary cinema,IN_CANON
 Cuba,Death of a Bureaucrat,1966,film,Tomás Gutiérrez Alea,Revolution and disillusionment,IN_CANON
 Cuba,The Last Supper,1976,film,Tomás Gutiérrez Alea,Race and revolution,needs_verification
 Cuba,Strawberry and Chocolate,1993,film,Tomás Gutiérrez Alea & Juan Carlos Tabío,LGBTQ+ history,IN_CANON
 Cuba,Memories of Underdevelopment,1968,film,Tomás Gutiérrez Alea,Revolution and cinema,IN_CANON
-Cuba,Suite Habana,2003,film,Fernando Pérez,Documentary of daily Havana life,IN_CANON
+Cuba,Suite Habana,2003,film,Fernando Pérez,Documentary of daily Havana life,needs_verification
 Cuba,Conducta,2014,film,Erwin Martín Díaz,Contemporary Cuban cinema,needs_verification
 Dominican Republic,Aguibibí,2006,film,Unknown,Dominican identity,needs_verification
 Dominican Republic,La lucha de Ana,2012,film,Unknown,Gender and race,needs_verification
@@ -89,13 +89,13 @@ Panama,Everybody Changes,2019,film,Unknown,Afro-Panamanian identity,needs_verifi
 Panama,Donaire y Esplendor,2017,film,Unknown,Cultural documentation,needs_verification
 Panama,Salsipuedes,2016,film,Unknown,Social realism,needs_verification
 Panama,Box 25,2015,film,Unknown,Urban narrative,needs_verification
-Paraguay,Hamaca paraguaya,2006,film,Paz Encina,Guaraní language and rural life,IN_CANON
+Paraguay,Hamaca paraguaya,2006,film,Paz Encina,Guaraní language and rural life,needs_verification
 Paraguay,Cloudy Times,2014,film,Unknown,Contemporary Paraguay,needs_verification
 Paraguay,The Gold Seekers,2017,film,Unknown,Indigenous displacement,needs_verification
 Paraguay,Nothing But the Sun,2021,film,Unknown,Rural narrative,needs_verification
 Paraguay,EAMI,2022,film,Unknown,Contemporary cinema,needs_verification
 Peru,Juliana,1989,film,Unknown,Post-conflict memory,needs_verification
-Peru,Madeinusa,2006,film,Claudia Llosa,Indigenous representation,IN_CANON
+Peru,Madeinusa,2006,film,Claudia Llosa,Indigenous representation,needs_verification
 Peru,October,2010,film,Unknown,Contemporary Peru,needs_verification
 Peru,NN,2014,film,Unknown,Urban narrative,needs_verification
 Peru,The Healer,2018,film,Unknown,Family story,needs_verification
@@ -111,7 +111,7 @@ Uruguay,A Useful Life,2010,film,Unknown,Working life,needs_verification
 Uruguay,Mr. Kaplan,2014,film,Unknown,Jewish-Uruguayan stories,needs_verification
 Uruguay,The Moneychanger,2019,film,Unknown,Social realism,needs_verification
 Uruguay,The Employer and the Employee,2021,film,Unknown,Working relationships,needs_verification
-Venezuela,Araya,1959,film,Margot Benacerraf,Documentary-poetic cinema,IN_CANON
+Venezuela,Araya,1959,film,Margot Benacerraf,Documentary-poetic cinema,needs_verification
 Venezuela,The Roof of the Whale,1981,film,Unknown,Urban insecurity,needs_verification
 Venezuela,Oriana,1985,film,Unknown,Class and gender,needs_verification
 Venezuela,Sicario,1994,film,Unknown,Drug trade,needs_verification
