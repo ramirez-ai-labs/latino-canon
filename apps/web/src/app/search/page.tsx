@@ -7,7 +7,7 @@ import { SearchFilters } from "@/components/SearchFilters";
 import { TitleCard } from "@/components/TitleCard";
 import { AgentSearchReasoning } from "@/components/AgentSearchReasoning";
 import { buttonVariants } from "@/components/ui/button";
-import { search, curateSearch } from "@/lib/api";
+import { ApiError, search, curateSearch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Explore" };
@@ -28,15 +28,32 @@ export default async function SearchPage({
 
   let res: SearchResponse | CurationResponse;
   let isAgent = false;
+  let rateLimited = false;
 
-  if (isAgentSearch && sp.q) {
-    try {
-      res = await curateSearch({ q: sp.q, limit: PER_PAGE });
-      isAgent = true;
-    } catch (err) {
-      const errMsg = err instanceof Error ? err.message : String(err);
-      console.warn(`[Agent] Failed for query "${sp.q}": ${errMsg}`);
-      console.error(`[Agent] Full error:`, err);
+  // The api limits uncached queries per visitor (30/min). Over it, say so here -
+  // app/error.tsx can't: Next strips thrown messages from server errors in production.
+  try {
+    if (isAgentSearch && sp.q) {
+      try {
+        res = await curateSearch({ q: sp.q, limit: PER_PAGE });
+        isAgent = true;
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        console.warn(`[Agent] Failed for query "${sp.q}": ${errMsg}`);
+        console.error(`[Agent] Full error:`, err);
+        res = await search({
+          q: sp.q,
+          mode: sp.mode ?? "hybrid",
+          theme: sp.theme,
+          kind: sp.kind,
+          country: sp.country,
+          decade: sp.decade ? Number(sp.decade) : undefined,
+          inclusionType: sp.inclusionType,
+          limit: PER_PAGE + 1,
+          offset: isBrowse ? offset : undefined,
+        });
+      }
+    } else {
       res = await search({
         q: sp.q,
         mode: sp.mode ?? "hybrid",
@@ -49,18 +66,10 @@ export default async function SearchPage({
         offset: isBrowse ? offset : undefined,
       });
     }
-  } else {
-    res = await search({
-      q: sp.q,
-      mode: sp.mode ?? "hybrid",
-      theme: sp.theme,
-      kind: sp.kind,
-      country: sp.country,
-      decade: sp.decade ? Number(sp.decade) : undefined,
-      inclusionType: sp.inclusionType,
-      limit: PER_PAGE + 1,
-      offset: isBrowse ? offset : undefined,
-    });
+  } catch (err) {
+    if (!(err instanceof ApiError && err.status === 429)) throw err;
+    rateLimited = true;
+    res = { query: sp.q ?? "", mode: "hybrid", interpretation: null, results: [], tookMs: 0 };
   }
 
   const resultsArray = isAgent
@@ -105,7 +114,15 @@ export default async function SearchPage({
         </p>
       </div>
 
-      {results.length === 0 ? (
+      {rateLimited ? (
+        <div className="mt-12 flex flex-col items-center justify-center rounded-2xl border border-border bg-surface-raised py-12 px-6 text-center">
+          <p className="text-lg font-semibold text-text">That&apos;s a lot of searches in a minute</p>
+          <p className="mt-2 text-sm text-muted max-w-md">
+            Each new search runs AI models on a shared daily budget, so they&apos;re limited per visitor. Try
+            again in a minute - repeated searches and browsing aren&apos;t limited.
+          </p>
+        </div>
+      ) : results.length === 0 ? (
         <div className="mt-12 flex flex-col items-center justify-center rounded-2xl border border-border bg-surface-raised py-12 px-6 text-center">
           <p className="text-lg font-semibold text-text">No titles match these filters</p>
           <p className="mt-2 text-sm text-muted max-w-md">
