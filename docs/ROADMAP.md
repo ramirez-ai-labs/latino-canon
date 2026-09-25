@@ -183,8 +183,42 @@ Order below: fix the measurements first, then what they measure.
   client (30/min, Rate Limiting binding). Still open: search on the user's original words (the rewrite drops content words like
   "telenovela"); LLM extracts filters only; lower the `tags` column's BM25 weight.
   Saves neurons.
-- [ ] **5b. Spanish search.** Spanish recall@5 0.453 vs 0.799 for the same queries in
-  English. Diagnose first: rewrite, embeddings, or the English-only keyword index.
+- [ ] **5b. Bilingual search.** Spanish recall@5 0.453 vs 0.799 for the same queries in
+  English. The catalog expansion made it more visible: about 120 Latin American films are
+  live under TMDB's English titles, and a search for the exact Spanish title ranks the film
+  #2 or #3 (checked 2026-09-25: "Viaje" → #2 behind *The Wind Journeys*, "El silencio de
+  Neto" → #3, "y tu mama tambien" → #3, down from #2).
+
+  *Diagnosis (2026-09-25, code review against a standard search pipeline):* query
+  understanding → hybrid retrieval (BM25 + dense) → fusion (RRF) → rerank → business
+  rules → LLM layer. Retrieval, fusion and the LLM layer are in place: bge-m3 is a
+  multilingual bi-encoder, RRF is tuned, and the LLM stays out of plain search (the
+  curation agent and ingest-time blurbs use it). Two stages are missing, rerank and an
+  exact-title rule (#4), and five things work against Spanish:
+  1. `toFtsMatch` ORs every token, stopwords included: "El silencio de Neto" becomes
+     `el* OR silencio* OR de* OR neto*`, and `de*` also matches "del" and "Desperado". On a
+     catalog this small, BM25's IDF can't down-weight them (`apps/api/src/search/lexical.ts`).
+  2. Spanish titles get half weight: after ingest the English TMDB title fills `title`
+     (4.0) and the Spanish name sits in `original_title` (2.0).
+  3. Synopses and blurbs are English only, so a Spanish plot query gets nothing from BM25
+     and relies on bge-m3 alone.
+  4. The rewrite's `cleanedQuery` replaces the user's words for both retrievers (#5).
+  5. FTS5's `unicode61` tokenizer has no Spanish stemming; prefix matching covers part of it.
+
+  *Fixes, cheapest first; each PR reports English and Spanish recall from the retrieval eval:*
+  1. **Exact-title rule** (#4, no neurons).
+  2. **Bilingual lexical fixes** (no neurons): an English + Spanish stopword list in
+     `toFtsMatch`, `original_title` weighted equal to `title`, and a boost for a
+     whole-phrase match.
+  3. **Search on the user's own words**; the rewrite only extracts filters (#5).
+  4. **Spanish synopses in the index.** TMDB serves them with `language=es`: no LLM, only a
+     TMDB fetch and a bge-m3 re-embed (bge-m3 is about 56 neurons a day now).
+  5. **A cross-encoder reranker, only if the eval calls for it.** It reorders candidates,
+     it can't find missed ones, so compare recall@40 with recall@5 after steps 1–4. High
+     @40 with low @5 means the right film is retrieved but ranked low: add a reranker.
+     Both low means retrieval misses it, and a reranker can't help. It must be
+     multilingual (`@cf/baai/bge-reranker-base` is English-focused and could hurt Spanish),
+     and it costs neurons on every uncached search.
 - [ ] **7. Embedding drift detection.** Store a hash of each title's embedding text; the
   nightly cron re-embeds titles whose hash changed.
 - [ ] **8. Classifier eval.** Precision/recall per `inclusion_type` against seed labels.
@@ -225,6 +259,11 @@ then expand.
 | Wrong film (2) | *Los olvidados* → `los-olvidados-2014` (a 2014 film, not Buñuel's 1950); *Manuel Rodríguez* → `manuel-rodriguez-1910` (a 1910 silent film) |
 | Not ingested (5) | Terra em Transe, Canoa, Rojo amanecer, The Battle of Chile, La vendedora de rosas |
 
+*Update (2026-09-25):* 12 of the 14 remaining Phase 1 titles are live, under TMDB's English
+titles where they differ (`the-young-and-the-damned-1950`, `entranced-earth-1967`,
+`canoa-a-shameful-memory-1975`, `red-dawn-1990`). *The Battle of Chile* and *La vendedora
+de rosas* are in the ingest queue. *Manuel Rodríguez* was removed (#244).
+
 **Second finding (2026-09-25): the Phase 1 PRs overwrote each other's seed entries.**
 Each PR appended to the end of `canon.seed.json` from the same base, and each merge
 replaced the previous PR's entries instead of keeping them: #227 dropped #226's Brazil
@@ -255,15 +294,17 @@ exact title, it is accepted whatever its year: the ±2-year guard (`isYearMismat
   UNESCO Memory of the World, 2003; *Limite*: #1 in Abraccine's 2015 Top 100), and
   `about_community` dropped from *Limite* and *The Exterminating Angel*. The three already
   live are skipped at ingest; their live tags still carry the old `breakthrough` (#5).
-- [ ] **2. Phase 1 data repair (rest).** Restore the seven dropped entries (above) and pin verified
+- [x] **2. Phase 1 data repair (rest)** — [#242](https://github.com/ramirez-ai-labs/latino-canon/pull/242)
+  (seven entries restored), [#244](https://github.com/ramirez-ai-labs/latino-canon/pull/244)
+  (pins, *Manuel Rodríguez* removed). Original scope: restore the seven dropped entries (above) and pin verified
   `tmdbId`s for Los olvidados (1950), Terra em Transe, Canoa, Rojo amanecer, The Battle of
   Chile and La vendedora de rosas - plus Limite, Pixote and The Exterminating Angel, which
   are live but need their seed entries back.
   Remove *Manuel Rodríguez* (1977): the film's existence isn't confirmed (CRITERIA rule #6).
-- [ ] **3. Production cleanup** (needs sign-off: changes live data). Delete
-  `los-olvidados-2014` and `manuel-rodriguez-1910`, re-ingest the pinned titles, rebuild
-  Vectorize.
-- [ ] **4. Catalog-wide year audit.** *Report done (2026-09-25):* comparing the seed
+- [x] **3. Production cleanup** — [#245](https://github.com/ramirez-ai-labs/latino-canon/pull/245)
+  (migration 0023, folded into #4c). Deleted `los-olvidados-2014` and `manuel-rodriguez-1910`;
+  the pinned titles re-ingest through the daily queue (#4e).
+- [x] **4. Catalog-wide year audit.** Fixed by #244 (pins) and #245 (deletions). *Report done (2026-09-25):* comparing the seed
   file with live D1 (by pinned id, else normalized title) found 7 wrong films live. Five
   have **wrong pinned `tmdbId`s** in the seed file, ingested on 2026-09-17 (#103), three
   days before pinned ids were year-checked (#152): *7 Boxes* (2012) →
@@ -286,7 +327,8 @@ exact title, it is accepted whatever its year: the ±2-year guard (`isYearMismat
   *La vendedora de rosas*), each checked against TMDB credits for the director.
   *Manuel Rodríguez* (1977) moved to `removed`. Re-ingest the 31 not yet live a few per
   day with `pnpm --filter @latino-canon/ingest ingest:refs "<ref>" ...`.
-- [ ] **4c. Delete the 14 wrong films** (the 11 from bad pins, plus `los-olvidados-2014`,
+- [x] **4c. Delete the 14 wrong films** — [#245](https://github.com/ramirez-ai-labs/latino-canon/pull/245),
+  migration 0023. The 11 from bad pins, plus `los-olvidados-2014`,
   `manuel-rodriguez-1910`, `a-queda-2025`), their vectors, and clear the search cache.
 - [x] **4e. Daily ingest queue.** Merging a seed PR no longer ingests; the ingest worker's
   cron takes the next 5 pinned, not-live seed entries per day (`ingest-queue.ts`,
@@ -296,14 +338,33 @@ exact title, it is accepted whatever its year: the ±2-year guard (`isYearMismat
   a `tmdb_id`. *Colada* (2026) is live as a different TMDB film under the same slug; the
   queue will surface it as held - needs a force re-ingest with the right pin.
 - [ ] **5. Phase 1 tag audit.** All 15 were tagged `breakthrough` without a citation;
-  CRITERIA.md requires a documented, citable first.
-- [ ] **6. Phase 2, one PR.** The remaining CSV titles, each run through CRITERIA.md
+  CRITERIA.md requires a documented, citable first. *Partly done:* #242 re-checked the
+  seven restored entries (2a). Still open: *Limite*, *Pixote* and *The Exterminating
+  Angel* are live with their old tags, since ingest skips existing titles. Fix them with a
+  D1 tag migration (no neurons), not a force re-ingest; then audit the other Phase 1
+  titles' `breakthrough` citations.
+- [ ] **5b. *Colada* (2026).** Live as a different TMDB film (1655192) under the same
+  slug; the seed pins Carmen Pelaez's film (1668285). Needs a force re-ingest with the
+  right pin (one title, about 200 neurons).
+- [x] **6. Phase 2** — [#247](https://github.com/ramirez-ai-labs/latino-canon/pull/247),
+  [#250](https://github.com/ramirez-ai-labs/latino-canon/pull/250)–[#253](https://github.com/ramirez-ai-labs/latino-canon/pull/253),
+  with every CSV row resolved in [#254](https://github.com/ramirez-ai-labs/latino-canon/pull/254)
+  (102 in canon, 8 not on TMDB, 7 out of scope, 1 excluded, 1 removed).
+  Original scope: the remaining CSV titles, each run through CRITERIA.md
   individually (rule #8: a generated list is a research source, not an import queue):
   director heritage confirmed from a source, only earned tags, a citable `breakthrough`,
   and a pinned `tmdbId`. Rows with an unconfirmable ("Unknown") director are dropped.
   Known CSV errors to correct on the way: *Embrace of the Serpent* is Ciro Guerra's (not
   Cary Joji Fukunaga's); *The Comedians* (Peter Glenville) and *Walker* (Alex Cox) have
   British directors; *Lumumba: Death of a Prophet* is about the Congo.
+
+**Ingest backlog (2026-09-25, compared by `tmdbId` against the live catalog):** 265
+titles live; **72 pinned seed entries not yet live**, 43 from the cinema list and 29
+re-pinned or other entries (including *Colada*). The daily queue takes 5 a day, about 15
+days. Two manual runs on 2026-09-25 ingested 24 titles
+(`gh workflow run ingest-new-titles.yml -f base_ref=<commit before a batch>`); titles
+already live are skipped before any AI call, so only new ones cost neurons. Measured cost:
+about 200 neurons per title (dashboard headline, 3.38k → 4.6k for 6 titles).
 
 **Decided (2026-09-25): Haiti is out of scope** - recorded in CRITERIA.md's "Scope of
 'Latino'". The CSV's 7 Haiti titles are marked `OUT_OF_SCOPE` and dropped from Phase 2.
