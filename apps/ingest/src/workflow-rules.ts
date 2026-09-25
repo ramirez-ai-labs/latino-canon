@@ -58,3 +58,53 @@ export function needsHumanReview(
 export function confidentThemes(themes: { theme: string; confidence: number }[] | undefined): string[] {
   return (themes ?? []).filter((t) => t.confidence >= MODEL_TAG_DISPLAY_THRESHOLD).map((t) => t.theme);
 }
+
+const titleTokens = (s: string): string[] =>
+  s
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(" ")
+    .filter(Boolean);
+
+const bigrams = (tokens: string[]): Set<string> => {
+  const s = tokens.join("");
+  const out = new Set<string>();
+  for (let i = 0; i < s.length - 1; i++) out.add(s.slice(i, i + 2));
+  return out;
+};
+
+/**
+ * Whether two titles plausibly name the same work: every word of one appears in the
+ * other ("Goal!" / "Goal! The Dream Begins"), or their letter pairs overlap enough to
+ * survive translation-adjacent spellings and subtitles (Dice >= 0.5 - "Pixote" /
+ * "Pixote: A Lei do Mais Fraco", "Y Tu Mama Tambien" / "Y tu mamá también"). A real
+ * translation ("Bound by Honor" for "Blood In Blood Out") passes only through an alias.
+ */
+export function titlesResemble(a: string, b: string): boolean {
+  const ta = titleTokens(a);
+  const tb = titleTokens(b);
+  if (ta.length === 0 || tb.length === 0) return false;
+  const [short, long] = ta.length <= tb.length ? [ta, tb] : [tb, ta];
+  if (short.every((t) => long.includes(t))) return true;
+  const ba = bigrams(ta);
+  const bb = bigrams(tb);
+  if (ba.size === 0 || bb.size === 0) return false;
+  let shared = 0;
+  for (const g of ba) if (bb.has(g)) shared++;
+  return (2 * shared) / (ba.size + bb.size) >= 0.5;
+}
+
+/**
+ * The resolved TMDB title must resemble the seed's title or one of its aliases. The
+ * year check alone missed wrong pinned ids from the same era: Monarca (2019) was pinned
+ * to a Louisiana swamp reality show (2018). An audit (2026-09-25) found 28 of 90 pinned
+ * ids pointing at unrelated works - Heli at a 1968 cartoon, Sin Nombre at A.P.E.X. -
+ * every one of which this rejects, while every correct pin passes.
+ */
+export function isTitleMismatch(seedNames: string[], tmdbTitle: string, tmdbOriginalTitle: string | null): boolean {
+  const found = [tmdbTitle, tmdbOriginalTitle].filter((t): t is string => Boolean(t));
+  return !seedNames.some((n) => found.some((f) => titlesResemble(n, f)));
+}

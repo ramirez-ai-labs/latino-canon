@@ -275,6 +275,14 @@ exact title, it is accepted whatever its year: the ±2-year guard (`isYearMismat
   and *Manuel Rodríguez* (see #3). 20 seed entries match no live title by id or name (e.g.
   *Sin Nombre*, *Heli*, *The Heiresses*). Fix: correct the five pins, then fold these
   into #3's cleanup.
+- [x] **4b. Name check at ingest.** A pinned-id audit by title (not just year) found
+  **28 of 90 pinned `tmdbId`s point at unrelated works** - 11 live as wrong films
+  (*Monarca* → a swamp reality show, *The Club* → a kids' series), 17 never ingested
+  (*Heli* → a 1968 cartoon, *Sin Nombre* → *A.P.E.X.*). `isTitleMismatch` now rejects a
+  TMDB match whose title and original title don't resemble the seed title or an alias;
+  calibrated on the live catalog it catches all 28 and passes every correct title.
+- [ ] **4c. Re-pin the 28 and delete the 11 wrong films** (plus `los-olvidados-2014`,
+  `manuel-rodriguez-1910`, `a-queda-2025`).
 - [ ] **5. Phase 1 tag audit.** All 15 were tagged `breakthrough` without a citation;
   CRITERIA.md requires a documented, citable first.
 - [ ] **6. Phase 2, one PR.** The remaining CSV titles, each run through CRITERIA.md
