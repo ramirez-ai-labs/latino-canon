@@ -4,8 +4,11 @@
 -- re-sending titles that are already correct and then hold them as anomalies.
 --
 -- Each id is the seed entry's pin, checked against TMDB (2026-09-25): title, year and
--- director match the live row. Guarded on tmdb_id IS NULL, so it can't overwrite a
--- real value; re-running changes nothing.
-UPDATE titles SET tmdb_id = 81055  WHERE id = 'smoke-gets-in-your-eyes-2009' AND tmdb_id IS NULL; -- É Proibido Fumar, Anna Muylaert
-UPDATE titles SET tmdb_id = 511425 WHERE id = 'eternity-2018'                AND tmdb_id IS NULL; -- Wiñaypacha, Óscar Catacora
-UPDATE titles SET tmdb_id = 499394 WHERE id = 'retablo-2018'                 AND tmdb_id IS NULL; -- Retablo, Álvaro Delgado-Aparicio
+-- director match the live row. Guarded on tmdb_id IS NULL, so it can never overwrite a
+-- real value, and re-running changes nothing.
+-- É Proibido Fumar (Anna Muylaert), Wiñaypacha (Óscar Catacora), Retablo (Álvaro Delgado-Aparicio).
+-- Comments stay on their own lines, without semicolons: the migration runner splits on
+-- semicolons, and a trailing comment becomes an empty statement D1 rejects.
+UPDATE titles SET tmdb_id = 81055 WHERE id = 'smoke-gets-in-your-eyes-2009' AND tmdb_id IS NULL;
+UPDATE titles SET tmdb_id = 511425 WHERE id = 'eternity-2018' AND tmdb_id IS NULL;
+UPDATE titles SET tmdb_id = 499394 WHERE id = 'retablo-2018' AND tmdb_id IS NULL;
