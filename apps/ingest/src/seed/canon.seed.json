@@ -1,5 +1,5 @@
 {
-    "$comment": "Trusted seed list. seedInclusionTypes is authoritative; the classifier still runs for themes and to measure agreement. Sourced from LOC Latinx filmography, UCLA Chicano/Latino TV guide, and editorial curation. Before adding a title, see CRITERIA.md in this directory for the verification checklist.",
+    "$comment": "Trusted seed list. seedInclusionTypes is authoritative; the classifier still runs for themes and to measure agreement. Sourced from LOC Latinx filmography, UCLA Chicano/Latino TV guide, and editorial curation. Before adding a title, see CRITERIA.md in this directory for the verification checklist. Removing one? List it in `removed` with a reason - CI rejects a title that disappears otherwise.",
     "titles": [
         { "ref": "Mi Familia (1995)", "title": "Mi Familia", "year": 1995, "kind": "film", "tmdbId": 38722, "seedInclusionTypes": ["led_by", "about_community"] },
         { "ref": "Selena (1997)", "title": "Selena", "year": 1997, "kind": "film", "seedInclusionTypes": ["led_by", "about_community", "breakthrough"] },
@@ -265,5 +265,6 @@
         { "ref": "Mexico 86 (2026)", "title": "Mexico 86", "year": 2026, "kind": "film", "tmdbId": 1530510, "seedInclusionTypes": ["led_by", "created_by", "about_community"], "note": "Gabriel Ripstein (Mexican; son of Arturo Ripstein) directed and co-wrote with Daniel Krauze; Diego Luna as the official who won Mexico the 1986 World Cup. Not César Díaz's 2024 Guatemalan-exile drama of the same name (TMDB 1174027)" },
         { "ref": "Goal! (2005)", "title": "Goal!", "year": 2005, "kind": "film", "tmdbId": 9763, "seedInclusionTypes": ["starring", "about_community"], "aliases": [{ "alias": "Goal! The Dream Begins", "kind": "alt_title" }], "note": "Director Danny Cannon and writers Dick Clement & Ian La Frenais are British - no led_by/created_by. Kuno Becker (Mexican) leads as Santiago Muñez, an undocumented Mexican immigrant from LA's barrio; about_community is an editorial call on the immigrant arc framing the story" },
         { "ref": "One, the Story of a Goal (2010)", "title": "One, the Story of a Goal", "year": 2010, "kind": "film", "tmdbId": 254448, "seedInclusionTypes": ["led_by", "about_community"], "note": "Documentary co-directed by Gerardo Muyshondt (Salvadoran) and Carlos Moreno (Colombian): El Salvador's 1982 World Cup team, qualifying at the start of the civil war" }
-    ]
+    ],
+    "removed": []
 }

@@ -225,7 +225,17 @@ then expand.
 | Wrong film (2) | *Los olvidados* → `los-olvidados-2014` (a 2014 film, not Buñuel's 1950); *Manuel Rodríguez* → `manuel-rodriguez-1910` (a 1910 silent film) |
 | Not ingested (5) | Terra em Transe, Canoa, Rojo amanecer, The Battle of Chile, La vendedora de rosas |
 
-**Root cause:** a seed entry without a `tmdbId` resolves through TMDB title search, which
+**Second finding (2026-09-25): the Phase 1 PRs overwrote each other's seed entries.**
+Each PR appended to the end of `canon.seed.json` from the same base, and each merge
+replaced the previous PR's entries instead of keeping them: #227 dropped #226's Brazil
+titles (*Limite*, *Terra em Transe*, *Pixote*), and #229 dropped #227's Mexico titles
+(*Los olvidados*, *The Exterminating Angel*, *Canoa*, *Rojo amanecer*). *Limite*, *Pixote*,
+*The Exterminating Angel* and the wrong *Los olvidados* are live but no longer in the seed
+file; *Terra em Transe*, *Canoa* and *Rojo amanecer* never ingested and their entries are
+gone. CI now rejects a PR that drops a seed entry unless it's listed in the file's
+`removed` ledger with a reason - replaying #227 and #229 through it flags all seven.
+
+**Root cause (wrong/missing ingests):** a seed entry without a `tmdbId` resolves through TMDB title search, which
 requires an exact title match (`resolveTmdbId`, `apps/ingest/src/sources/tmdb.ts`).
 TMDB returns English titles ("Entranced Earth", "The Rose Seller"), so Spanish and
 Portuguese seed titles find no exact match and fail. When a *different* film shares the
@@ -238,8 +248,12 @@ exact title, it is accepted whatever its year: the ±2-year guard (`isYearMismat
   matched title is further than that, so the bar rejects only wrong films. CI now also
   validates seed PRs (`seed-validate.ts`): new entries must pin `tmdbId`, and duplicates
   or unknown inclusion types fail.
-- [ ] **2. Phase 1 data repair.** Pin verified `tmdbId`s for Los olvidados (1950),
-  Terra em Transe, Canoa, Rojo amanecer, The Battle of Chile and La vendedora de rosas.
+- [x] **1b. Seed removal guard.** A title can't leave `canon.seed.json` without a
+  `removed` ledger entry and reason (`seed-validate.ts`).
+- [ ] **2. Phase 1 data repair.** Restore the seven dropped entries (above) and pin verified
+  `tmdbId`s for Los olvidados (1950), Terra em Transe, Canoa, Rojo amanecer, The Battle of
+  Chile and La vendedora de rosas - plus Limite, Pixote and The Exterminating Angel, which
+  are live but need their seed entries back.
   Remove *Manuel Rodríguez* (1977): the film's existence isn't confirmed (CRITERIA rule #6).
 - [ ] **3. Production cleanup** (needs sign-off: changes live data). Delete
   `los-olvidados-2014` and `manuel-rodriguez-1910`, re-ingest the pinned titles, rebuild
