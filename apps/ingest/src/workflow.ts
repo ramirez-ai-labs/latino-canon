@@ -6,7 +6,7 @@ import { normalizeTitle } from "./normalize.js";
 import { persistTitle, upsertVector, writeTags, writeAliases, writeBlurb, writeContentAdvisory, setJob } from "./persist.js";
 import { cachePoster } from "./poster.js";
 import { classifyForIngest, classifyContentAdvisory, blurbForIngest } from "./ai.js";
-import { jobIdFor, isYearMismatch, needsHumanReview, confidentThemes } from "./workflow-rules.js";
+import { jobIdFor, isTitleMismatch, isYearMismatch, needsHumanReview, confidentThemes } from "./workflow-rules.js";
 
 /**
  * Durable ingestion pipeline. Each step is independently retried; a failure in
@@ -67,6 +67,24 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
             p.tmdbId
               ? `Pinned tmdbId ${p.tmdbId} resolves to ${found} - check the seed entry's tmdbId`
               : `TMDB search matched ${found} - pin the right tmdbId in the seed entry`,
+          ),
+        );
+        return;
+      }
+
+      // VALIDATION GATE: ...and it must be the seed's title by name, not just by era - a
+      // wrong pinned id from the same years passes the year check (see isTitleMismatch).
+      const seedNames = [p.title, ...(p.aliases ?? []).map((a) => a.alias)];
+      if (isTitleMismatch(seedNames, raw.details.title, raw.details.originalTitle)) {
+        const found = `"${raw.details.title}" / "${raw.details.originalTitle}"`;
+        await step.do("skip title mismatch", () =>
+          setJob(
+            this.env,
+            jobId,
+            p.ref,
+            "validate",
+            "error",
+            `${p.tmdbId ? `Pinned tmdbId ${p.tmdbId}` : "TMDB search"} resolves to ${found}, which doesn't resemble "${p.title}" or its aliases - check the tmdbId, or add the title TMDB uses as an alias`,
           ),
         );
         return;
