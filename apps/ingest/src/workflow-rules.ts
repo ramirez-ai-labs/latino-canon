@@ -12,15 +12,22 @@ export function jobIdFor(ref: string): string {
 }
 
 /**
- * A pinned tmdbId skips search entirely, so nothing else checks it actually points
- * at the right title. Found the hard way: El Chavo del 8 (1973)'s seed entry had a
- * wrong tmdbId that actually resolves to Firefly (2002) - an unrelated title already
- * in the catalog - and a force:true re-ingest silently overwrote Firefly's real tags
- * with El Chavo's seedInclusionTypes. A release-year mismatch this large can only
- * mean the pinned id is wrong, not that TMDB's data is imprecise.
+ * The resolved TMDB title's release year must be within 2 years of the seed year,
+ * however the id was found. Two ways it goes wrong, both found live:
+ *
+ * - A pinned tmdbId skips search, so nothing else checks it: El Chavo del 8 (1973)'s
+ *   pinned id resolved to Firefly (2002), and a force:true re-ingest overwrote Firefly's
+ *   tags with El Chavo's.
+ * - A title search accepts any exact title match: Los olvidados (1950) resolved to a
+ *   2014 film of the same name, Manuel Rodríguez (1977) to a 1910 one. This check used
+ *   to apply to pinned ids only, on the theory that search picks the closest year - but
+ *   when the right film isn't in the results, the closest year is still the wrong film.
+ *
+ * Checked against the live catalog (2026-09-25): no correctly matched title is more than
+ * 2 years from its seed year, so the bar costs nothing real.
  */
-export function isYearMismatch(pinnedTmdbId: number | undefined, expectedYear: number, actualYear: number): boolean {
-  return Boolean(pinnedTmdbId) && Math.abs(actualYear - expectedYear) > 2;
+export function isYearMismatch(expectedYear: number, actualYear: number): boolean {
+  return Math.abs(actualYear - expectedYear) > 2;
 }
 
 /**

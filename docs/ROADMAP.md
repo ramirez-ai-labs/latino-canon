@@ -233,19 +233,29 @@ exact title, it is accepted whatever its year: the ±2-year guard (`isYearMismat
 `apps/ingest/src/workflow-rules.ts`) only covers pinned ids.
 
 **Next (in order):**
-- [ ] **1. Year guard on search matches** (bug PR). Reject a search match more than 2
-  years from the seed year, the same bar pinned ids already meet; unit test for the
-  *Los olvidados* case.
+- [x] **1. Year guard on search matches.** Every TMDB match, pinned or searched, must be
+  within 2 years of the seed year. Checked against the live catalog first: no correctly
+  matched title is further than that, so the bar rejects only wrong films. CI now also
+  validates seed PRs (`seed-validate.ts`): new entries must pin `tmdbId`, and duplicates
+  or unknown inclusion types fail.
 - [ ] **2. Phase 1 data repair.** Pin verified `tmdbId`s for Los olvidados (1950),
   Terra em Transe, Canoa, Rojo amanecer, The Battle of Chile and La vendedora de rosas.
   Remove *Manuel Rodríguez* (1977): the film's existence isn't confirmed (CRITERIA rule #6).
 - [ ] **3. Production cleanup** (needs sign-off: changes live data). Delete
   `los-olvidados-2014` and `manuel-rodriguez-1910`, re-ingest the pinned titles, rebuild
   Vectorize.
-- [ ] **4. Catalog-wide year audit.** Compare every live title's year with its seed
-  entry. Search surfaced likely older wrong matches
-  (`national-geographic-meister-der-naturfotographie-2009`, `no-hands-on-the-clock-1941`).
-  Report first; fixes go in separate PRs.
+- [ ] **4. Catalog-wide year audit.** *Report done (2026-09-25):* comparing the seed
+  file with live D1 (by pinned id, else normalized title) found 7 wrong films live. Five
+  have **wrong pinned `tmdbId`s** in the seed file, ingested on 2026-09-17 (#103), three
+  days before pinned ids were year-checked (#152): *7 Boxes* (2012) →
+  `no-hands-on-the-clock-1941`, *Paulina* (2015) →
+  `national-geographic-meister-der-naturfotographie-2009`, *Casa Grande* (2014) →
+  `walk-the-dark-street-1956`, *The Year My Parents Went on Vacation* (2006) →
+  `cirque-du-soleil-la-magie-continue-1987`, *The Line* (2019) →
+  `the-cornstarch-gizmo-2008`. Two came from search: *A Queda* (1978) → `a-queda-2025`,
+  and *Manuel Rodríguez* (see #3). 20 seed entries match no live title by id or name (e.g.
+  *Sin Nombre*, *Heli*, *The Heiresses*). Fix: correct the five pins, then fold these
+  into #3's cleanup.
 - [ ] **5. Phase 1 tag audit.** All 15 were tagged `breakthrough` without a citation;
   CRITERIA.md requires a documented, citable first.
 - [ ] **6. Phase 2, one PR.** The remaining CSV titles, each run through CRITERIA.md

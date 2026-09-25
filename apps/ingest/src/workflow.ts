@@ -53,15 +53,10 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
         return;
       }
 
-      // VALIDATION GATE: a pinned tmdbId skips search entirely, so nothing else checks
-      // it actually points at the right title. Found the hard way: El Chavo del 8
-      // (1973)'s seed entry had a wrong tmdbId that actually resolves to Firefly
-      // (2002) - an unrelated title that already existed in the catalog - and a
-      // force:true re-ingest silently overwrote Firefly's real tags with El Chavo's
-      // seedInclusionTypes because nothing here ever compared the fetched year against
-      // what the seed/caller expected. A release-year mismatch this large can only
-      // mean the pinned id is wrong, not that TMDB's data is imprecise.
-      if (isYearMismatch(p.tmdbId, p.year, raw.details.releaseYear)) {
+      // VALIDATION GATE: the resolved title must be the seed's title, not a namesake from
+      // another decade - see isYearMismatch for the incidents behind this.
+      if (isYearMismatch(p.year, raw.details.releaseYear)) {
+        const found = `"${raw.details.title}" (${raw.details.releaseYear}), expected "${p.title}" (${p.year})`;
         await step.do("skip year mismatch", () =>
           setJob(
             this.env,
@@ -69,7 +64,9 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
             p.ref,
             "validate",
             "error",
-            `Pinned tmdbId ${p.tmdbId} resolves to "${raw.details.title}" (${raw.details.releaseYear}), expected "${p.title}" (${p.year}) - check the seed entry's tmdbId`,
+            p.tmdbId
+              ? `Pinned tmdbId ${p.tmdbId} resolves to ${found} - check the seed entry's tmdbId`
+              : `TMDB search matched ${found} - pin the right tmdbId in the seed entry`,
           ),
         );
         return;

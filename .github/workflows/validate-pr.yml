@@ -71,6 +71,15 @@ jobs:
       - name: Test eval (retrieval metrics)
         run: pnpm --filter @latino-canon/eval run test
 
+      # Rules for new canon entries (pinned tmdbId) need the base branch's copy to diff
+      # against; the whole-file rules (duplicates, types) also run in the ingest tests.
+      - name: Validate canon seed changes
+        working-directory: apps/ingest
+        run: |
+          git fetch --depth=1 origin "${{ github.base_ref }}"
+          git show FETCH_HEAD:apps/ingest/src/seed/canon.seed.json > /tmp/base.seed.json || echo '{}' > /tmp/base.seed.json
+          pnpm exec tsx scripts/validate-seed.ts /tmp/base.seed.json src/seed/canon.seed.json
+
       - name: Test ingest (TMDB/OMDb mapping, normalization)
         run: pnpm --filter @latino-canon/ingest run test
 
