@@ -1,7 +1,7 @@
 country,title,year,kind,director,why_it_matters,status
 Argentina,Zama,2017,film,Lucrecia Martel,Regional influence and aesthetic innovation,needs_verification
 Argentina,La Ciénaga,2001,film,Lucrecia Martel,Martel's directorial debut and regional significance,IN_CANON
-Bolivia,Blood of the Condor,1969,film,Jorge Sanjinés,Indigenous/community-centered cinema pioneer,needs_verification
+Bolivia,Blood of the Condor,1969,film,Jorge Sanjinés,Indigenous/community-centered cinema pioneer,IN_CANON
 Bolivia,The Principal Enemy,1974,film,Jorge Sanjinés,Sanjinés's critical documentary work,needs_verification
 Bolivia,The Courage of the People,1971,film,Jorge Sanjinés,Indigenous activism documentary,needs_verification
 Bolivia,Cuestión de fe,1995,film,Unknown,Emerging Bolivian cinema,needs_verification
@@ -28,8 +28,8 @@ Costa Rica,Viaje,2015,film,Unknown,Rural life and travel,needs_verification
 Costa Rica,The Sound of Things,2016,film,Unknown,Contemporary Costa Rican cinema,needs_verification
 Costa Rica,Clara Sola,2021,film,Nathalie Álvarez Mesén,Gender and rural life,needs_verification
 Costa Rica,Domingo and the Mist,2022,film,Unknown,Contemporary narrative,needs_verification
-Cuba,Lucía,1968,film,Humberto Solás,ICAIC-era revolutionary cinema,needs_verification
-Cuba,Death of a Bureaucrat,1966,film,Tomás Gutiérrez Alea,Revolution and disillusionment,needs_verification
+Cuba,Lucía,1968,film,Humberto Solás,ICAIC-era revolutionary cinema,IN_CANON
+Cuba,Death of a Bureaucrat,1966,film,Tomás Gutiérrez Alea,Revolution and disillusionment,IN_CANON
 Cuba,The Last Supper,1976,film,Tomás Gutiérrez Alea,Race and revolution,needs_verification
 Cuba,Strawberry and Chocolate,1993,film,Tomás Gutiérrez Alea & Juan Carlos Tabío,LGBTQ+ history,IN_CANON
 Cuba,Memories of Underdevelopment,1968,film,Tomás Gutiérrez Alea,Revolution and cinema,IN_CANON
@@ -55,8 +55,8 @@ El Salvador,El Suspiro del Silencio,2020,film,Unknown,Migration and loss,needs_v
 Guatemala,El silencio de Neto,1994,film,Luis Felipe Díaz,Civil-war memory,needs_verification
 Guatemala,Gasolina,2008,film,Unknown,Urban Mayan life,needs_verification
 Guatemala,Las marimbas del infierno,2010,film,Unknown,Indigenous music and culture,needs_verification
-Guatemala,Temblores,2019,film,Jayro Bustamante,Religion and sexuality,needs_verification
-Guatemala,La Llorona,2019,film,Jayro Bustamante,Indigenous mythology and violence,needs_verification
+Guatemala,Temblores,2019,film,Jayro Bustamante,Religion and sexuality,IN_CANON
+Guatemala,La Llorona,2019,film,Jayro Bustamante,Indigenous mythology and violence,IN_CANON
 Guatemala,Cadejo Blanco,2021,film,Unknown,Street life and mythology,needs_verification
 Haiti,The Comedians,1967,film,Peter Glenville,Dictatorship (Duvalier era),needs_verification
 Haiti,Anita,1980,film,Unknown,Haitian cinema,needs_verification
