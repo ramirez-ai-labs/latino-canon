@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { confidentThemes, isYearMismatch, jobIdFor, needsHumanReview } from "./workflow-rules.js";
+import { confidentThemes, isTitleMismatch, isYearMismatch, jobIdFor, needsHumanReview, titlesResemble } from "./workflow-rules.js";
 
 describe("jobIdFor", () => {
   it("slugifies a title ref into a stable job id", () => {
@@ -31,6 +31,45 @@ describe("isYearMismatch", () => {
 
   it("is symmetric - resolving to something earlier than expected is just as wrong", () => {
     expect(isYearMismatch(1977, 1910)).toBe(true); // Manuel Rodríguez
+  });
+});
+
+describe("isTitleMismatch", () => {
+  it("rejects a same-era wrong pin the year check lets through: Monarca (2019) -> a swamp reality show (2018)", () => {
+    expect(isTitleMismatch(["Monarca", "Monarch"], "Swamp Mysteries with Troy Landry", null)).toBe(true);
+  });
+
+  it("rejects the audit's unrelated pins", () => {
+    expect(isTitleMismatch(["Heli"], "Paste Makes Waste", null)).toBe(true);
+    expect(isTitleMismatch(["Sin Nombre"], "A.P.E.X.", null)).toBe(true);
+    expect(isTitleMismatch(["The Club"], "Blue Malone: Imaginary Detectives", null)).toBe(true);
+  });
+
+  it("accepts the original title when TMDB's English title differs", () => {
+    expect(isTitleMismatch(["Terra em Transe"], "Entranced Earth", "Terra em Transe")).toBe(false);
+  });
+
+  it("accepts subtitles, accents and punctuation", () => {
+    expect(isTitleMismatch(["Pixote"], "Pixote", "Pixote: A Lei do Mais Fraco")).toBe(false);
+    expect(isTitleMismatch(["Goal!"], "Goal! The Dream Begins", null)).toBe(false);
+    expect(isTitleMismatch(["Y Tu Mama Tambien"], "Y tu mamá también", null)).toBe(false);
+  });
+
+  it("accepts a real translation only through an alias", () => {
+    expect(isTitleMismatch(["Blood In Blood Out"], "Bound by Honor", null)).toBe(true);
+    expect(isTitleMismatch(["Blood In Blood Out", "Bound by Honor"], "Bound by Honor", null)).toBe(false);
+  });
+});
+
+describe("titlesResemble", () => {
+  it("is symmetric and ignores case", () => {
+    expect(titlesResemble("THE WOLF HOUSE", "The Wolf House")).toBe(true);
+    expect(titlesResemble("Canoa: A Shameful Memory", "Canoa")).toBe(titlesResemble("Canoa", "Canoa: A Shameful Memory"));
+  });
+
+  it("treats an empty or symbol-only title as no match", () => {
+    expect(titlesResemble("", "Coco")).toBe(false);
+    expect(titlesResemble("!!!", "Coco")).toBe(false);
   });
 });
 

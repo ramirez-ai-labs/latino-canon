@@ -76,7 +76,10 @@ is involved somewhere," but a specific, checkable credit. Six exist:
     the title by exact-title search: TMDB's English titles miss Spanish/Portuguese seed
     titles entirely, and a namesake from another decade gets accepted (*Los olvidados*
     (1950) went live as a 2014 film). Ingest also rejects any match more than 2 years
-    from the seed year, pinned or not.
+    from the seed year, or whose TMDB title and original title don't resemble the seed
+    title or an alias — 28 of 90 pins from a generated research batch pointed at
+    unrelated works (*Heli* at a 1968 cartoon). If TMDB knows the film only by a
+    translation (*Blood In Blood Out* → *Bound by Honor*), add that as an alias.
 11. **Removing a title means listing it in `removed`** at the bottom of the seed file,
     with a reason (wrong film, failed verification, duplicate) — CI rejects a title that
     just disappears. That's how merges silently dropped seven Phase 1 entries.
