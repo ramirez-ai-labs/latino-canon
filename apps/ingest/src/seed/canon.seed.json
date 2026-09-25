@@ -164,12 +164,9 @@
 
         { "ref": "A Day Without a Mexican (2004)", "title": "A Day Without a Mexican", "year": 2004, "kind": "film", "tmdbId": 16427, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
 
-        { "ref": "The Hustlers (1962)", "title": "The Hustlers", "year": 1962, "kind": "film", "tmdbId": 28525, "seedInclusionTypes": ["led_by", "about_community"] },
         { "ref": "A Queda (1978)", "title": "A Queda", "year": 1978, "kind": "film", "tmdbId": 195560, "seedInclusionTypes": ["led_by", "about_community"] },
         { "ref": "Martín (Hache) (1997)", "title": "Martín (Hache)", "year": 1997, "kind": "film", "tmdbId": 43429, "seedInclusionTypes": ["led_by", "about_community"] },
         { "ref": "The Hustlers (1962)", "title": "The Hustlers", "year": 1962, "kind": "film", "tmdbId": 28525, "seedInclusionTypes": ["led_by", "about_community"], "aliases": [{ "alias": "Os Cafajestes", "kind": "translation" }] },
-        { "ref": "A Queda (1978)", "title": "A Queda", "year": 1978, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
-        { "ref": "Martín (Hache) (1997)", "title": "Martín (Hache)", "year": 1997, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
         { "ref": "Linha de Passe (2008)", "title": "Linha de Passe", "year": 2008, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
         { "ref": "Behind the Sun (2001)", "title": "Behind the Sun", "year": 2001, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
         { "ref": "Common Ground (2002)", "title": "Common Ground", "year": 2002, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
