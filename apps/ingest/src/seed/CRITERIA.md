@@ -133,6 +133,14 @@ Spain decision — heritage, not a specific colonial language, is what the taxon
 gates on. Confirmed Brazilian directors (e.g. Gabriel Mascaro, Kleber Mendonça Filho)
 earn `led_by`/`created_by` the same way a confirmed Mexican or Cuban director would.
 
+**Decided (2026-09-25): Haiti is out of scope.** The Brazil decision widened scope by
+shared Iberian heritage, not by geography; Haitian cinema is Francophone/Kreyòl
+Caribbean, not Hispanic or Lusophone, so it isn't Latino in this taxonomy's sense. The
+seven Haitian titles on the generated Latin American cinema list (*Moloch Tropical*,
+*Murder in Pacot*, *Freda* and others) are excluded on scope, not quality. A Haitian or
+Haitian-diaspora title still qualifies through a separately verified Latino credit (a
+Dominican co-director, say), like any other work.
+
 **Decided: `about_community` isn't narrowed to U.S. Latino/diaspora stories.**
 Rule #4's test ("the Latino community/experience is the actual subject... would the
 story still make sense without that context?") was never actually written with a
