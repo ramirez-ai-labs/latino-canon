@@ -281,8 +281,13 @@ exact title, it is accepted whatever its year: the ±2-year guard (`isYearMismat
   (*Heli* → a 1968 cartoon, *Sin Nombre* → *A.P.E.X.*). `isTitleMismatch` now rejects a
   TMDB match whose title and original title don't resemble the seed title or an alias;
   calibrated on the live catalog it catches all 28 and passes every correct title.
-- [ ] **4c. Re-pin the 28 and delete the 11 wrong films** (plus `los-olvidados-2014`,
-  `manuel-rodriguez-1910`, `a-queda-2025`).
+- [x] **4d. Wrong pins corrected in the seed file.** 28 pins re-pointed at the right
+  films and 4 missing pins added (*A Queda*, *Martín (Hache)*, *The Battle of Chile* Part I,
+  *La vendedora de rosas*), each checked against TMDB credits for the director.
+  *Manuel Rodríguez* (1977) moved to `removed`. Re-ingest the 31 not yet live a few per
+  day with `pnpm --filter @latino-canon/ingest ingest:refs "<ref>" ...`.
+- [ ] **4c. Delete the 14 wrong films** (the 11 from bad pins, plus `los-olvidados-2014`,
+  `manuel-rodriguez-1910`, `a-queda-2025`), their vectors, and clear the search cache.
 - [ ] **5. Phase 1 tag audit.** All 15 were tagged `breakthrough` without a citation;
   CRITERIA.md requires a documented, citable first.
 - [ ] **6. Phase 2, one PR.** The remaining CSV titles, each run through CRITERIA.md
