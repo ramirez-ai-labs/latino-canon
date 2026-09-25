@@ -77,6 +77,9 @@ is involved somewhere," but a specific, checkable credit. Six exist:
     titles entirely, and a namesake from another decade gets accepted (*Los olvidados*
     (1950) went live as a 2014 film). Ingest also rejects any match more than 2 years
     from the seed year, pinned or not.
+11. **Removing a title means listing it in `removed`** at the bottom of the seed file,
+    with a reason (wrong film, failed verification, duplicate) — CI rejects a title that
+    just disappears. That's how merges silently dropped seven Phase 1 entries.
 
 ## Deferred, pending TMDB data
 

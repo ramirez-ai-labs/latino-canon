@@ -6,7 +6,7 @@
  *   tsx scripts/validate-seed.ts <base-seed.json> <head-seed.json>
  */
 import { readFileSync } from "node:fs";
-import { parseSeedFile } from "../src/seed-diff.js";
+import { parseSeedFile, parseSeedRemovals } from "../src/seed-diff.js";
 import { validateSeed } from "../src/seed-validate.js";
 
 const [baseFile, headFile] = process.argv.slice(2);
@@ -15,21 +15,22 @@ if (!baseFile || !headFile) {
   process.exit(1);
 }
 
-const read = (path: string) => {
+const readRaw = (path: string) => {
   try {
-    return parseSeedFile(readFileSync(path, "utf8"));
+    return readFileSync(path, "utf8");
   } catch {
-    return [];
+    return ""; // no base copy (first run) - parses as no titles
   }
 };
 
-const head = read(headFile);
+const headRaw = readRaw(headFile);
+const head = parseSeedFile(headRaw);
 if (head.length === 0) {
   console.error(`${headFile}: no titles parsed - is the JSON valid?`);
   process.exit(1);
 }
 
-const errors = validateSeed(read(baseFile), head);
+const errors = validateSeed(parseSeedFile(readRaw(baseFile)), head, parseSeedRemovals(headRaw));
 if (errors.length > 0) {
   for (const e of errors) console.error(`::error file=apps/ingest/src/seed/canon.seed.json::${e}`);
   process.exit(1);

@@ -121,7 +121,9 @@ twice (#211, #222). `search.test.ts` now fails if it comes back.
    mistakes include wrong directors, wrong years, duplicate entries, and wrong films.
 2. Edit `apps/ingest/src/seed/canon.seed.json` with a verified, pinned `tmdbId`, and open
    a `content:` PR. CI (`scripts/validate-seed.ts`) rejects duplicates, unknown inclusion
-   types, and new entries without `tmdbId`. At ingest, a match more than 2 years from the
+   types, new entries without `tmdbId`, and titles that disappear without a `removed`
+   ledger entry (a merge once silently dropped seven). After merging `main` into a seed
+   branch, check that nothing from other PRs was lost. At ingest, a match more than 2 years from the
    seed year is rejected (`isYearMismatch`).
 3. On merge, `ingest-new-titles.yml` ingests only the new entries. Mind the neuron
    budget.

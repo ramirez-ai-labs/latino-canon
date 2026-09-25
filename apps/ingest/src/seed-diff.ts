@@ -12,6 +12,22 @@ export function parseSeedFile(raw: string): SeedTitle[] {
   }
 }
 
+/** An entry deliberately taken out of the canon - see validateSeed's removal rule. */
+export interface SeedRemoval {
+  ref: string;
+  reason: string;
+}
+
+/** The `removed` ledger of a canon.seed.json payload; malformed/missing input yields none. */
+export function parseSeedRemovals(raw: string): SeedRemoval[] {
+  try {
+    const parsed = JSON.parse(raw) as { removed?: SeedRemoval[] };
+    return parsed.removed ?? [];
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Titles present in `after` but not in `before`, keyed by `ref` ("Title (Year)").
  * Used by .github/workflows/ingest-new-titles.yml to turn "add a title to
