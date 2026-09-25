@@ -3,6 +3,21 @@ import type { Collection, CurationResponse, EvalRun, SearchResponse, Title } fro
 import { localCollection, localCollections, localSearch, localTitle } from "./local-data";
 
 /**
+ * A non-2xx api response. Pages branch on `status`: a 404 title is notFound(), a 429 is
+ * "slow down" shown in place - not the generic error page, whose message Next strips in
+ * production.
+ */
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    path: string,
+  ) {
+    super(`api ${status} for ${path}`);
+    this.name = "ApiError";
+  }
+}
+
+/**
  * Server-side API client. Prefers the `API` service binding (no network hop); falls
  * back to PUBLIC_API_URL when running `next dev` without bindings.
  */
@@ -35,7 +50,7 @@ async function apiFetch<T>(
     ? await api.fetch(new Request(url, fetchOptions))
     : await fetch(`${process.env.PUBLIC_API_URL ?? "http://localhost:8787"}${path}`, fetchOptions);
 
-  if (!res.ok) throw new Error(`api ${res.status} for ${path}`);
+  if (!res.ok) throw new ApiError(res.status, path);
   return (await res.json()) as T;
 }
 

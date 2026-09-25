@@ -1,3 +1,5 @@
+import { cache } from "react";
+import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Theme } from "@latino-canon/core";
@@ -11,16 +13,58 @@ import {
   splitCitations,
   THEME_LABELS,
 } from "@latino-canon/core";
-import { getTitle, posterUrl, search } from "@/lib/api";
+import { ApiError, getTitle, posterUrl, search } from "@/lib/api";
 import { Badge } from "@/components/ui/Badge";
 import { TitleCard } from "@/components/TitleCard";
 import { Rail, RailItem } from "@/components/ui/Rail";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Only a 404 means the title doesn't exist. Any other failure (api down, rate-limited)
+ * used to render "not found" too - an outage passed off as a missing title - and now
+ * reaches app/error.tsx. cache() shares one api call between generateMetadata and the page.
+ */
+const loadTitle = cache(async (id: string) => {
+  try {
+    return await getTitle(id);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+});
+
+/** Per-title <title>/description/Open Graph - these pages are the ones worth sharing and indexing. */
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const title = await loadTitle((await params).id);
+  if (!title) return { title: "Not found" };
+
+  const blurb = title.blurb
+    ? splitCitations(title.blurb.text)
+        .map((part) => ("text" in part ? part.text : ""))
+        .join("")
+    : null;
+  const text = (blurb ?? title.synopsis ?? "").replace(/\s+/g, " ").trim();
+  const description = text.length > 160 ? `${text.slice(0, 157).trimEnd()}…` : text || undefined;
+  const poster = posterUrl(title.posterKey);
+  const name = `${title.title} (${title.yearStart})`;
+
+  return {
+    title: name,
+    description,
+    openGraph: {
+      title: name,
+      description,
+      type: title.kind === "series" ? "video.tv_show" : "video.movie",
+      // Only an absolute URL is usable by a link-preview crawler; the placeholder isn't.
+      ...(poster.startsWith("http") ? { images: [poster] } : {}),
+    },
+  };
+}
+
 export default async function TitlePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const title = await getTitle(id).catch(() => null);
+  const title = await loadTitle(id);
   if (!title) notFound();
 
   // Director if credited, else the first-ordered creator - same fallback db/cards.ts's
