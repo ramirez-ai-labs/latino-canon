@@ -170,6 +170,11 @@ export interface SearchResponse {
   interpretation: QueryInterpretation | null;
   results: TitleCard[];
   tookMs: number;
+  /**
+   * True when semantic retrieval was unavailable (e.g. the Workers AI daily budget ran
+   * out) and these are keyword-only results. Degraded responses are never cached.
+   */
+  degraded?: boolean;
 }
 
 export interface QueryInterpretation {

@@ -6,6 +6,8 @@ export interface Env {
   POSTERS: R2Bucket;
   /** Absent in tests / local dev without the binding - see search.ts's cache key. */
   CF_VERSION_METADATA?: WorkerVersionMetadata;
+  /** Per-caller limit on neuron-spending searches - see rate-limit.ts. Absent in tests. */
+  SEARCH_RATE_LIMITER?: RateLimit;
 
   AI_GATEWAY_ID: string;
   SEARCH_CACHE_TTL_SECONDS: string;

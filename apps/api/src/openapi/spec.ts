@@ -88,12 +88,18 @@ export const OPENAPI_SPEC = {
                     },
                     results: { type: "array", items: { $ref: "#/components/schemas/TitleCard" } },
                     tookMs: { type: "number", description: "Query execution time in milliseconds" },
+                    degraded: {
+                      type: "boolean",
+                      description:
+                        "Present (true) when semantic retrieval was unavailable, e.g. the Workers AI daily budget ran out, and results are keyword-only. Never cached.",
+                    },
                   },
                 },
               },
             },
           },
           "400": { description: "Invalid query parameters" },
+          "429": { description: "Rate limited - 30 uncached queries per minute per client. See Retry-After." },
         },
       },
     },

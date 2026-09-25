@@ -97,6 +97,9 @@ export default async function SearchPage({
             <span className="opacity-60"> ({((res as SearchResponse).interpretation!).source})</span>
           </p>
         )}
+        {!isAgent && (res as SearchResponse).degraded && (
+          <p>Meaning-based search is temporarily unavailable - showing keyword matches only.</p>
+        )}
         <p>
           {results.length} results {isAgent ? "· AI-curated" : `· ${(res as SearchResponse).mode} · ${(res as SearchResponse).tookMs}ms`} {isBrowse && `· Page ${page}`}
         </p>

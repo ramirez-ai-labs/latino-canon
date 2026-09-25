@@ -166,10 +166,11 @@ Order below: fix the measurements first, then what they measure.
 - [x] **2. Re-baseline v3 (run 1 complete)** — Baseline established: **0.682** (211/212 blurbs).
   Genre backfill 52% → 100%, content-advisory backfill 55% → 100%. Vectorize rebuilt with
   all 223 titles re-embedded. Run 2 (consistency check) TBD later UTC day.
-- [ ] **4. Exact-title match always wins + keyword-only fallback.** A normalized title,
-  original-title or alias match ranks first and skips the LLM rewrite ("y tu mama
-  tambien" currently ranks #2). If the query embedding fails (e.g. neurons exhausted),
-  search falls back to keyword results instead of a 500. No neurons.
+- [ ] **4. Exact-title match always wins.** A normalized title, original-title or alias
+  match ranks first and skips the LLM rewrite ("y tu mama tambien" currently ranks #2).
+  No neurons. *Keyword-only fallback is done:* a failed query embedding (e.g. neurons
+  exhausted) now returns keyword results flagged `degraded` - never cached, and the
+  retrieval eval refuses to score them - instead of a 500.
 - [ ] **6. Better blurbs.** ~120 of ~140 blurbs the v3 judge flags fail on one "It
   matters…" sentence no source supports. Add the OMDb awards/ratings the workflow already
   fetches (and discards) as sources; second sentence factual or source-backed; name the
@@ -177,8 +178,9 @@ Order below: fix the measurements first, then what they measure.
   Validate on a ~30-title sample, then roll out in daily batches. **Decide the approval
   path first** - `writeBlurb` resets `approved` when text changes and cards show only
   approved blurbs.
-- [ ] **5. Rewrite rework.** Check the cache before the LLM call (keyed on the raw
-  query); search on the user's original words (the rewrite drops content words like
+- [ ] **5. Rewrite rework.** *Cache-first is done:* the cache is checked before the LLM
+  call, keyed on the normalized raw query, and uncached queries are rate-limited per
+  client (30/min, Rate Limiting binding). Still open: search on the user's original words (the rewrite drops content words like
   "telenovela"); LLM extracts filters only; lower the `tags` column's BM25 weight.
   Saves neurons.
 - [ ] **5b. Spanish search.** Spanish recall@5 0.453 vs 0.799 for the same queries in

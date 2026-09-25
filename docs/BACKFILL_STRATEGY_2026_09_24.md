@@ -98,28 +98,14 @@ Write-Host "Content advisory backfill complete!"
 
 **Goal:** Re-embed all titles with new genre/advisory data
 
-**Approach:** Rebuild Vectorize with batching
-- Current endpoint will rate-limit, so need to call multiple times
-- Each call processes remaining unembedded titles
-- Total time: ~5-10 minutes (depending on rate limiting)
+**Approach:** the ingest worker's token-protected, paged `POST /rebuild-vectors`.
+(This plan originally called the api's `/admin/rebuild-vectorize`, which had no auth and
+has since been removed.)
 
 **Command:**
-```powershell
-# Call multiple times until all titles are embedded
-for ($i = 1; $i -le 5; $i++) {
-  Write-Host "Vectorize rebuild attempt $i..."
-  $response = curl -X POST "https://latino-canon-api.ai-builders-studio-latinx.workers.dev/admin/rebuild-vectorize" | ConvertFrom-Json
-  
-  Write-Host "Attempt $i: embedded=$($response.embedded), total=$($response.total)"
-  
-  if ($response.embedded -eq $response.total) {
-    Write-Host "All titles embedded successfully!"
-    break
-  }
-  
-  # Delay before retry to avoid rate limit
-  Start-Sleep -Seconds 5
-}
+```bash
+INGEST_URL=https://latino-canon-ingest.ai-builders-studio-latinx.workers.dev \
+INGEST_ADMIN_TOKEN=... pnpm --filter @latino-canon/ingest rebuild:vectors 20
 ```
 
 ### Phase 4: Cache Invalidation

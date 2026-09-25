@@ -80,4 +80,31 @@ describe("retrieve", () => {
 
     expect(result[0]?.titleId).toBe("lexical-winner");
   });
+
+  it("mode=hybrid returns keyword results and reports it when the embedding fails", async () => {
+    lexicalSearch.mockResolvedValueOnce(hits("a", "b", "c"));
+    semanticSearch.mockRejectedValueOnce(new Error("4006: daily neuron allocation exceeded"));
+    const onDegraded = vi.fn();
+    const result = await retrieve(env, { query: "q", mode: "hybrid", filters, limit: 2, onDegraded });
+
+    expect(result).toEqual(hits("a", "b"));
+    expect(onDegraded).toHaveBeenCalledOnce();
+  });
+
+  it("mode=semantic falls back to lexicalSearch at the caller's limit when the embedding fails", async () => {
+    semanticSearch.mockRejectedValueOnce(new Error("4006"));
+    lexicalSearch.mockResolvedValueOnce(hits("a"));
+    const onDegraded = vi.fn();
+    const result = await retrieve(env, { query: "q", mode: "semantic", filters, limit: 5, onDegraded });
+
+    expect(result).toEqual(hits("a"));
+    expect(lexicalSearch).toHaveBeenCalledWith(env, "q", filters, 5);
+    expect(onDegraded).toHaveBeenCalledOnce();
+  });
+
+  it("a lexical (D1) failure still throws - there's nothing cheaper to fall back to", async () => {
+    lexicalSearch.mockRejectedValueOnce(new Error("D1 down"));
+    semanticSearch.mockResolvedValueOnce(hits("b"));
+    await expect(retrieve(env, { query: "q", mode: "hybrid", filters, limit: 5 })).rejects.toThrow("D1 down");
+  });
 });

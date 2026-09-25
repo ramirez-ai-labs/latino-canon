@@ -140,9 +140,9 @@ retrieval eval after every api deploy with per-category scores on the Eval page.
 | Search integrity + filter semantics | #213–#215 | ✅ Complete | v1.2.0 |
 | Valid groundedness eval | #216, #217 | ✅ Complete | v1.2.0 |
 | Retrieval eval after every deploy | #219 | ✅ Complete | main (unreleased) |
-| Admin rebuild-vectorize endpoint | #222 | ✅ Complete | main (deployed Sept 24, 2026) |
+| ~~Admin rebuild-vectorize endpoint~~ | #222 | Removed - unauthenticated duplicate of the ingest worker's `POST /rebuild-vectors` | - |
 
-**All features including the two v1.0.0 nice-to-haves (OpenAPI + ESLint) plus the Sept 24 admin endpoint are production-ready and live.**
+**All features including the two v1.0.0 nice-to-haves (OpenAPI + ESLint) are production-ready and live.**
 
 ## Testing
 

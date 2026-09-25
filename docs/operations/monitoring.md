@@ -130,6 +130,11 @@ keyword index keeping stale text after a re-ingest (contentless FTS5) and its al
 **What should have caught this sooner:** a filtered semantic spot-check (see the runbook
 below) - and now the post-deploy retrieval eval.
 
+**It came back once.** #222 re-added an unauthenticated `POST /admin/rebuild-vectorize` to
+the public api worker - a duplicate of `/rebuild-vectors` that anyone could call in a loop
+to spend the neuron budget live search runs on. Removed again; `apps/api/src/routes/
+search.test.ts` now asserts the api exposes no `/admin` routes.
+
 ### 5. Inferred filters silently dropped search quality from 0.83 to 0.68
 
 **What happened:** adding genre and content-advisory inference (#206) let the LLM query

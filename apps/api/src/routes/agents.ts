@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { Env } from "../bindings.js";
 import { curate } from "../agents/curation-agent.js";
+import { clientIp } from "../rate-limit.js";
 import type { CurationRequest, CurationResponse } from "../agents/types.js";
 
 export const agentsRoute = new Hono<{ Bindings: Env }>();
@@ -74,7 +75,7 @@ agentsRoute.post("/curate", async (c) => {
     return c.json({ ...cached, cached: true });
   }
 
-  const ip = c.req.header("cf-connecting-ip") ?? "unknown";
+  const ip = clientIp(c);
   if (await isRateLimited(c.env, ip)) {
     console.warn(JSON.stringify({ event: "agents.curate", outcome: "rate_limited", query: body.query }));
     return c.json({ error: "Rate limit exceeded - try again in a minute" }, 429);

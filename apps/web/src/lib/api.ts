@@ -17,11 +17,17 @@ async function apiFetch<T>(
   const api = (env as { API?: { fetch: typeof fetch } }).API;
   const url = `https://api${path}`;
 
+  // The api rate-limits per viewer, but over the service binding it only sees this
+  // worker - pass the viewer's address along (every page here is force-dynamic, so
+  // reading request headers is always allowed).
+  const { headers } = await import("next/headers");
+  const viewerIp = (await headers()).get("cf-connecting-ip");
+
   const fetchOptions = {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      ...(options?.body ? {} : {}),
+      ...(viewerIp ? { "x-client-ip": viewerIp } : {}),
     },
   };
 
