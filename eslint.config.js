@@ -65,6 +65,7 @@ export default [
         KVNamespace: "readonly",
         R2Bucket: "readonly",
         WorkerVersionMetadata: "readonly",
+        RateLimit: "readonly",
         Blob: "readonly",
         Headers: "readonly",
         Response: "readonly",

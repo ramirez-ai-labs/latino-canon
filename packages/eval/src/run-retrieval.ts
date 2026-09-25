@@ -16,6 +16,7 @@
  *
  * Writes .eval-out/retrieval-<timestamp>.json for tracking over time.
  */
+import { setTimeout as sleep } from "node:timers/promises";
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { EvalRun, SearchMode, SearchResponse } from "@latino-canon/core";
@@ -28,6 +29,7 @@ const MODES = (process.env.MODES ?? "lexical,semantic,hybrid").split(",").map((m
 const RECORD = process.env.RECORD === "1";
 const GATE = process.env.GATE === "1";
 const MAX_DROP = Number(process.env.MAX_DROP ?? 0.03);
+const MAX_RATE_LIMIT_WAITS = 20; // 77 queries x 3 modes at 30/min needs ~7; well past that, something's wrong
 
 function loadQueries(): GoldQuery[] {
   const path = fileURLToPath(new URL("./datasets/queries.jsonl", import.meta.url));
@@ -39,10 +41,23 @@ function loadQueries(): GoldQuery[] {
 
 async function searchOnce(url: string): Promise<SearchResponse> {
   // One retry: a single transient 5xx shouldn't fail a deploy gate, a persistent one should.
-  for (let attempt = 0; ; attempt++) {
+  // A 429 isn't a failure - the api rate-limits every caller, this one included, so wait
+  // out the window. A degraded (keyword-only) response is one: scoring it would record an
+  // AI outage as a retrieval regression.
+  for (let attempt = 0, waits = 0; ; ) {
     const res = await fetch(url);
-    if (res.ok) return (await res.json()) as SearchResponse;
-    if (attempt >= 1) throw new Error(`GET ${url} -> ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    if (res.status === 429 && waits < MAX_RATE_LIMIT_WAITS) {
+      waits++;
+      await sleep(Number(res.headers.get("retry-after") ?? 60) * 1000);
+      continue;
+    }
+    if (res.ok) {
+      const body = (await res.json()) as SearchResponse;
+      if (!body.degraded) return body;
+      if (attempt++ >= 1) throw new Error(`GET ${url} -> degraded (semantic retrieval unavailable); not scoring`);
+      continue;
+    }
+    if (attempt++ >= 1) throw new Error(`GET ${url} -> ${res.status}: ${(await res.text()).slice(0, 200)}`);
   }
 }
 
