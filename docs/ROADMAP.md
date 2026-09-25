@@ -250,7 +250,12 @@ exact title, it is accepted whatever its year: the ±2-year guard (`isYearMismat
   or unknown inclusion types fail.
 - [x] **1b. Seed removal guard.** A title can't leave `canon.seed.json` without a
   `removed` ledger entry and reason (`seed-validate.ts`).
-- [ ] **2. Phase 1 data repair.** Restore the seven dropped entries (above) and pin verified
+- [x] **2a. Seven dropped entries restored** with pinned, TMDB-verified ids and tags
+  re-checked against CRITERIA.md: `breakthrough` kept only where citable (*Los olvidados*:
+  UNESCO Memory of the World, 2003; *Limite*: #1 in Abraccine's 2015 Top 100), and
+  `about_community` dropped from *Limite* and *The Exterminating Angel*. The three already
+  live are skipped at ingest; their live tags still carry the old `breakthrough` (#5).
+- [ ] **2. Phase 1 data repair (rest).** Restore the seven dropped entries (above) and pin verified
   `tmdbId`s for Los olvidados (1950), Terra em Transe, Canoa, Rojo amanecer, The Battle of
   Chile and La vendedora de rosas - plus Limite, Pixote and The Exterminating Angel, which
   are live but need their seed entries back.
