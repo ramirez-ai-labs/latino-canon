@@ -21,6 +21,8 @@ export interface SearchPlanResult {
   dropped: string[];
   /** strict = inferred filters excluded titles; boost = they only re-ranked. */
   filterMode: "strict" | "boost";
+  /** Semantic retrieval failed and these are keyword-only results - see retrieve(). */
+  degraded: boolean;
 }
 
 /**
@@ -49,34 +51,45 @@ export async function runSearch(
   },
 ): Promise<SearchPlanResult> {
   const { query, mode, explicit, limit, offset } = opts;
+  let degraded = false;
+  const onDegraded = (err: unknown): void => {
+    degraded = true;
+    console.warn(JSON.stringify({ event: "search.degraded", reason: err instanceof Error ? err.message : String(err) }));
+  };
   const definedInferred = Object.fromEntries(Object.entries(opts.inferred).filter(([, v]) => v !== undefined));
   const all: SearchFilters = { ...definedInferred, ...explicit };
   const inferred: SearchFilters = Object.fromEntries(Object.entries(definedInferred).filter(([k]) => !(k in explicit)));
 
   if (!query || (Object.keys(all).length > 0 && isFillerQuery(query))) {
     let hits = await browseByPopularity(env, all, limit, offset);
-    if (hits.length > 0) return { hits, applied: all, dropped: [], filterMode: "strict" };
+    if (hits.length > 0) return { hits, applied: all, dropped: [], filterMode: "strict", degraded };
     for (const relaxed of relaxedFilterSets(all, explicit)) {
       hits = await browseByPopularity(env, relaxed, limit, offset);
       if (hits.length > 0) {
-        return { hits, applied: relaxed, dropped: Object.keys(all).filter((k) => !(k in relaxed)), filterMode: "strict" };
+        return {
+          hits,
+          applied: relaxed,
+          dropped: Object.keys(all).filter((k) => !(k in relaxed)),
+          filterMode: "strict",
+          degraded,
+        };
       }
     }
-    return { hits: [], applied: all, dropped: [], filterMode: "strict" };
+    return { hits: [], applied: all, dropped: [], filterMode: "strict", degraded };
   }
 
   if (Object.keys(inferred).length === 0) {
-    const hits = await retrieve(env, { query, mode, filters: explicit, limit });
-    return { hits, applied: explicit, dropped: [], filterMode: "strict" };
+    const hits = await retrieve(env, { query, mode, filters: explicit, limit, onDegraded });
+    return { hits, applied: explicit, dropped: [], filterMode: "strict", degraded };
   }
 
-  const pool = await retrieve(env, { query, mode, filters: explicit, limit: Math.max(limit, BOOST_POOL) });
+  const pool = await retrieve(env, { query, mode, filters: explicit, limit: Math.max(limit, BOOST_POOL), onDegraded });
   const facets = await loadFacets(env, pool.map((h) => h.titleId));
   const hits = rerankWithBoosts(pool, (id) => {
     const f = facets.get(id);
     return f ? countFacetMatches(f, inferred) : 0;
   }).slice(0, limit);
-  return { hits, applied: all, dropped: [], filterMode: "boost" };
+  return { hits, applied: all, dropped: [], filterMode: "boost", degraded };
 }
 
 async function loadFacets(env: Env, ids: string[]): Promise<Map<string, TitleFacets>> {

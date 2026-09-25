@@ -10,6 +10,7 @@ import { runSearch } from "../search/run-search.js";
 import { hydrateCards } from "../db/cards.js";
 import { rewriteQuery } from "../ai/rewrite-query.js";
 import { makeLlmClient } from "../llm/index.js";
+import { clientIp, isSearchRateLimited } from "../rate-limit.js";
 
 export const searchRoute = new Hono<{ Bindings: Env }>();
 
@@ -31,19 +32,9 @@ searchRoute.get("/", async (c) => {
     genre: input.genre,
     contentAdvisory: input.contentAdvisory,
   });
-  let filters: SearchFilters = { ...explicitFilters };
-  let effectiveQuery = input.q;
-  let interpretation: QueryInterpretation | null = null;
-
-  // Natural-language queries: let the LLM lift filters out of the phrase.
-  if (input.q) {
-    interpretation = await rewriteQuery(makeLlmClient(c.env), input.q);
-    if (interpretation) {
-      effectiveQuery = interpretation.cleanedQuery || input.q;
-      filters = { ...interpretation.filters, ...explicitFilters }; // explicit query params win
-    }
-  }
-
+  // Checked before the query rewrite, keyed on what the caller sent (not the rewrite's
+  // output): a repeated query used to pay for an LLM call just to compute its own cache
+  // key. Case and spacing don't change results, so they don't split the cache either.
   // offset must be part of the key - every page of the same query/filters/limit
   // otherwise collides on one cache entry, so page 2's request could return whatever
   // page happened to be cached last (page 1's data, or page 4's, depending on timing),
@@ -53,9 +44,27 @@ searchRoute.get("/", async (c) => {
   // previous code computed. This replaced a hand-bumped "v2" prefix and the manual
   // POST /rebuild-search-cache after each deploy (index rebuilds still need that one).
   const version = c.env.CF_VERSION_METADATA?.id ?? "local";
-  const cacheKey = `search:${version}:${input.mode}:${effectiveQuery}:${JSON.stringify(filters)}:${input.limit}:${input.offset}`;
+  const normalizedQuery = (input.q ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+  const cacheKey = `search:${version}:${input.mode}:${normalizedQuery}:${JSON.stringify(explicitFilters)}:${input.limit}:${input.offset}`;
   const cached = await c.env.CACHE.get<SearchResponse>(cacheKey, "json");
-  if (cached) return c.json({ ...cached, tookMs: Date.now() - started });
+  if (cached) return c.json({ ...cached, query: input.q, tookMs: Date.now() - started });
+
+  // Past this point a query costs Workers AI neurons (rewrite + embedding) from the
+  // account-wide daily budget live search itself runs on. Browsing without a query doesn't.
+  if (input.q && (await isSearchRateLimited(c.env, clientIp(c)))) {
+    console.warn(JSON.stringify({ event: "search", outcome: "rate_limited" }));
+    c.header("Retry-After", "60");
+    return c.json({ error: "Rate limit exceeded - try again in a minute" }, 429);
+  }
+
+  let effectiveQuery = input.q;
+  let interpretation: QueryInterpretation | null = null;
+
+  // Natural-language queries: let the LLM lift filters out of the phrase.
+  if (input.q) {
+    interpretation = await rewriteQuery(makeLlmClient(c.env), input.q);
+    if (interpretation) effectiveQuery = interpretation.cleanedQuery || input.q;
+  }
 
   // How inferred filters are applied - strict for a filter-only query, a ranking boost
   // otherwise - lives in runSearch, shared with the curation agent.
@@ -88,13 +97,17 @@ searchRoute.get("/", async (c) => {
     interpretation,
     results,
     tookMs: Date.now() - started,
+    ...(plan.degraded ? { degraded: true } : {}),
   };
 
-  c.executionCtx.waitUntil(
-    c.env.CACHE.put(cacheKey, JSON.stringify(body), {
-      expirationTtl: Number(c.env.SEARCH_CACHE_TTL_SECONDS),
-    }),
-  );
+  // Keyword-only results must not outlive the outage that caused them.
+  if (!plan.degraded) {
+    c.executionCtx.waitUntil(
+      c.env.CACHE.put(cacheKey, JSON.stringify(body), {
+        expirationTtl: Number(c.env.SEARCH_CACHE_TTL_SECONDS),
+      }),
+    );
+  }
   return c.json(body);
 });
 

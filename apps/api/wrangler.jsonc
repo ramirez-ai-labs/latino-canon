@@ -53,6 +53,19 @@
 			"bucket_name": "latino-canon-posters"
 		}
 	],
+	// Per-caller limit on /search cache misses with a query - each one spends neurons from
+	// the account-wide 10k/day budget (query rewrite + bge-m3). 30/min is well above a
+	// person typing; a script hits it in seconds. The retrieval eval backs off on 429.
+	"ratelimits": [
+		{
+			"name": "SEARCH_RATE_LIMITER",
+			"namespace_id": "1001",
+			"simple": {
+				"limit": 30,
+				"period": 60
+			}
+		}
+	],
 	"vars": {
 		"AI_GATEWAY_ID": "latino-canon",
 		"SEARCH_CACHE_TTL_SECONDS": "3600"

@@ -105,6 +105,10 @@ curl "https://latino-canon-api.ai-builders-studio-latinx.workers.dev/search?q=an
 
 Results are cached per deployed version of the API (a new deploy never serves results computed by the previous code).
 
+If semantic retrieval is unavailable - most often because the account's daily Workers AI
+budget has run out - search returns keyword-only results with `"degraded": true` instead of
+failing. Degraded responses are never cached.
+
 ---
 
 ### `GET /titles/{id}`
@@ -188,7 +192,12 @@ Returns `topResults`, the `extractedIntent`, and a step-by-step `reasoning` arra
 
 ## Rate Limits
 
-No API key required. Only `POST /agents/curate` is rate-limited: **10 requests per minute per IP** (each request can make up to two Workers AI calls). Over the limit it returns `429`. Other endpoints have no per-client limit; search is protected by its result cache.
+No API key required. Two endpoints spend Workers AI neurons from the same account-wide daily budget, so both are limited per client:
+
+- **`GET /search`** - **30 uncached queries per minute**. Cached results and browsing without a `q` don't count. Over the limit it returns `429` with `Retry-After: 60`.
+- **`POST /agents/curate`** - **10 requests per minute**, plus a site-wide daily cap (each request can make up to two Workers AI calls).
+
+Other endpoints have no per-client limit.
 
 ---
 
@@ -206,7 +215,7 @@ No API key required. Only `POST /agents/curate` is rate-limited: **10 requests p
 
 ## Caching
 
-- **Search results** are cached in KV for **1 hour**, keyed by the deployed API version plus the interpreted query, filters, mode, limit and offset. A new deploy starts with an empty cache.
+- **Search results** are cached in KV for **1 hour**, keyed by the deployed API version plus the query as sent (case and spacing normalized), explicit filters, mode, limit and offset. The cache is checked before the query rewrite, so a repeated query costs no Workers AI calls. A new deploy starts with an empty cache.
 - **Posters** are served with `Cache-Control: public, max-age=86400`.
 - Other responses aren't cached.
 
@@ -214,11 +223,17 @@ No API key required. Only `POST /agents/curate` is rate-limited: **10 requests p
 
 ## Admin Endpoints
 
-The API also provides operational admin routes for search-index maintenance (no auth required; deployed as Cloudflare Workers):
+The public API has no admin routes. Index maintenance - re-embedding the catalog into
+Vectorize, clearing the search cache, backfills - lives on the ingest worker behind
+`Authorization: Bearer <INGEST_ADMIN_TOKEN>`, because each of those calls spends Workers AI
+neurons from the same account-wide daily budget live search depends on:
 
-- **`POST /admin/rebuild-vectorize`** — Re-embed all titles with current genre/content-advisory metadata and upsert to Vectorize. Use after backfill operations or when embedding logic changes. Returns `{ "embedded": 223, "total": 223, "status": "success" }`.
+- **`POST /rebuild-vectors`** (ingest) - re-embed one page of titles with the shared
+  embedding contract (`packages/core/src/embedding.ts`). Run the whole catalog with
+  `pnpm --filter @latino-canon/ingest rebuild:vectors`.
+- **`POST /rebuild-search-cache`** (ingest) - clear cached search results after a rebuild.
 
-For a complete list of admin and backfill operations (ingest worker), see [INGEST_API.md](INGEST_API.md).
+See [INGEST_API.md](INGEST_API.md) for the full list.
 
 ---
 

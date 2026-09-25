@@ -96,3 +96,80 @@ describe("GET /search - inferred filters on a query with content", () => {
     expect(body.results).toHaveLength(0);
   });
 });
+
+// No AI binding in this suite - exactly the state live search is in once the account's
+// daily Workers AI neuron budget runs out. That used to 500 every search until 00:00 UTC.
+describe("GET /search - Workers AI unavailable", () => {
+  it("hybrid falls back to keyword results instead of a 500, and says so", async () => {
+    const body = await search("q=bodega%20washington%20heights");
+    expect(body.degraded).toBe(true);
+    expect(body.results.map((r) => r.id)).toContain("in-the-heights-2021");
+  });
+
+  it("never caches a degraded response", async () => {
+    await search("q=divorcee%20rediscovers%20joy");
+    const { keys } = await env.CACHE.list({ prefix: "search:" });
+    expect(keys.map((k) => k.name).some((k) => k.includes("divorcee"))).toBe(false);
+  });
+
+  it("lexical mode isn't degraded - it never needed an embedding", async () => {
+    const body = await search("q=washington%20heights&mode=lexical");
+    expect(body.degraded).toBeUndefined();
+  });
+});
+
+describe("GET /search - cache and rate limit", () => {
+  async function rawSearch(qs: string, overrides: Partial<typeof env> = {}, headers: Record<string, string> = {}) {
+    const ctx = createExecutionContext();
+    const res = await app.request(`/search?${qs}`, { headers }, { ...env, ...overrides }, ctx);
+    await waitOnExecutionContext(ctx);
+    return res;
+  }
+  const denyAll = (seen: string[] = []) => ({
+    SEARCH_RATE_LIMITER: {
+      limit: ({ key }: { key: string }) => {
+        seen.push(key);
+        return Promise.resolve({ success: false });
+      },
+    },
+  });
+
+  it("serves a cached result before the rewrite runs, keyed on the normalized raw query", async () => {
+    const cached = { query: "x", mode: "lexical", interpretation: null, results: [{ id: "from-cache" }], tookMs: 0 };
+    await env.CACHE.put("search:local:lexical:cached query:{}:50:0", JSON.stringify(cached));
+    // A denying limiter proves the cache is checked first: a hit must not count against it.
+    const res = await rawSearch("q=%20Cached%20%20QUERY&mode=lexical", denyAll());
+    expect(res.status).toBe(200);
+    const body = await res.json<SearchResponse>();
+    expect(body.results.map((r) => r.id)).toEqual(["from-cache"]);
+    expect(body.query).toBe("Cached  QUERY");
+  });
+
+  it("rate-limits a cache miss with a query", async () => {
+    const res = await rawSearch("q=uncached%20query", denyAll());
+    expect(res.status).toBe(429);
+    expect(res.headers.get("retry-after")).toBe("60");
+  });
+
+  it("doesn't rate-limit browsing - no query, no neurons", async () => {
+    const res = await rawSearch("kind=film", denyAll());
+    expect(res.status).toBe(200);
+  });
+
+  it("keys the limit on the edge-set IP, and on x-client-ip only when that's absent", async () => {
+    const seen: string[] = [];
+    await rawSearch("q=first%20miss", denyAll(seen), { "x-client-ip": "203.0.113.9" });
+    await rawSearch("q=second%20miss", denyAll(seen), { "cf-connecting-ip": "198.51.100.4", "x-client-ip": "203.0.113.9" });
+    expect(seen).toEqual(["203.0.113.9", "198.51.100.4"]);
+  });
+});
+
+// #211 added an unauthenticated re-embed endpoint here, #213 removed it, #222 re-added it.
+// Index maintenance spends the neuron budget live search runs on - it belongs on the
+// ingest worker, behind INGEST_ADMIN_TOKEN (POST /rebuild-vectors).
+describe("api worker exposes no admin routes", () => {
+  it("POST /admin/rebuild-vectorize is gone", async () => {
+    const res = await app.request("/admin/rebuild-vectorize", { method: "POST" }, env, createExecutionContext());
+    expect(res.status).toBe(404);
+  });
+});

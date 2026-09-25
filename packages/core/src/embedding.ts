@@ -4,7 +4,7 @@ import type { TitleKind } from "./types.js";
 /**
  * The one definition of what a title's vector is made of and what metadata rides along
  * with it. This used to live in three places (ingest's upsertVector, an unused api
- * copy commented "keep in sync", and the api's /admin/rebuild-vectorize) - they had
+ * copy commented "keep in sync", and the api's since-removed /admin/rebuild-vectorize) - they had
  * already drifted, and the rebuild copy's metadata dropped `kind`/`decade`, which is
  * what filterToVectorize pushes down, so every rebuilt vector silently stopped matching
  * any kind/decade-filtered semantic query. Every writer to Vectorize goes through here.
