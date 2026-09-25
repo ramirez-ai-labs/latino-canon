@@ -305,9 +305,8 @@ exact title, it is accepted whatever its year: the ±2-year guard (`isYearMismat
   Cary Joji Fukunaga's); *The Comedians* (Peter Glenville) and *Walker* (Alex Cox) have
   British directors; *Lumumba: Death of a Prophet* is about the Congo.
 
-**Open decision:** the CSV's 7 Haiti titles fall outside the current scope in
-CRITERIA.md (Hispanic heritage broadly, plus Brazil). Either keep them out, or widen the
-scope in CRITERIA.md in its own PR before Phase 2.
+**Decided (2026-09-25): Haiti is out of scope** - recorded in CRITERIA.md's "Scope of
+'Latino'". The CSV's 7 Haiti titles are marked `OUT_OF_SCOPE` and dropped from Phase 2.
 
 ---
 
