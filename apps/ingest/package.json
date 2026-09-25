@@ -11,6 +11,7 @@
     "test": "vitest run && vitest run --config vitest.d1.config.ts",
     "seed": "tsx scripts/seed.ts",
     "seed:only": "tsx scripts/seed-only.ts",
+    "ingest:refs": "tsx scripts/ingest-refs.ts",
     "backfill:gender": "tsx scripts/backfill-gender.ts",
     "backfill:genres": "tsx scripts/backfill-genres.ts",
     "backfill:content-advisory": "tsx scripts/backfill-content-advisory.ts",

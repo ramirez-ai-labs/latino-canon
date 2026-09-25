@@ -275,6 +275,11 @@ exact title, it is accepted whatever its year: the ±2-year guard (`isYearMismat
   and *Manuel Rodríguez* (see #3). 20 seed entries match no live title by id or name (e.g.
   *Sin Nombre*, *Heli*, *The Heiresses*). Fix: correct the five pins, then fold these
   into #3's cleanup.
+- [x] **4d. Wrong pins corrected in the seed file.** 28 pins re-pointed at the right
+  films and 4 missing pins added (*A Queda*, *Martín (Hache)*, *The Battle of Chile* Part I,
+  *La vendedora de rosas*), each checked against TMDB credits for the director.
+  *Manuel Rodríguez* (1977) moved to `removed`. Re-ingest the 31 not yet live a few per
+  day with `pnpm --filter @latino-canon/ingest ingest:refs "<ref>" ...`.
 - [ ] **5. Phase 1 tag audit.** All 15 were tagged `breakthrough` without a citation;
   CRITERIA.md requires a documented, citable first.
 - [ ] **6. Phase 2, one PR.** The remaining CSV titles, each run through CRITERIA.md
