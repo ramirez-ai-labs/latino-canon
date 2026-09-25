@@ -215,13 +215,15 @@ and supports prereleases.
 Adding a title to the canon is a normal PR: edit
 `apps/ingest/src/seed/canon.seed.json` — see
 [`apps/ingest/src/seed/CRITERIA.md`](apps/ingest/src/seed/CRITERIA.md) for the
-inclusion-type verification checklist first — open a PR, get it reviewed. Once merged,
-`.github/workflows/ingest-new-titles.yml` diffs the seed file and `POST`s just the
-newly added entries to the deployed ingest worker automatically — no manual
-`curl`/CLI step. See [infra/README.md](infra/README.md#8-github-actions-auto-ingest-new-canon-titles)
-for the one-time GitHub Actions config it needs. This is separate from
-`deploy-ingest.yml` above: `ingest-new-titles.yml` sends data to whichever code is
-already live, it never redeploys the Worker's own code.
+inclusion-type verification checklist first — open a PR, get it reviewed. Merging
+doesn't ingest anything by itself: the ingest worker's daily cron (08:00 UTC) runs an
+**ingest queue** (`apps/ingest/src/ingest-queue.ts`) that takes the next
+`INGEST_QUEUE_PER_DAY` (default 5) pinned seed entries not yet live and starts their
+Workflows, so ingest volume stays inside the neuron budget however many content PRs
+merge in a day. A re-pinned entry counts as not live, so corrections drain the same way.
+`GET /queue` on the ingest worker shows what's next and anything held (an entry whose
+current pin already failed, which needs a human). `ingest-new-titles.yml` remains as a
+manual override for ingesting new entries immediately.
 
 ---
 

@@ -153,6 +153,26 @@ List pending and errored ingest jobs (up to 200 most recent).
 
 ---
 
+### `GET /queue` (Admin)
+
+What the daily cron (08:00 UTC) will ingest next, without starting anything. The queue
+takes seed entries that pin a `tmdbId` no live title has, in seed-file order, up to
+`INGEST_QUEUE_PER_DAY` (default 5) per day.
+
+```json
+{
+  "next": ["Heli (2013)", "Araby (2017)"],
+  "eligible": 35,
+  "held": [{ "ref": "Colada (2026)", "reason": "ingested, but no live title has this tmdbId - check for a slug collision" }]
+}
+```
+
+`held` lists entries the queue won't send because a job already tried their current pin:
+it failed a check (wrong film, bad pin), is still running, or is in review. Fix the seed
+entry (a new pin re-queues it) or the data; retrying the same pin won't help.
+
+---
+
 ### `POST /seed-load` (Admin)
 
 Load seed titles **without** classification, blurb generation, or TMDB fetching. 

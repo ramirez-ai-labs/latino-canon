@@ -86,12 +86,12 @@ pnpm --filter @latino-canon/ingest deploy
 pnpm --filter @latino-canon/web deploy
 ```
 
-## 8. GitHub Actions: auto-ingest new canon titles
+## 8. GitHub Actions: manual ingest override
 
-`.github/workflows/ingest-new-titles.yml` triggers a title's ingestion automatically
-once a PR that adds it to `apps/ingest/src/seed/canon.seed.json` merges to `main` —
-so adding a title to the canon doesn't need a manual `curl`/CLI call against the
-deployed worker. It needs the *deployed* ingest worker's URL and admin token as
+New canon titles are ingested by the ingest worker's daily queue (5 a day,
+`INGEST_QUEUE_PER_DAY` in `apps/ingest/wrangler.jsonc`), not on merge.
+`.github/workflows/ingest-new-titles.yml` is a manual override that ingests titles
+added since a given ref immediately. It needs the *deployed* ingest worker's URL and admin token as
 repo-level GitHub config (Settings → Secrets and variables → Actions):
 
 ```text

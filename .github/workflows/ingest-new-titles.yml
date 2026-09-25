@@ -1,16 +1,12 @@
 name: Ingest new canon titles
 
-# Editors add titles by opening a PR that edits canon.seed.json - the actual point of
-# the taxonomy/review-queue design is that a human decides what belongs in the canon.
-# This workflow is what turns "the PR merged" into "the title is queued for ingestion,"
-# so that step isn't a manual curl/CLI call against the deployed worker.
+# Manual override only. Merged seed titles are ingested by the ingest worker's daily
+# queue (apps/ingest/src/ingest-queue.ts, 5 a day by default) - this used to run on every
+# merge, which let two content PRs on one UTC day blow the shared Workers AI neuron
+# budget (2026-09-25). Run it by hand only to ingest newly added titles immediately,
+# against the diff from `base_ref`; mind the day's budget.
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "apps/ingest/src/seed/canon.seed.json"
   workflow_dispatch:
     inputs:
       base_ref:

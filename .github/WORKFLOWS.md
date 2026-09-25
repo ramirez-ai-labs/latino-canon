@@ -59,17 +59,17 @@ All workflows are organized by category below. Each entry includes the trigger c
 
 ---
 
-## Data Ingestion (Manual trigger or on seed commit)
+## Data Ingestion
+
+Merged seed titles are **not** ingested by a workflow. The ingest worker's daily cron
+(08:00 UTC) runs the ingest queue (`apps/ingest/src/ingest-queue.ts`): the next
+`INGEST_QUEUE_PER_DAY` (default 5) pinned seed entries whose TMDB id isn't live.
+`GET /queue` on the ingest worker previews it.
 
 ### ingest-new-titles.yml
-- **Trigger**: On commit to `main` + changes to `apps/ingest/src/seed/canon.seed.json`
-- **Purpose**: Ingest new titles from seed into production database
-- **What it does**:
-  - Detects new titles added to seed file
-  - POSTs them to `/ingest` endpoint for full workflow processing
-  - Runs 4 titles at a time with 5s delays
-- **Duration**: Varies (1-5 min depending on batch size)
-- **Note**: Runs in parallel with `deploy-ingest.yml` — no ordering guarantee
+- **Trigger**: manual only (`workflow_dispatch`, optional `base_ref`)
+- **Purpose**: override - ingest titles added since `base_ref` immediately, outside the queue
+- **Note**: spends 70B neurons now; check the day's budget first
 
 ---
 
@@ -139,7 +139,8 @@ All workflows are organized by category below. Each entry includes the trigger c
 | Commit to main + api changes | deploy-api | ✅ | — | Deploy API |
 | Commit to main + ingest changes | deploy-ingest | ✅ | — | Deploy ingest |
 | Commit to main + web changes | deploy-web | ✅ | — | Deploy frontend |
-| Commit to main + seed.json changes | ingest-new-titles | ✅ | — | Ingest data |
+| Daily 08:00 UTC (ingest worker cron) | ingest queue, 5 titles | ✅ | — | Ingest data |
+| Manual trigger from Actions UI | ingest-new-titles | — | ✅ | Ingest now (override) |
 | deploy-api succeeds | eval-retrieval (hybrid) | ✅ | — | Catch search regressions |
 | Sundays 09:30 UTC | eval-retrieval (all modes) | ✅ | ✅ | Weekly search baseline |
 | Manual trigger from Actions UI | eval-groundedness | — | ✅ | Evaluate blurbs |
@@ -156,7 +157,8 @@ All workflows are organized by category below. Each entry includes the trigger c
 → Check `deploy-*` logs for Cloudflare token or migration errors
 
 ### "New titles didn't appear in search"
-→ Check `ingest-new-titles` logs; seeds are ingested async via workflow
+→ Titles ingest via the daily queue, 5 a day. Check `GET /queue` on the ingest worker
+for the order and any held entries, then `GET /jobs` for errors
 
 ### "Eval results aren't showing on /eval page"
 → Check the `eval-retrieval` / `eval-groundedness` logs for D1 insert errors

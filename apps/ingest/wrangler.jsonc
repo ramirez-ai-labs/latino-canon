@@ -37,12 +37,16 @@
   ],
 
   "triggers": {
-    // nightly: retry errored jobs + refresh popularity/ratings
+    // daily: ingest the next seed titles (ingest-queue.ts), retry errored jobs,
+    // refresh popularity/ratings
     "crons": ["0 8 * * *"]
   },
 
   "vars": {
-    "AI_GATEWAY_ID": "latino-canon"
+    "AI_GATEWAY_ID": "latino-canon",
+    // Seed titles ingested per day. Each costs 70B classify + blurb neurons from the
+    // account-wide 10k/day budget; 5 leaves room for live search and one eval.
+    "INGEST_QUEUE_PER_DAY": "5"
   }
 
   // Secrets: TMDB_API_KEY, OMDB_API_KEY, INGEST_ADMIN_TOKEN

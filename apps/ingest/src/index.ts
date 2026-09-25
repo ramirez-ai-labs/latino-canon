@@ -6,6 +6,7 @@ import { removeInvalidTmdbEntries } from "./cleanup/index.js";
 import { rebuildVectors, reindexFts, writeAliases, writeContentAdvisory } from "./persist.js";
 import { classifyContentAdvisory } from "./ai.js";
 import { ingestOpenApiSpec } from "./openapi.js";
+import { loadQueuePlan, runIngestQueue } from "./ingest-queue.js";
 
 export { IngestWorkflow } from "./workflow.js";
 
@@ -14,6 +15,7 @@ export default {
    * Admin surface — protected by INGEST_ADMIN_TOKEN. Not public.
    *   POST /ingest               { titles: IngestParams[] }   → kicks off one workflow per title
    *   GET  /jobs                                              → review queue
+   *   GET  /queue                                             → what the daily cron ingests next
    *   POST /backfill-gender           { limit?: number }      → TMDB-only, no Workers AI neurons
    *   POST /backfill-genres           { limit?: number }      → TMDB-only, no Workers AI neurons
    *   POST /backfill-content-advisory { limit?: number }      → LLM classification (small model)
@@ -355,6 +357,16 @@ export default {
       return Response.json({ titleId, aliasCount: aliases.length });
     }
 
+    // What the daily cron will ingest next, without starting anything.
+    if (req.method === "GET" && url.pathname === "/queue") {
+      const plan = await loadQueuePlan(env);
+      return Response.json({
+        next: plan.picked.map((t) => t.ref),
+        eligible: plan.eligible,
+        held: plan.held,
+      });
+    }
+
     if (req.method === "GET" && url.pathname === "/jobs") {
       const { results } = await env.DB.prepare(
         "SELECT * FROM ingest_jobs WHERE status IN ('needs_review','error') ORDER BY updated_at DESC LIMIT 200",
@@ -416,7 +428,7 @@ export default {
   /** Nightly cron. */
   async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
     ctx.waitUntil(
-      Promise.all([retryErroredJobs(env), refreshPopularity(env)]).then(() => undefined),
+      Promise.all([runIngestQueue(env), retryErroredJobs(env), refreshPopularity(env)]).then(() => undefined),
     );
   },
 };
