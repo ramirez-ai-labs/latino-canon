@@ -12,27 +12,25 @@ describe("jobIdFor", () => {
 });
 
 describe("isYearMismatch", () => {
-  it("is false when no tmdbId was pinned, regardless of year gap", () => {
-    // A plain title+year search (no pinned id) has no "wrong id" failure mode this
-    // guards against - only a pinned id can point at a completely unrelated title.
-    expect(isYearMismatch(undefined, 1973, 2002)).toBe(false);
+  it("catches a pinned id pointing at an unrelated title: El Chavo del 8 (1973) -> Firefly (2002)", () => {
+    expect(isYearMismatch(1973, 2002)).toBe(true);
   });
 
-  it("catches the exact real incident: El Chavo del 8 (1973) pinned to Firefly (2002)", () => {
-    expect(isYearMismatch(1437, 1973, 2002)).toBe(true);
+  it("catches a search match on a namesake: Los olvidados (1950) -> a 2014 film", () => {
+    expect(isYearMismatch(1950, 2014)).toBe(true);
   });
 
-  it("tolerates a small gap (release-date/awards-year imprecision)", () => {
-    expect(isYearMismatch(47, 1973, 1974)).toBe(false);
-    expect(isYearMismatch(47, 1973, 1975)).toBe(false);
+  it("tolerates a small gap (festival premiere vs release, awards-year imprecision)", () => {
+    expect(isYearMismatch(1973, 1974)).toBe(false);
+    expect(isYearMismatch(1973, 1975)).toBe(false);
   });
 
   it("flags just past the tolerance boundary", () => {
-    expect(isYearMismatch(47, 1973, 1976)).toBe(true);
+    expect(isYearMismatch(1973, 1976)).toBe(true);
   });
 
-  it("is symmetric - a pinned id resolving to something earlier than expected is just as wrong", () => {
-    expect(isYearMismatch(1, 2020, 1990)).toBe(true);
+  it("is symmetric - resolving to something earlier than expected is just as wrong", () => {
+    expect(isYearMismatch(1977, 1910)).toBe(true); // Manuel Rodríguez
   });
 });
 

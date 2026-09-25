@@ -70,6 +70,13 @@ is involved somewhere," but a specific, checkable credit. Six exist:
    genre or subject matter doesn't change that. Caught on review; both titles added.
    This doesn't retroactively bless every older exclusion built on similar reasoning
    (e.g. *From Dusk till Dawn*) — those stay flagged rather than silently reopened.
+10. **Pin `tmdbId` on every new entry — CI rejects one without it**
+    (`apps/ingest/src/seed-validate.ts`). Find the film on themoviedb.org and confirm
+    its year and director match what steps 1-2 verified. Without a pin, ingest resolves
+    the title by exact-title search: TMDB's English titles miss Spanish/Portuguese seed
+    titles entirely, and a namesake from another decade gets accepted (*Los olvidados*
+    (1950) went live as a 2014 film). Ingest also rejects any match more than 2 years
+    from the seed year, pinned or not.
 
 ## Deferred, pending TMDB data
 

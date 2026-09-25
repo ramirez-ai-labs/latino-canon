@@ -76,8 +76,9 @@ filters exclude. Inferred ones boost, unless the query is filter-only. See `runS
 
 ### 5. "Latino-focused" is an explicit taxonomy, not a genre tag
 
-The four `inclusion_type` values are `led_by`, `created_by`, `about_community` and
-`breakthrough` (`packages/core/src/taxonomy.ts`). The policy itself lives in
+The six `inclusion_type` values are `led_by`, `created_by`, `about_community`,
+`breakthrough`, `starring` and `produced_by` (`INCLUSION_TYPES` in
+`packages/core/src/taxonomy.ts`). The policy itself lives in
 `apps/ingest/src/seed/CRITERIA.md`. Tag precedence is **editor > seed > model**. Model
 tags below `MODEL_TAG_DISPLAY_THRESHOLD` are never shown or embedded, and low-confidence
 classifications go to the `needs_review` queue.
@@ -117,9 +118,11 @@ twice (#211, #222). `search.test.ts` now fails if it comes back.
 ### Adding a title to the canon
 
 1. Verify every credit independently against `apps/ingest/src/seed/CRITERIA.md`. Past
-   mistakes include wrong directors, wrong years, duplicate entries, and TMDB id
-   collisions (pin `tmdbId`).
-2. Edit `apps/ingest/src/seed/canon.seed.json` and open a `content:` PR.
+   mistakes include wrong directors, wrong years, duplicate entries, and wrong films.
+2. Edit `apps/ingest/src/seed/canon.seed.json` with a verified, pinned `tmdbId`, and open
+   a `content:` PR. CI (`scripts/validate-seed.ts`) rejects duplicates, unknown inclusion
+   types, and new entries without `tmdbId`. At ingest, a match more than 2 years from the
+   seed year is rejected (`isYearMismatch`).
 3. On merge, `ingest-new-titles.yml` ingests only the new entries. Mind the neuron
    budget.
 
