@@ -4,7 +4,7 @@ Argentina,La Ciénaga,2001,film,Lucrecia Martel,Martel's directorial debut and r
 Bolivia,Blood of the Condor,1969,film,Jorge Sanjinés,Indigenous/community-centered cinema pioneer,IN_CANON
 Bolivia,The Principal Enemy,1974,film,Jorge Sanjinés,Sanjinés's critical documentary work,needs_verification
 Bolivia,The Courage of the People,1971,film,Jorge Sanjinés,Indigenous activism documentary,needs_verification
-Bolivia,Cuestión de fe,1995,film,Unknown,Emerging Bolivian cinema,needs_verification
+Bolivia,Cuestión de fe,1995,film,Unknown,Emerging Bolivian cinema,IN_CANON
 Bolivia,I Am the Other,1986,film,Unknown,Indigenous representation,needs_verification
 Bolivia,Utama,2022,film,Alejandro Fuentes,Contemporary Andean cinema,needs_verification
 Brazil,Limite,1931,film,Mario Peixoto,Silent cinema and experimental form,needs_verification
@@ -38,9 +38,9 @@ Cuba,Conducta,2014,film,Erwin Martín Díaz,Contemporary Cuban cinema,needs_veri
 Dominican Republic,Aguibibí,2006,film,Unknown,Dominican identity,needs_verification
 Dominican Republic,La lucha de Ana,2012,film,Unknown,Gender and race,needs_verification
 Dominican Republic,Cristo Rey,2013,film,Unknown,Contemporary Dominican cinema,needs_verification
-Dominican Republic,Cocote,2017,film,Unknown,Haiti-Dominican relations,needs_verification
-Dominican Republic,Carajita,2021,film,Unknown,Gender and childhood,needs_verification
-Dominican Republic,Bantú Mama,2021,film,Unknown,Afro-Dominican identity,needs_verification
+Dominican Republic,Cocote,2017,film,Unknown,Haiti-Dominican relations,IN_CANON
+Dominican Republic,Carajita,2021,film,Unknown,Gender and childhood,IN_CANON
+Dominican Republic,Bantú Mama,2021,film,Unknown,Afro-Dominican identity,IN_CANON
 Dominican Republic,Perejil,2022,film,Unknown,Contemporary festival cinema,needs_verification
 Ecuador,Ratas ratones rateros,1999,film,Sebastián Cordova,New Ecuadorian cinema,needs_verification
 Ecuador,Crónicas,2004,film,Claudia Llosa,Journalism and media violence,needs_verification
@@ -51,13 +51,13 @@ Ecuador,The Longest Night,2019,film,Óscar Fuentes Tapia,Intimate family drama,n
 El Salvador,El pirata negro,1954,film,Unknown,Early Salvadoran cinema,needs_verification
 El Salvador,La palabra de Pablo,2017,film,Unknown,Postwar narrative,needs_verification
 El Salvador,The Body Politic,2021,film,Unknown,Contemporary activism,needs_verification
-El Salvador,El Suspiro del Silencio,2020,film,Unknown,Migration and loss,needs_verification
-Guatemala,El silencio de Neto,1994,film,Luis Felipe Díaz,Civil-war memory,needs_verification
-Guatemala,Gasolina,2008,film,Unknown,Urban Mayan life,needs_verification
-Guatemala,Las marimbas del infierno,2010,film,Unknown,Indigenous music and culture,needs_verification
+El Salvador,El Suspiro del Silencio,2020,film,Unknown,Migration and loss,IN_CANON
+Guatemala,El silencio de Neto,1994,film,Luis Felipe Díaz,Civil-war memory,IN_CANON
+Guatemala,Gasolina,2008,film,Unknown,Urban Mayan life,IN_CANON
+Guatemala,Las marimbas del infierno,2010,film,Unknown,Indigenous music and culture,IN_CANON
 Guatemala,Temblores,2019,film,Jayro Bustamante,Religion and sexuality,IN_CANON
 Guatemala,La Llorona,2019,film,Jayro Bustamante,Indigenous mythology and violence,IN_CANON
-Guatemala,Cadejo Blanco,2021,film,Unknown,Street life and mythology,needs_verification
+Guatemala,Cadejo Blanco,2021,film,Unknown,Street life and mythology,IN_CANON
 Haiti,The Comedians,1967,film,Peter Glenville,Dictatorship (Duvalier era),OUT_OF_SCOPE
 Haiti,Anita,1980,film,Unknown,Haitian cinema,OUT_OF_SCOPE
 Haiti,Lumumba: Death of a Prophet,1991,film,Raoul Peck,Postcolonial memory,OUT_OF_SCOPE
@@ -65,11 +65,11 @@ Haiti,Royal Bonbon,2002,film,Pascal Aussignac,Dictatorship satire,OUT_OF_SCOPE
 Haiti,Moloch Tropical,2009,film,Raoul Peck,Postcolonial identity,OUT_OF_SCOPE
 Haiti,Murder in Pacot,2014,film,Laurence Magliagrasse,Urban violence,OUT_OF_SCOPE
 Haiti,Freda,2021,film,Fireworks Films,Contemporary Haitian cinema,OUT_OF_SCOPE
-Honduras,No hay tierra sin dueño,2002,film,Unknown,Land and inequality,needs_verification
-Honduras,Amor y frijoles,2009,film,Unknown,Popular comedy,needs_verification
-Honduras,Morazán,2017,film,Unknown,National identity,needs_verification
+Honduras,No hay tierra sin dueño,2002,film,Unknown,Land and inequality,IN_CANON
+Honduras,Amor y frijoles,2009,film,Unknown,Popular comedy,IN_CANON
+Honduras,Morazán,2017,film,Unknown,National identity,IN_CANON
 Honduras,Café con sabor a mi tierra,2019,film,Unknown,Local production,needs_verification
-Honduras,El Xendra,2012,film,Unknown,Genre production,needs_verification
+Honduras,El Xendra,2012,film,Unknown,Genre production,IN_CANON
 Mexico,Los olvidados,1950,film,Luis Buñuel,Golden Age legacy,needs_verification
 Mexico,The Exterminating Angel,1962,film,Luis Buñuel,Surrealist political allegory,needs_verification
 Mexico,Canoa,1976,film,Felipe Cazals,Political violence,needs_verification
@@ -80,30 +80,30 @@ Mexico,Roma,2018,film,Alfonso Cuarón,Global auteur cinema,IN_CANON
 Mexico,Macario,1960,film,Ignacio Rodríguez,Golden Age magical realism,IN_CANON
 Nicaragua,Alsino and the Condor,1982,film,Unknown,Revolution and Sandinista imagery,needs_verification
 Nicaragua,Walker,1987,film,Unknown,Political history,needs_verification
-Nicaragua,La Yuma,2009,film,Unknown,Gender and youth,needs_verification
-Nicaragua,Palabras mágicas,2012,film,Unknown,Contemporary Nicaragua,needs_verification
+Nicaragua,La Yuma,2009,film,Unknown,Gender and youth,IN_CANON
+Nicaragua,Palabras mágicas,2012,film,Unknown,Contemporary Nicaragua,IN_CANON
 Nicaragua,El Nica,2015,film,Unknown,National identity,needs_verification
 Nicaragua,Antígona,2018,film,Unknown,Political memory,needs_verification
 Panama,Plaza Catedral,2021,film,Unknown,Urban contemporary,needs_verification
 Panama,Everybody Changes,2019,film,Unknown,Afro-Panamanian identity,needs_verification
 Panama,Donaire y Esplendor,2017,film,Unknown,Cultural documentation,needs_verification
-Panama,Salsipuedes,2016,film,Unknown,Social realism,needs_verification
-Panama,Box 25,2015,film,Unknown,Urban narrative,needs_verification
+Panama,Salsipuedes,2016,film,Unknown,Social realism,IN_CANON
+Panama,Box 25,2015,film,Unknown,Urban narrative,IN_CANON
 Paraguay,Hamaca paraguaya,2006,film,Paz Encina,Guaraní language and rural life,needs_verification
 Paraguay,Cloudy Times,2014,film,Unknown,Contemporary Paraguay,needs_verification
-Paraguay,The Gold Seekers,2017,film,Unknown,Indigenous displacement,needs_verification
+Paraguay,The Gold Seekers,2017,film,Unknown,Indigenous displacement,IN_CANON
 Paraguay,Nothing But the Sun,2021,film,Unknown,Rural narrative,needs_verification
 Paraguay,EAMI,2022,film,Unknown,Contemporary cinema,needs_verification
 Peru,Juliana,1989,film,Unknown,Post-conflict memory,needs_verification
 Peru,Madeinusa,2006,film,Claudia Llosa,Indigenous representation,needs_verification
 Peru,October,2010,film,Unknown,Contemporary Peru,needs_verification
-Peru,NN,2014,film,Unknown,Urban narrative,needs_verification
+Peru,NN,2014,film,Unknown,Urban narrative,IN_CANON
 Peru,The Healer,2018,film,Unknown,Family story,needs_verification
 Peru,The Milk of Sorrow,2009,film,Claudia Llosa,Post-conflict and indigeneity,IN_CANON
-Puerto Rico,Los peloteros,1953,film,Unknown,Sports and culture,needs_verification
+Puerto Rico,Los peloteros,1953,film,Unknown,Sports and culture,IN_CANON
 Puerto Rico,La guagua aérea,1993,film,Unknown,Migration and diaspora,needs_verification
-Puerto Rico,Cayo,2005,film,Unknown,Contemporary Puerto Rican cinema,needs_verification
-Puerto Rico,Mala mala,2014,film,Unknown,Queer and trans lives,needs_verification
+Puerto Rico,Cayo,2005,film,Unknown,Contemporary Puerto Rican cinema,IN_CANON
+Puerto Rico,Mala mala,2014,film,Unknown,Queer and trans lives,IN_CANON
 Puerto Rico,Antes que cante el gallo,2016,film,Unknown,Colonial history,needs_verification
 Puerto Rico,La pecera,2023,film,Unknown,Environmental crisis,needs_verification
 Uruguay,25 Watts,2001,film,Juan Pablo Steubal & Marcelo Viana,Deadpan national style,needs_verification
