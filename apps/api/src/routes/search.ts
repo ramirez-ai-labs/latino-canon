@@ -11,6 +11,7 @@ import { hydrateCards } from "../db/cards.js";
 import { rewriteQuery } from "../ai/rewrite-query.js";
 import { makeLlmClient } from "../llm/index.js";
 import { clientIp, isSearchRateLimited } from "../rate-limit.js";
+import { exactTitleIds } from "../search/exact-title.js";
 
 export const searchRoute = new Hono<{ Bindings: Env }>();
 
@@ -60,8 +61,18 @@ searchRoute.get("/", async (c) => {
   let effectiveQuery = input.q;
   let interpretation: QueryInterpretation | null = null;
 
+  // A query that is a title's exact name ranks that title first (see exactTitleIds) and
+  // skips the rewrite - there's nothing to interpret, and the rewrite could only drop or
+  // reword the name. Hybrid only: lexical/semantic stay pure retrievers for the per-mode
+  // evals. Not with explicit facets, which the pinned title might not satisfy.
+  const exact =
+    input.q && input.mode === "hybrid" && Object.keys(explicitFilters).length === 0
+      ? await exactTitleIds(c.env, input.q)
+      : [];
+  if (exact.length) console.warn(JSON.stringify({ event: "search.exact_title", titleIds: exact }));
+
   // Natural-language queries: let the LLM lift filters out of the phrase.
-  if (input.q) {
+  if (input.q && exact.length === 0) {
     interpretation = await rewriteQuery(makeLlmClient(c.env), input.q);
     if (interpretation) effectiveQuery = interpretation.cleanedQuery || input.q;
   }
@@ -76,7 +87,13 @@ searchRoute.get("/", async (c) => {
     limit: input.limit,
     offset: input.offset,
   });
-  const hits = plan.hits;
+  // Exact matches lead page one; later pages drop them so a title never shows twice.
+  const rest = plan.hits.filter((h) => !exact.includes(h.titleId));
+  const top = rest[0]?.score ?? 0;
+  const hits =
+    input.offset === 0 && exact.length
+      ? [...exact.map((titleId, i) => ({ titleId, score: top + exact.length - i })), ...rest].slice(0, input.limit)
+      : rest;
   if (interpretation) {
     interpretation = {
       ...interpretation,

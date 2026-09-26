@@ -105,6 +105,12 @@ curl "https://latino-canon-api.ai-builders-studio-latinx.workers.dev/search?q=an
 
 Results are cached per deployed version of the API (a new deploy never serves results computed by the previous code).
 
+In `hybrid` mode, a query that is a title's exact name - its title, original title or an
+alias, ignoring case, accents and punctuation, optionally followed by the year
+(`gloria 2013`) - returns that title first, and `interpretation` is `null` because the
+query rewrite is skipped. Not applied in `lexical`/`semantic` modes or with explicit
+filters.
+
 If semantic retrieval is unavailable - most often because the account's daily Workers AI
 budget has run out - search returns keyword-only results with `"degraded": true` instead of
 failing. Degraded responses are never cached.
