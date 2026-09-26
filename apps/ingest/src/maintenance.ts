@@ -1,5 +1,6 @@
 import type { Env, IngestParams } from "./bindings.js";
 import { fetchTmdbDetails } from "./sources/tmdb.js";
+import { isStaleRetry, seedTitles } from "./ingest-queue.js";
 
 /**
  * Cron: re-queue jobs that errored, capped so a poison job can't loop forever.
@@ -32,6 +33,9 @@ export async function retryErroredJobs(env: Env): Promise<void> {
     } catch {
       continue; // corrupt params column - not this function's job to fix, leave for a human
     }
+
+    // The seed has since re-pinned this title - the ingest queue ingests the new pin.
+    if (isStaleRetry(params, seedTitles())) continue;
 
     // force:true because the earlier attempt may have already persisted a partial
     // row before failing later in the pipeline (e.g. classify/embed/blurb) - without

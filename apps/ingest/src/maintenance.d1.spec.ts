@@ -58,6 +58,22 @@ describe("retryErroredJobs", () => {
     expect(row?.attempts).toBe(2);
   });
 
+  it("skips a job the seed has since re-pinned - the ingest queue owns the new pin", async () => {
+    const create = vi.fn().mockResolvedValue({ id: "instance-2" });
+    const env = { ...testEnv, INGEST_WORKFLOW: { create } } as unknown as Env;
+    // Heli (2013) was pinned to a 1968 cartoon (202389) until #244 re-pinned it (186935).
+    const stale = { ref: "Heli (2013)", title: "Heli", year: 2013, kind: "film" as const, tmdbId: 202389 };
+    await env.DB.prepare(
+      "INSERT INTO ingest_jobs (id, title_ref, stage, status, attempts, params) VALUES (?,?,?,?,?,?)",
+    )
+      .bind("job-stale-1", stale.ref, "validate", "error", 0, JSON.stringify(stale))
+      .run();
+
+    await retryErroredJobs(env);
+
+    expect(create).not.toHaveBeenCalledWith({ params: { ...stale, force: true } });
+  });
+
   it("bumps attempts but does not guess params for a pre-migration job with none stored", async () => {
     // Regression case for the incident this replaces: guessing IngestParams from
     // title_ref alone (no kind/tmdbId/seedInclusionTypes) is what corrupted an

@@ -45,8 +45,10 @@
   "vars": {
     "AI_GATEWAY_ID": "latino-canon",
     // Seed titles ingested per day. Each costs 70B classify + blurb neurons from the
-    // account-wide 10k/day budget; 5 leaves room for live search and one eval.
-    "INGEST_QUEUE_PER_DAY": "5"
+    // account-wide 10k/day budget - measured ~140-200 per title (2026-09-25), so 15 is
+    // ~2-3k/day, leaving room for live search (~0.7k) and a retrieval eval (~0.4k). Don't
+    // run a groundedness judge (~2.8k) on a heavy queue day.
+    "INGEST_QUEUE_PER_DAY": "15"
   }
 
   // Secrets: TMDB_API_KEY, OMDB_API_KEY, INGEST_ADMIN_TOKEN

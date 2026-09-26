@@ -13,6 +13,8 @@
  *   GATE=1                 exit 1 if hybrid recall@5 dropped more than MAX_DROP against
  *                          the last recorded run on the same golden set.
  *   MAX_DROP=0.03          see eval-retrieval.yml for how this was chosen.
+ *   REBASELINE="<reason>"  accept this run as the new baseline whatever the drop - for a
+ *                          drop caused by catalog growth, not code (see checkGate).
  *
  * Writes .eval-out/retrieval-<timestamp>.json for tracking over time.
  */
@@ -29,6 +31,7 @@ const MODES = (process.env.MODES ?? "lexical,semantic,hybrid").split(",").map((m
 const RECORD = process.env.RECORD === "1";
 const GATE = process.env.GATE === "1";
 const MAX_DROP = Number(process.env.MAX_DROP ?? 0.03);
+const REBASELINE = process.env.REBASELINE?.trim() ? { reason: process.env.REBASELINE.trim() } : undefined;
 const MAX_RATE_LIMIT_WAITS = 20; // 77 queries x 3 modes at 30/min needs ~7; well past that, something's wrong
 
 function loadQueries(): GoldQuery[] {
@@ -75,7 +78,7 @@ async function runMode(mode: SearchMode, queries: GoldQuery[]) {
  * runs are recorded (the history should show them) but never become the baseline -
  * otherwise one regressed deploy would lower the bar for every deploy after it.
  */
-async function lastComparableRecall(hash: string): Promise<number | null> {
+async function lastComparableRun(hash: string): Promise<{ recall: number; catalogSize?: number } | null> {
   const res = await fetch(`${API_URL}/eval-runs?type=retrieval&limit=50`);
   if (!res.ok) throw new Error(`GET /eval-runs -> ${res.status}`);
   const { runs } = (await res.json()) as { runs: EvalRun[] };
@@ -83,7 +86,18 @@ async function lastComparableRecall(hash: string): Promise<number | null> {
     const d = r.details as { goldenSetHash?: string; gate?: { pass: boolean } } | null;
     return d?.goldenSetHash === hash && d.gate?.pass !== false && r.metrics["hybrid.recall@5"] !== undefined;
   });
-  return match?.metrics["hybrid.recall@5"] ?? null;
+  if (!match) return null;
+  return {
+    recall: match.metrics["hybrid.recall@5"]!,
+    catalogSize: (match.details as { catalogSize?: number } | null)?.catalogSize,
+  };
+}
+
+/** Titles the api serves - recorded per run, so a drop can be read against catalog growth. */
+async function catalogSize(): Promise<number | undefined> {
+  const res = await fetch(`${API_URL}/titles`);
+  if (!res.ok) return undefined;
+  return ((await res.json()) as { count?: number }).count;
 }
 
 const fmt = (n: number) => n.toFixed(3);
@@ -131,7 +145,9 @@ async function main() {
   console.log(`\nwrote ${out}`);
 
   // Baseline is read before this run is recorded, so a run never compares against itself.
-  const gate = hybrid && GATE ? checkGate(hybrid.scores["recall@5"], await lastComparableRecall(hash), MAX_DROP) : null;
+  const baseline = hybrid && GATE ? await lastComparableRun(hash) : null;
+  const gate = hybrid && GATE ? checkGate(hybrid.scores["recall@5"], baseline?.recall ?? null, MAX_DROP, REBASELINE) : null;
+  const catalog = await catalogSize();
 
   if (RECORD) {
     const metrics: Record<string, number> = { queries: queries.length };
@@ -153,6 +169,7 @@ async function main() {
       details: {
         goldenSetHash: hash,
         modes: MODES,
+        catalogSize: catalog,
         gate,
         misses: primary.perQuery
           .filter((q) => !q.ranked.slice(0, 5).some((id) => q.relevant.includes(id)))
@@ -166,11 +183,20 @@ async function main() {
     if (gate.baseline === null) {
       console.log(`\ngate: no earlier run on golden set ${hash} - this run is the baseline (recall@5 ${fmt(gate.current)})`);
     } else {
-      const verdict = gate.pass ? "PASS" : "FAIL";
+      const verdict = gate.rebaseline ? "REBASELINED" : gate.pass ? "PASS" : "FAIL";
       console.log(
         `\ngate: ${verdict} - hybrid recall@5 ${fmt(gate.current)} vs baseline ${fmt(gate.baseline)} (${gate.delta! >= 0 ? "+" : ""}${fmt(gate.delta!)}, max drop ${MAX_DROP})`,
       );
-      if (!gate.pass) process.exitCode = 1;
+      const grew = catalog !== undefined && baseline?.catalogSize !== undefined ? catalog - baseline.catalogSize : undefined;
+      console.log(`catalog: ${catalog ?? "?"} titles (baseline run: ${baseline?.catalogSize ?? "not recorded"}${grew ? `, ${grew > 0 ? "+" : ""}${grew}` : ""})`);
+      if (gate.rebaseline) console.log(`accepted as the new baseline: ${gate.rebaseline.reason}`);
+      if (!gate.pass) {
+        console.log(
+          "If no ranking code changed, new titles likely pushed expected answers down: check the misses above, " +
+            'then re-run from Actions with "rebaseline" and a reason to accept it.',
+        );
+        process.exitCode = 1;
+      }
     }
   }
 }

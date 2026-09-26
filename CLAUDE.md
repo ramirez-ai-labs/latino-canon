@@ -126,7 +126,7 @@ twice (#211, #222). `search.test.ts` now fails if it comes back.
    branch, check that nothing from other PRs was lost. At ingest, a match more than 2 years from the
    seed year, or whose TMDB titles don't resemble the seed title or an alias, is rejected
    (`isYearMismatch`, `isTitleMismatch`). Open the TMDB page for every pin you add.
-3. Merge any time: the ingest worker's daily queue ingests the next 5 pinned seed
+3. Merge any time: the ingest worker's daily queue ingests the next 15 pinned seed
    entries that aren't live (`ingest-queue.ts`, cron 08:00 UTC). `GET /queue` shows the
    order and anything held. `ingest-new-titles.yml` is a manual override only.
 

@@ -33,6 +33,13 @@ on:
         description: "Comma-separated search modes"
         default: "hybrid"
         type: string
+      rebaseline:
+        description: >-
+          Accept this run as the new baseline whatever the drop, with a reason
+          (e.g. "catalog grew 237 -> 265, no ranking change"). Leave empty for a normal gated run.
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: read
@@ -55,6 +62,7 @@ jobs:
       RECORD: "1"
       GATE: "1"
       MAX_DROP: "0.03"
+      REBASELINE: ${{ inputs.rebaseline }}
 
     steps:
       - name: Check out repository
