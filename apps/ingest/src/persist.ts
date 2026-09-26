@@ -250,7 +250,8 @@ export async function writeBlurb(env: Env, titleId: string, blurb: BlurbGroundin
   // discard an editor's prior approval - only reset it when the text or its grounding
   // sources actually changed. Found the hard way: every re-ingest was resetting
   // approved -> 0 unconditionally, which combined with a run of metadata-fix PRs wiped
-  // out the whole catalog's approval state without anyone noticing.
+  // out the whole catalog's approval state without anyone noticing. A judge verdict is
+  // about the text it read, so new text drops it along with the approval.
   await env.DB.prepare(
     `INSERT INTO blurbs (title_id, text, sources, model, approved)
      VALUES (?1, ?2, ?3, ?4, 0)
@@ -261,6 +262,11 @@ export async function writeBlurb(env: Env, titleId: string, blurb: BlurbGroundin
        approved = CASE
          WHEN blurbs.text = excluded.text AND blurbs.sources IN (excluded.sources, ?5) THEN blurbs.approved
          ELSE 0
+       END,
+       groundedness = CASE WHEN blurbs.text = excluded.text THEN blurbs.groundedness END,
+       judge_version = CASE WHEN blurbs.text = excluded.text THEN blurbs.judge_version END,
+       approved_by = CASE
+         WHEN blurbs.text = excluded.text AND blurbs.sources IN (excluded.sources, ?5) THEN blurbs.approved_by
        END`,
   )
     // ?5: the same sources in the pre-id/text format ({kind, ref, quote}) - storing id +
@@ -272,6 +278,30 @@ export async function writeBlurb(env: Env, titleId: string, blurb: BlurbGroundin
       blurb.model,
       JSON.stringify(blurb.sources.map(({ kind, ref, quote }) => ({ kind, ref, quote }))),
     )
+    .run();
+}
+
+/**
+ * Record the ingest-time judge verdict and approve the blurb if it passed. Keyed on the
+ * text the judge read, so a blurb rewritten in between is left alone. A failing verdict
+ * never revokes an approval: a re-ingest that keeps an editor-approved text re-judges it,
+ * and the editor's call stands.
+ */
+export async function recordBlurbVerdict(
+  env: Env,
+  titleId: string,
+  text: string,
+  verdict: { score: number; judgeVersion: number; pass: boolean },
+): Promise<void> {
+  await env.DB.prepare(
+    `UPDATE blurbs SET
+       groundedness = ?3,
+       judge_version = ?4,
+       approved_by = CASE WHEN ?5 = 1 AND approved = 0 THEN 'judge' ELSE approved_by END,
+       approved = CASE WHEN ?5 = 1 THEN 1 ELSE approved END
+     WHERE title_id = ?1 AND text = ?2`,
+  )
+    .bind(titleId, text, verdict.score, verdict.judgeVersion, verdict.pass ? 1 : 0)
     .run();
 }
 

@@ -107,16 +107,32 @@ export function contentAdvisoryUser(input: { title: string; year: number; synops
 /**
  * "Why it matters" blurb. RAG: the caller supplies grounding snippets, each with an id.
  * Every sentence in the blurb must map to a snippet id via "claims".
+ *
+ * The first prompt asked for a "why it matters" note, and the model obliged with a
+ * closing "It matters as a portrayal of…" sentence no source supports: on the v3 judge
+ * run (2026-09-24), 118 of the 136 blurbs below 1.0 failed on that one sentence. Every
+ * sentence is now a sourced fact; significance comes from an award source when OMDb has
+ * one, and is otherwise left unsaid rather than invented. Ingest auto-approves a blurb
+ * the judge finds fully supported (see BLURB_AUTO_APPROVE_MIN_SCORE), so an invented
+ * judgment now costs the title its approval, not just a point on the eval.
  */
-export const BLURB_SYSTEM = `You write a 2-3 sentence "why it matters" note for a title in a Latino film canon.
+export const BLURB_SYSTEM = `You write a 2-sentence note for a title in a Latino film canon: what the work is, and
+what it's recognized for.
 
 Constraints:
-- Ground every claim in the supplied SOURCES. Do not add facts that are not in a source.
-- No hype adjectives ("stunning", "must-see"). State what the work is and its significance.
+- Every sentence must state something a SOURCE says. Do not add facts, and do not write
+  judgments of meaning or significance ("It matters as…", "It is an important portrayal
+  of…", "It is part of the Latino film canon") - no source states those, so they count
+  as unsupported.
+- If an award source is given, use it for the second sentence (e.g. "It won 3 awards,
+  including …"). Otherwise the second sentence is another sourced fact: who made it,
+  where or when it's set, or what happens.
+- Refer to the work by its title (the credit sources name it) or as "the film" /
+  "the series" - never by a character's name.
+- No hype adjectives ("stunning", "must-see").
 - "text" must be 40-360 characters - both bounds are hard requirements. Two sentences is
-  usually enough to state what the work is and why it matters. Add a second sentence only
-  if a single clause would be under 40 characters; do not add a third sentence "for
-  completeness" once two already cover it - that is the most common way past 360.
+  usually enough; do not add a third sentence "for completeness" - that is the most
+  common way past 360.
 - For each factual claim, cite the source id it rests on.
 Respond ONLY with JSON matching:
 {"text": string, "claims":[{"claim": string, "supportedBy": string}]}`;

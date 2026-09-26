@@ -15,11 +15,11 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import {
-  coerceLlmText,
-  extractJson,
   GROUNDEDNESS_JUDGE_MODEL,
   GROUNDEDNESS_JUDGE_SYSTEM,
   GROUNDEDNESS_JUDGE_VERSION,
+  groundednessJudgeUser,
+  parseGroundednessVerdict,
 } from "@latino-canon/core";
 import { writeEvalRunSql } from "./record-run.js";
 
@@ -37,7 +37,7 @@ async function judge(blurb: string, sources: { id: string; text: string }[]): Pr
   if (!CF_ACCOUNT_ID || !CLOUDFLARE_API_TOKEN) {
     throw new Error("set CF_ACCOUNT_ID and CLOUDFLARE_API_TOKEN for the judge (Workers AI REST API)");
   }
-  const user = `BLURB:\n${blurb}\n\nSOURCES:\n${sources.map((s) => `[${s.id}] ${s.text}`).join("\n")}`;
+  const user = groundednessJudgeUser(blurb, sources);
   const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/${GROUNDEDNESS_JUDGE_MODEL}`, {
     method: "POST",
     headers: {
@@ -60,8 +60,7 @@ async function judge(blurb: string, sources: { id: string; text: string }[]): Pr
   if (!r.ok) throw new Error(`workers-ai judge ${r.status}: ${await r.text()}`);
   const d = (await r.json()) as { result?: { response?: unknown }; success: boolean; errors?: unknown[] };
   if (!d.success) throw new Error(`workers-ai judge failed: ${JSON.stringify(d.errors)}`);
-  const parsed = extractJson(coerceLlmText(d.result?.response) || "{}") as { score?: unknown; unsupported?: unknown };
-  return { score: Number(parsed.score) || 0, unsupported: Array.isArray(parsed.unsupported) ? parsed.unsupported : [] };
+  return parseGroundednessVerdict(d.result?.response);
 }
 
 async function main() {

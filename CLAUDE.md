@@ -45,7 +45,7 @@ at 00:00 UTC. Running out breaks live search, not just ingest. Measured costs:
 | Job | Neurons |
 | --- | --- |
 | Live search | ~0.5–0.7k/day |
-| Ingest queue, classify+blurb (70B), 15 titles/day | ~3k (~200/title) |
+| Ingest queue, classify+blurb+judge (70B), 15 titles/day | ~3.2k (~200/title + ~13 judge) |
 | Groundedness judge run | ~2.8k |
 | Retrieval eval | ~0.15k hybrid, ~0.4k all modes |
 
@@ -189,8 +189,9 @@ README and `monitoring.md`.
 6. **`apps/web` has no tests.**
 7. **Seed titles go live a day or more after merge.** The queue ingests 15 a day, so a
    migration that touches a new title must wait for it (see "Adding a migration").
-8. **Blurb approval is manual.** New blurbs stay unapproved until an editor approves them
-   (auto-approval via the groundedness judge is planned).
+8. **Only fully supported blurbs auto-approve.** Ingest runs the v3 judge on each new
+   blurb and approves it at score 1.0 (`approved_by = 'judge'`). Anything lower, the 63
+   blurbs from before the gate, and any blurb whose judge call failed wait for an editor.
 9. **The retrieval gate compares against the last passing run.** A big catalog change
    can shift recall legitimately; re-run `eval-retrieval.yml` with a `rebaseline` reason
    rather than weakening the threshold.
@@ -199,12 +200,11 @@ README and `monitoring.md`.
 
 See `docs/ROADMAP.md` for the authoritative list. Current order:
 
-1. Auto-approve blurbs that pass the groundedness judge (item 6).
-2. A remote MCP server over search, titles and curate.
-3. Spanish search: grow the Spanish golden queries, then the bilingual plan (5b).
-4. Rewrite rework: search on the user's original words and let the LLM extract filters
+1. A remote MCP server over search, titles and curate.
+2. Spanish search: grow the Spanish golden queries, then the bilingual plan (5b).
+3. Rewrite rework: search on the user's original words and let the LLM extract filters
    only (item 5).
-5. Classifier eval (item 8).
+4. Classifier eval (item 8).
 
 ## Testing
 

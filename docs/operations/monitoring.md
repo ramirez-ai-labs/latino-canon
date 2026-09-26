@@ -221,7 +221,7 @@ budget on a given day.
   single practical lesson from incident #3 above. Cloudflare dashboard → AI →
   Workers AI shows today's usage so far (see the alert below for a CLI query).
 - **Measured costs (2026-09-24, ingest re-measured 2026-09-25):** live search
-  ~0.5–0.7k/day; the daily ingest queue ~3k (15 titles × ~200, 70B); groundedness eval ~2.8k per run (70B); retrieval eval ~0.15k hybrid /
+  ~0.5–0.7k/day; the daily ingest queue ~3.2k (15 titles × ~200, 70B, + ~13 each for the blurb judge); groundedness eval ~2.8k per run (70B); retrieval eval ~0.15k hybrid /
   ~0.4k all modes.
 - **Rules:** at most one 70B job (groundedness run, blurb regeneration) per day, never
   on an ingest day; sample before full runs; weekly, not nightly, schedules.
@@ -363,11 +363,17 @@ a retry - the nightly retry skips jobs the seed has since re-pinned.
 
 ```bash
 npx wrangler d1 execute latino-canon --remote --command \
-  "SELECT approved, COUNT(*) FROM blurbs GROUP BY approved"
+  "SELECT approved, approved_by, COUNT(*), ROUND(AVG(groundedness), 2) FROM blurbs GROUP BY 1, 2"
 ```
 
 If `approved = 1` count doesn't grow roughly in line with the catalog, or drops
 between checks, something is silently un-approving blurbs again (incident #1).
+Since the ingest-time judge gate, most new titles should land as `approved_by =
+'judge'`. If a day's queue run adds mostly unapproved blurbs with `groundedness`
+set, the blurb prompt is producing unsupported sentences again - read them in Workers
+Logs (`event: "ingest.blurb_judge"`, `outcome: "held"`, with the `unsupported` claims).
+Unapproved with `groundedness` NULL means the judge call itself failed
+(`outcome: "judge_failed"`).
 Cross-check against `GET /titles?hasBlurb=1`'s count, which is what the live
 site's search results actually gate on.
 

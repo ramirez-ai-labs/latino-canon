@@ -36,7 +36,7 @@ export function normalizeTitle(
   details: TmdbDetails,
   ratings: OmdbRatings | null,
 ): Title {
-  void ratings; // not yet folded into the Title shape — see apps/ingest/src/ai.ts blurbForIngest TODO
+  void ratings; // not stored on the Title - the awards line reaches the blurb as a source instead (ai.ts blurbSources)
 
   return {
     id: slugId(details.title, details.releaseYear),

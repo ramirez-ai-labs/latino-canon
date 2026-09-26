@@ -1,11 +1,21 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
+import { GROUNDEDNESS_JUDGE_VERSION, passesBlurbGate, type GroundednessVerdict } from "@latino-canon/core";
 import type { Env, IngestParams } from "./bindings.js";
 import { resolveTmdbId, fetchTmdbDetails } from "./sources/tmdb.js";
 import { fetchOmdbRatings } from "./sources/omdb.js";
 import { normalizeTitle } from "./normalize.js";
-import { persistTitle, upsertVector, writeTags, writeAliases, writeBlurb, writeContentAdvisory, setJob } from "./persist.js";
+import {
+  persistTitle,
+  upsertVector,
+  writeTags,
+  writeAliases,
+  writeBlurb,
+  writeContentAdvisory,
+  recordBlurbVerdict,
+  setJob,
+} from "./persist.js";
 import { cachePoster } from "./poster.js";
-import { classifyForIngest, classifyContentAdvisory, blurbForIngest } from "./ai.js";
+import { classifyForIngest, classifyContentAdvisory, blurbForIngest, judgeBlurb } from "./ai.js";
 import { jobIdFor, isTitleMismatch, isYearMismatch, needsHumanReview, confidentThemes } from "./workflow-rules.js";
 
 /**
@@ -143,9 +153,51 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
       const blurb = await step.do(
         "generate blurb",
         { retries: { limit: 2, delay: "30 seconds" } },
-        () => blurbForIngest(this.env, title, classification),
+        () => blurbForIngest(this.env, title, classification, raw.ratings?.awards ?? null),
       );
       await step.do("write blurb (unapproved)", () => writeBlurb(this.env, title.id, blurb));
+
+      // Approval gate: the v3 judge reads the blurb against its sources, and a fully
+      // supported blurb is approved here instead of waiting for an editor - the daily
+      // queue was adding ~15 unapproved blurbs a day to a backlog of 63. A judge failure
+      // (its retries exhausted, or a reply with no JSON) leaves the blurb unapproved for
+      // an editor, the pre-gate behavior; it never fails the ingest.
+      stage = "judge";
+      let verdict: GroundednessVerdict | null = null;
+      try {
+        verdict = await step.do("judge blurb", { retries: { limit: 2, delay: "30 seconds" } }, () =>
+          judgeBlurb(this.env, blurb),
+        );
+      } catch (err) {
+        console.warn(
+          JSON.stringify({
+            event: "ingest.blurb_judge",
+            titleId: title.id,
+            outcome: "judge_failed",
+            error: err instanceof Error ? err.message : String(err),
+          }),
+        );
+      }
+      if (verdict) {
+        const judged = verdict;
+        const pass = passesBlurbGate(judged);
+        await step.do("record blurb verdict", () =>
+          recordBlurbVerdict(this.env, title.id, blurb.result.text, {
+            score: judged.score,
+            judgeVersion: GROUNDEDNESS_JUDGE_VERSION,
+            pass,
+          }),
+        );
+        console.warn(
+          JSON.stringify({
+            event: "ingest.blurb_judge",
+            titleId: title.id,
+            outcome: pass ? "approved" : "held",
+            score: judged.score,
+            unsupported: judged.unsupported,
+          }),
+        );
+      }
 
       // --- Route to human review when the model isn't confident ---------------
       const lowConfidence = needsHumanReview(p.seedInclusionTypes, classification.inclusionTypes);
