@@ -285,7 +285,7 @@ Measured costs (2026-09-24, Workers AI analytics, `aiInferenceAdaptiveGroups`):
 | Job | Model | Neurons |
 |---|---|---|
 | Live search (query rewrite + embedding) | 8B + bge-m3 | ~0.5–0.7k/day |
-| Ingest classify + blurb (daily queue, 15 titles) | 70B | ~3k/day (~200 per title) |
+| Ingest classify + blurb + judge (daily queue, 15 titles) | 70B | ~3.2k/day (~200 per title + ~13 for the judge) |
 | Groundedness eval, 212 blurbs | 70B | ~2.8k per run |
 | Retrieval eval, 77 queries | 8B + bge-m3 | ~0.15k hybrid / ~0.4k all modes |
 
@@ -346,7 +346,12 @@ found by hand, is why the eval now runs on every deploy.
 `pnpm eval:groundedness` has an LLM judge (70B) check each approved blurb's claims against
 the sources it was written from. **Current baseline: 0.682** (211 of 212 blurbs scored,
 judge v3). About 120 of the ~140 flagged blurbs fail on a single "It matters…" sentence
-that no source supports - the target of the next blurb work.
+that no source supports. New blurbs are written without it (sourced facts only, with
+OMDb's awards line as a source), and ingest now runs the same v3 judge on each one:
+a blurb with every claim supported is approved automatically (`approved_by = 'judge'`),
+anything less waits for an editor. The eval and the gate share one judge input format
+(`packages/core/src/groundedness.ts`), so a gate verdict and an eval score measure the
+same thing.
 
 Earlier published numbers (0.486 and similar) were invalid: until
 [#216](https://github.com/ramirez-ai-labs/latino-canon/pull/216) the judge was given each

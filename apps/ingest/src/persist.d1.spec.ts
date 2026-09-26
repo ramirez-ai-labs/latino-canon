@@ -2,7 +2,16 @@ import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import type { Title } from "@latino-canon/core";
 import type { Env } from "./bindings.js";
-import { persistTitle, rebuildVectors, setJob, writeAliases, writeBlurb, writeContentAdvisory, writeTags } from "./persist.js";
+import {
+  persistTitle,
+  rebuildVectors,
+  recordBlurbVerdict,
+  setJob,
+  writeAliases,
+  writeBlurb,
+  writeContentAdvisory,
+  writeTags,
+} from "./persist.js";
 
 function makeTitle(overrides: Partial<Title> = {}): Title {
   return {
@@ -236,6 +245,61 @@ describe("writeBlurb source format", () => {
     await writeBlurb(env, "blurb-format-2020", { result: { text, claims: [] }, sources: newSources, model: "m" });
     const row = await env.DB.prepare("SELECT approved FROM blurbs WHERE title_id = ?").bind("blurb-format-2020").first<{ approved: number }>();
     expect(row?.approved).toBe(1);
+  });
+});
+
+describe("recordBlurbVerdict", () => {
+  const text = "Test Title (2020) is directed by Ana Díaz [d0]. It won 2 awards [a1].";
+  const blurb = (t: string) => ({ result: { text: t, claims: [] }, sources: [], model: "m" });
+  type Row = { approved: number; approved_by: string | null; groundedness: number | null; judge_version: number | null };
+  const read = (id: string) =>
+    env.DB.prepare("SELECT approved, approved_by, groundedness, judge_version FROM blurbs WHERE title_id = ?")
+      .bind(id)
+      .first<Row>();
+
+  it("a passing verdict approves the blurb and marks the judge as approver", async () => {
+    await persistTitle(env, makeTitle({ id: "verdict-pass-2020", tmdbId: 101 }));
+    await writeBlurb(env, "verdict-pass-2020", blurb(text));
+    await recordBlurbVerdict(env, "verdict-pass-2020", text, { score: 1, judgeVersion: 3, pass: true });
+    expect(await read("verdict-pass-2020")).toEqual({ approved: 1, approved_by: "judge", groundedness: 1, judge_version: 3 });
+  });
+
+  it("a failing verdict records the score and leaves the blurb for an editor", async () => {
+    await persistTitle(env, makeTitle({ id: "verdict-fail-2020", tmdbId: 102 }));
+    await writeBlurb(env, "verdict-fail-2020", blurb(text));
+    await recordBlurbVerdict(env, "verdict-fail-2020", text, { score: 0.5, judgeVersion: 3, pass: false });
+    expect(await read("verdict-fail-2020")).toEqual({ approved: 0, approved_by: null, groundedness: 0.5, judge_version: 3 });
+  });
+
+  it("a failing verdict never revokes an editor's approval", async () => {
+    await persistTitle(env, makeTitle({ id: "verdict-editor-2020", tmdbId: 103 }));
+    await writeBlurb(env, "verdict-editor-2020", blurb(text));
+    await env.DB.prepare("UPDATE blurbs SET approved = 1 WHERE title_id = ?").bind("verdict-editor-2020").run();
+    await recordBlurbVerdict(env, "verdict-editor-2020", text, { score: 0.5, judgeVersion: 3, pass: false });
+    expect(await read("verdict-editor-2020")).toMatchObject({ approved: 1, approved_by: null });
+  });
+
+  it("a verdict on text that has since been rewritten changes nothing", async () => {
+    await persistTitle(env, makeTitle({ id: "verdict-stale-2020", tmdbId: 104 }));
+    await writeBlurb(env, "verdict-stale-2020", blurb("A newer blurb text that replaced the one the judge read."));
+    await recordBlurbVerdict(env, "verdict-stale-2020", text, { score: 1, judgeVersion: 3, pass: true });
+    expect(await read("verdict-stale-2020")).toEqual({ approved: 0, approved_by: null, groundedness: null, judge_version: null });
+  });
+
+  it("re-ingesting different text drops the old verdict with the approval", async () => {
+    await persistTitle(env, makeTitle({ id: "verdict-reset-2020", tmdbId: 105 }));
+    await writeBlurb(env, "verdict-reset-2020", blurb(text));
+    await recordBlurbVerdict(env, "verdict-reset-2020", text, { score: 1, judgeVersion: 3, pass: true });
+    await writeBlurb(env, "verdict-reset-2020", blurb("A regenerated blurb with different text, long enough too."));
+    expect(await read("verdict-reset-2020")).toEqual({ approved: 0, approved_by: null, groundedness: null, judge_version: null });
+  });
+
+  it("re-ingesting the same text keeps the verdict and the judge's approval", async () => {
+    await persistTitle(env, makeTitle({ id: "verdict-keep-2020", tmdbId: 106 }));
+    await writeBlurb(env, "verdict-keep-2020", blurb(text));
+    await recordBlurbVerdict(env, "verdict-keep-2020", text, { score: 1, judgeVersion: 3, pass: true });
+    await writeBlurb(env, "verdict-keep-2020", blurb(text));
+    expect(await read("verdict-keep-2020")).toEqual({ approved: 1, approved_by: "judge", groundedness: 1, judge_version: 3 });
   });
 });
 

@@ -15,8 +15,13 @@ import {
   normalizeBlurbJson,
   normalizeContentAdvisoryJson,
   MODELS,
+  GROUNDEDNESS_JUDGE_MODEL,
+  GROUNDEDNESS_JUDGE_SYSTEM,
+  groundednessJudgeUser,
+  parseGroundednessVerdict,
+  type GroundednessVerdict,
   type BlurbResult,
-  type BlurbSource,
+  type ResolvedBlurbSource,
   type ClassificationResult,
   type ContentAdvisory,
   type Title,
@@ -100,26 +105,39 @@ export async function classifyContentAdvisory(
 
 export interface BlurbGroundingResult {
   result: BlurbResult;
-  sources: BlurbSource[];
+  sources: ResolvedBlurbSource[];
   model: string;
 }
 
-export async function blurbForIngest(
-  env: Env,
-  t: Title,
-  classification: ClassificationResult,
-): Promise<BlurbGroundingResult> {
-  // TODO: enrich with LOC Latinx filmography / UCLA guide notes + award facts (OMDb).
-  const sources = [
+/**
+ * The sources a blurb may cite. Credit text names the work ("Tlayucan (1962) is directed
+ * by Luis Alcoriza.") because the model otherwise never sees the title - it called the
+ * Linha de Passe blurb's film by a character's name - and a title the blurb states then
+ * has a source behind it. The award source is OMDb's awards line, fetched at ingest for
+ * years and discarded until now: the one sourced way to say why a title is recognized.
+ */
+export function blurbSources(t: Title, awards: string | null): ResolvedBlurbSource[] {
+  const work = `${t.title} (${t.yearStart})`;
+  return [
     t.synopsis ? { id: "s1", kind: "synopsis" as const, ref: t.id, quote: null, text: t.synopsis } : null,
     ...creditNames(t, "director").map((n, i) => ({
       id: `d${i}`,
       kind: "credit" as const,
       ref: n,
       quote: null,
-      text: `Directed by ${n}.`,
+      text: `${work} is directed by ${n}.`,
     })),
+    awards ? { id: "a1", kind: "award" as const, ref: t.imdbId ?? t.id, quote: null, text: `${work} awards (OMDb): ${awards}` } : null,
   ].filter((s): s is NonNullable<typeof s> => Boolean(s));
+}
+
+export async function blurbForIngest(
+  env: Env,
+  t: Title,
+  classification: ClassificationResult,
+  awards: string | null,
+): Promise<BlurbGroundingResult> {
+  const sources = blurbSources(t, awards);
 
   const out = await runLlm(
     env,
@@ -136,6 +154,27 @@ export async function blurbForIngest(
     sources: sources.map(({ id, kind, ref, quote, text }) => ({ kind, ref, quote, id, text })),
     model: MODELS.blurb,
   };
+}
+
+/**
+ * The v3 groundedness judge on one fresh blurb - the same model, system prompt and input
+ * format as the eval harness (core groundedness.ts), so an ingest verdict means what an
+ * eval score means. ~13 neurons a blurb.
+ */
+export async function judgeBlurb(env: Env, blurb: BlurbGroundingResult): Promise<GroundednessVerdict> {
+  const res = (await env.AI.run(
+    GROUNDEDNESS_JUDGE_MODEL as Parameters<Ai["run"]>[0],
+    {
+      messages: [
+        { role: "system", content: GROUNDEDNESS_JUDGE_SYSTEM },
+        { role: "user", content: groundednessJudgeUser(blurb.result.text, blurb.sources) },
+      ],
+      max_tokens: 512,
+      temperature: 0,
+    } as Parameters<Ai["run"]>[1],
+    { gateway: { id: env.AI_GATEWAY_ID, metadata: { task: "judge", pipeline: "ingest" } } },
+  )) as { response?: unknown };
+  return parseGroundednessVerdict(res.response);
 }
 
 // --- provider plumbing ------------------------------------------------------

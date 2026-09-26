@@ -176,12 +176,14 @@ Order below: fix the measurements first, then what they measure.
   exhausted) now returns keyword results flagged `degraded` - never cached, and the
   retrieval eval refuses to score them - instead of a 500.
 - [ ] **6. Better blurbs.** ~120 of ~140 blurbs the v3 judge flags fail on one "It
-  matters…" sentence no source supports. Add the OMDb awards/ratings the workflow already
-  fetches (and discards) as sources; second sentence factual or source-backed; name the
-  work by its title (the Linha de Passe blurb called the film by its character's name).
-  Validate on a ~30-title sample, then roll out in daily batches. **Decide the approval
-  path first** - `writeBlurb` resets `approved` when text changes and cards show only
-  approved blurbs.
+  matters…" sentence no source supports. *New blurbs done:* the prompt now asks for
+  sourced facts only, OMDb's awards line is a source (`a1`), and credit sources name the
+  work so the model stops calling a film by a character's name. The approval path is
+  decided: ingest runs the v3 judge on each new blurb and auto-approves it at 1.0
+  (`approved_by = 'judge'`, score in `blurbs.groundedness`); the rest wait for an editor.
+  **Still open:** regenerating the ~140 existing flagged blurbs under the new prompt -
+  check the first queue days' pass rate before spending 70B neurons on it, then do it
+  in daily batches (one 70B blurb call + ~13 for the judge per title).
 - [ ] **5. Rewrite rework.** *Cache-first is done:* the cache is checked before the LLM
   call, keyed on the normalized raw query, and uncached queries are rate-limited per
   client (30/min, Rate Limiting binding). Still open: search on the user's original words (the rewrite drops content words like
@@ -231,7 +233,7 @@ Order below: fix the measurements first, then what they measure.
 
 **Workers AI budget** (10k neurons/day, resets 00:00 UTC; measured 2026-09-24 via the
 `aiInferenceAdaptiveGroups` analytics dataset). Live search ~0.5–0.7k/day; the daily
-ingest queue ~3k (15 titles × ~200, 70B; re-measured 2026-09-25); groundedness judge ~2.8k/run; retrieval eval ~0.15k (hybrid) /
+ingest queue ~3.2k (15 titles × ~200, 70B, re-measured 2026-09-25, + ~13 each for the blurb judge); groundedness judge ~2.8k/run; retrieval eval ~0.15k (hybrid) /
 ~0.4k (all modes). Rules: at most one 70B job (judge, blurb regeneration) per day and
 never on an ingest day; sample before full runs; no ad-hoc production eval runs; weekly,
 not nightly, schedules.
