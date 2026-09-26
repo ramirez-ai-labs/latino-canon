@@ -134,6 +134,9 @@ Constraints:
   usually enough; do not add a third sentence "for completeness" - that is the most
   common way past 360.
 - For each factual claim, cite the source id it rests on.
+- In "text", cite with the id in square brackets right after the claim, e.g. "…set in
+  Bogotá [s1]." The brackets become footnotes, so never write an id without brackets and
+  never name a source in the sentence ("according to…", "says s1", "OMDb", "the synopsis").
 Respond ONLY with JSON matching:
 {"text": string, "claims":[{"claim": string, "supportedBy": string}]}`;
 

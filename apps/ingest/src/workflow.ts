@@ -1,5 +1,5 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
-import { GROUNDEDNESS_JUDGE_VERSION, passesBlurbGate, type GroundednessVerdict } from "@latino-canon/core";
+import { GROUNDEDNESS_JUDGE_VERSION, blurbTextProblems, passesBlurbGate, type GroundednessVerdict } from "@latino-canon/core";
 import type { Env, IngestParams } from "./bindings.js";
 import { resolveTmdbId, fetchTmdbDetails } from "./sources/tmdb.js";
 import { fetchOmdbRatings } from "./sources/omdb.js";
@@ -180,7 +180,10 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
       }
       if (verdict) {
         const judged = verdict;
-        const pass = passesBlurbGate(judged);
+        // The judge checks support, not presentation: a fully sourced blurb can still show
+        // raw source ids to readers (see blurbTextProblems).
+        const textProblems = blurbTextProblems(blurb.result.text);
+        const pass = passesBlurbGate(judged) && textProblems.length === 0;
         await step.do("record blurb verdict", () =>
           recordBlurbVerdict(this.env, title.id, blurb.result.text, {
             score: judged.score,
@@ -195,6 +198,7 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
             outcome: pass ? "approved" : "held",
             score: judged.score,
             unsupported: judged.unsupported,
+            textProblems,
           }),
         );
       }

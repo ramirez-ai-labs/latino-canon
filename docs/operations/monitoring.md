@@ -372,6 +372,9 @@ Since the ingest-time judge gate, most new titles should land as `approved_by =
 'judge'`. If a day's queue run adds mostly unapproved blurbs with `groundedness`
 set, the blurb prompt is producing unsupported sentences again - read them in Workers
 Logs (`event: "ingest.blurb_judge"`, `outcome: "held"`, with the `unsupported` claims).
+A held blurb with `groundedness` 1.0 was stopped by the text check instead: its
+`textProblems` field says why (`bare source id`, `names its source`). If that happens
+often, the prompt's citation rule is being ignored.
 Unapproved with `groundedness` NULL means the judge call itself failed
 (`outcome: "judge_failed"`).
 Cross-check against `GET /titles?hasBlurb=1`'s count, which is what the live
