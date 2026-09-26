@@ -15,7 +15,7 @@ roles.
 | Concern | Choice | Why it's the right default (and free-tier safe) |
 |---|---|---|
 | Compute | **Cloudflare Workers** | 100k req/day free. One runtime for app, API, and pipelines — no cold-start tax, no separate Python host. |
-| Frontend | **Next.js 15 (App Router) on Workers via [OpenNext](https://opennext.js.org/cloudflare)** | Server components for SEO on title pages; Cloudflare's currently-recommended Next path (not `next-on-pages`). |
+| Frontend | **Next.js 15 (App Router) on Workers via [OpenNext](https://opennext.js.org/cloudflare)**, React 19, Tailwind 4 | Server components for SEO on title pages; Cloudflare's currently-recommended Next path (not `next-on-pages`). UI primitives are CVA + lucide icons, no component-library dependency. |
 | API | **Hono on Workers** | Tiny, typed, fast router. Kept as its own worker so "AI services" is a real boundary — independently deployable and observable. `web` calls it over a **service binding** (no public round-trip). |
 | Relational data | **D1 (SQLite)** | 500 MB / 5M row-reads per day free. Holds titles, people, credits, tags, blurbs, collections. |
 | Lexical search | **D1 FTS5** | BM25 full-text ranking built into D1 — no separate Meilisearch/Elastic host to pay for. |
@@ -24,9 +24,12 @@ roles.
 | LLM inference | **Workers AI** | Runtime path (query rewriting) and offline path (classification, blurb generation) both run on Workers AI (10k neurons/day free) — no closed-model provider, deployed app costs $0. |
 | LLM observability | **AI Gateway** | Free. Caching, logging, and per-request metadata in front of Workers AI. |
 | Async pipelines | **Workflows + Cron Triggers** | Queues require Workers Paid — Workflows are free-tier eligible and give durable, retriable multi-step ingestion. |
-| Object storage | **R2** (optional) | 10 GB free, zero egress. Caches posters so we don't hot-link TMDB. |
-| Cache | **KV** | Search-result and popular-query cache. |
-| Eval | **`packages/eval`** | Recall@k / MRR / nDCG@10 for retrieval; LLM-as-judge groundedness for blurbs. Runs in CI. |
+| Object storage | **R2** | 10 GB free, zero egress. Ingest caches posters there and the api serves them from `/posters`, so we don't hot-link TMDB. |
+| Cache | **KV** | Search and curation-agent result caches (checked before any AI call), plus the agent's per-client and daily call counters. |
+| Abuse / cost control | **Rate Limiting binding** | 30 requests/min per client on `/search`, in front of every AI call. No KV writes per request (the free tier allows 1,000/day). |
+| Agent | **Curation agent (`/agents/curate`)** | A fixed 4-step pipeline - extract intent, one hybrid search, score a small pool by tone (the one LLM step), re-rank - with a visible reasoning trail. |
+| Eval | **`packages/eval`** | Recall@k / MRR / nDCG@10 for retrieval; LLM-as-judge groundedness for blurbs. Runs in CI; the retrieval eval gates every api deploy. |
+| Tooling | **pnpm 10 + Turborepo, TypeScript 5.9, Vitest** | Workers suites run on real local D1/KV/R2 via `@cloudflare/vitest-pool-workers`. Node ≥ 22. |
 
 **Everything above is Cloudflare free tier, with no paid or closed-model dependency.**
 
@@ -36,32 +39,36 @@ roles.
 
 ```
                         ┌─────────────────────────────────────────────┐
-   Browser ──────────►  │  apps/web   Next.js 15 / OpenNext (Workers)  │
-                        │  - landing / browse / search / title pages   │
+   Browser ──────────►  │  apps/web   Next.js 15 / OpenNext (Workers) │
+                        │  - landing / browse / search / title pages  │
                         └───────────────┬─────────────────────────────┘
                                         │ service binding (env.API)
                         ┌───────────────▼─────────────────────────────┐
-                        │  apps/api   Hono (Workers)                   │
-                        │  GET /search   hybrid | lexical | semantic   │
-                        │  GET /titles/:id   GET /collections/:slug    │
-                        │  POST /feedback                              │
-                        │                                             │
-                        │  ai/     rewrite-query                       │
-                        │  search/ lexical(D1 FTS5) · semantic(Vec) ·  │
-                        │          hybrid(RRF)                         │
-                        └──┬─────────┬──────────┬─────────┬────────────┘
+                        │  apps/api   Hono (Workers)                  │
+                        │  GET /search   hybrid | lexical | semantic  │
+                        │    cache → rate limit → exact-title pin →   │
+                        │    rewrite → BM25 + vector → RRF            │
+                        │  POST /agents/curate   (curation agent)     │
+                        │  GET /titles/:id   GET /collections/:slug   │
+                        │  GET /posters   GET /eval-runs   GET /docs  │
+                        │  POST /feedback                             │
+                        └──┬─────────┬──────────┬─────────┬───────────┘
                            │         │          │         │
                      ┌─────▼──┐ ┌────▼────┐ ┌───▼───┐ ┌───▼────────┐
                      │  D1    │ │Vectorize│ │  KV   │ │ Workers AI │
                      │ +FTS5  │ │ bge-m3  │ │ cache │ │  / AI GW   │
                      └────────┘ └─────────┘ └───────┘ └────────────┘
+                                  R2 (posters) · Rate Limiting binding
                            ▲
                            │ writes
                 ┌──────────┴───────────────────────────────────────┐
-                │  apps/ingest   Workflow + Cron (Workers)          │
-                │  seed/TMDB/OMDb → normalize → D1 → embed → Vec    │
-                │  → classify (inclusion_type + themes) → blurb     │
+                │  apps/ingest   Workflow + Cron (Workers)         │
+                │  cron 08:00 UTC: daily queue, 15 seed entries    │
+                │  resolve (TMDB) → fetch (TMDB/OMDb) → normalize  │
+                │  → D1 → classify (inclusion_type + themes)       │
+                │  → embed → Vectorize → blurb                     │
                 │  → human-review queue (ingest_jobs)              │
+                │  admin endpoints behind INGEST_ADMIN_TOKEN       │
                 └──────────────────────────────────────────────────┘
 
    packages/core   types · zod schemas · taxonomy · RRF · prompts · LLM provider
@@ -81,7 +88,10 @@ roles.
 | `created_by` | Latino writer(s) / creator(s) of the work | *One Day at a Time* (Gloria Calderón Kellett) |
 | `about_community` | Centers Latino characters / experience regardless of authorship | *Coco* |
 | `breakthrough` | A "first" — representation, award, box office milestone | *Selena* |
+| `starring` | A Latino actor holds the lead or title role | *No Manches Frida* (Martha Higareda) |
+| `produced_by` | A Latino producer held significant creative or executive control | *Suárez* (Wilmer Valderrama) |
 
+The full policy, with edge cases and past rulings, is `apps/ingest/src/seed/CRITERIA.md`.
 Every title carries ≥1 `inclusion_type` tag plus theme tags. The classifier produces
 these with a confidence score (`source = 'model'`); an editor can override
 (`source = 'editor'`); seed titles are trusted (`source = 'seed'`). The UI shows the tag
@@ -101,6 +111,9 @@ packages/
   eval/       retrieval + groundedness evaluation harness
 infra/
   README.md   resource creation commands (D1, Vectorize, KV, R2, AI Gateway)
+scripts/      infra-create.ts (creates the resources, writes ids into wrangler.jsonc)
+docs/         API and ingest references, ROADMAP, operations/monitoring runbook
+.github/workflows/   PR validation, per-worker deploys, evals, release
 ```
 
 ---
