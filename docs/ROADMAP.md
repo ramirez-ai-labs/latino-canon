@@ -343,9 +343,12 @@ exact title, it is accepted whatever its year: the ±2-year guard (`isYearMismat
   Angel* are live with their old tags, since ingest skips existing titles. Fix them with a
   D1 tag migration (no neurons), not a force re-ingest; then audit the other Phase 1
   titles' `breakthrough` citations.
-- [ ] **5b. *Colada* (2026).** Live as a different TMDB film (1655192) under the same
-  slug; the seed pins Carmen Pelaez's film (1668285). Needs a force re-ingest with the
-  right pin (one title, about 200 neurons).
+- [x] **5b. *Colada* (2026).** The live title (TMDB 1655192) is the right film; the seed's
+  pin (1668285) was the wrong one. Re-pinned to 1655192, so the queue stops holding it.
+- [x] **5c. *The Bronze Screen* (2002).** Its 71-byte id failed Vectorize's 64-byte limit at
+  embed. `slugId` now caps ids at 64 bytes at a word boundary (no existing id changes);
+  migration 0025 removes the broken row and failed job so the queue re-ingests it as
+  `the-bronze-screen-100-years-of-the-latino-image-in-american-2002`.
 - [x] **6. Phase 2** — [#247](https://github.com/ramirez-ai-labs/latino-canon/pull/247),
   [#250](https://github.com/ramirez-ai-labs/latino-canon/pull/250)–[#253](https://github.com/ramirez-ai-labs/latino-canon/pull/253),
   with every CSV row resolved in [#254](https://github.com/ramirez-ai-labs/latino-canon/pull/254)

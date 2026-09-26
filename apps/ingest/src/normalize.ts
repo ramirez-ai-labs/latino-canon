@@ -3,9 +3,28 @@ import type { IngestParams } from "./bindings.js";
 import type { TmdbDetails, TmdbPerson } from "./sources/tmdb.js";
 import type { OmdbRatings } from "./sources/omdb.js";
 
-/** Deterministic slug id, e.g. "real-women-have-curves-2002". Stable across re-ingests. */
+/** Vectorize rejects vector ids over 64 bytes, and a title's id is its vector id. */
+export const MAX_ID_BYTES = 64;
+
+/**
+ * Deterministic slug id, e.g. "real-women-have-curves-2002". Stable across re-ingests.
+ * ASCII only (accents are stripped), so characters = bytes. A slug that would pass
+ * MAX_ID_BYTES is cut at the last word boundary that fits - found when "The Bronze
+ * Screen: 100 Years of the Latino Image in American Cinema" (71 bytes) persisted fine and
+ * then failed at embed with VECTOR_UPSERT_ERROR 40008. Every id shorter than the cap is
+ * unchanged, so no existing title moves.
+ */
 export function slugId(title: string, year: number): string {
-  return `${title.toLowerCase().normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-")}-${year}`;
+  let base = title.toLowerCase().normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-");
+  const room = MAX_ID_BYTES - `-${year}`.length;
+  if (base.length > room) {
+    const full = base;
+    base = full.slice(0, room);
+    // Keep the last word if the cap falls right after it; otherwise drop the partial word.
+    const cut = base.lastIndexOf("-");
+    if (full[room] !== "-" && cut > 0) base = base.slice(0, cut);
+  }
+  return `${base}-${year}`;
 }
 
 /**

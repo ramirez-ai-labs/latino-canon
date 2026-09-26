@@ -116,7 +116,7 @@
         { "ref": "No Translation Required (2026)", "title": "No Translation Required", "year": 2026, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "starring", "about_community"] },
         { "ref": "ASCO: Without Permission (2025)", "title": "ASCO: Without Permission", "year": 2025, "kind": "film", "seedInclusionTypes": ["about_community", "produced_by"] },
         { "ref": "Mad Bills to Pay (2026)", "title": "Mad Bills to Pay", "year": 2026, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"], "tmdbId": 1400756 },
-        { "ref": "Colada (2026)", "title": "Colada", "year": 2026, "kind": "film", "tmdbId": 1668285, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
+        { "ref": "Colada (2026)", "title": "Colada", "year": 2026, "kind": "film", "tmdbId": 1655192, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
         { "ref": "42nd Street (2025)", "title": "42nd Street", "year": 2025, "kind": "film", "seedInclusionTypes": ["led_by", "about_community"] },
         { "ref": "Barrio Triste (2026)", "title": "Barrio Triste", "year": 2026, "kind": "film", "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
         { "ref": "Ashes (2026)", "title": "Ashes", "year": 2026, "kind": "film", "tmdbId": 1623608, "seedInclusionTypes": ["led_by", "created_by", "about_community"] },
