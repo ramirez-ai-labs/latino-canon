@@ -141,6 +141,16 @@ retrieval eval after every api deploy with per-category scores on the Eval page.
 | Valid groundedness eval | #216, #217 | ✅ Complete | v1.2.0 |
 | Retrieval eval after every deploy | #219 | ✅ Complete | main (unreleased) |
 | ~~Admin rebuild-vectorize endpoint~~ | #222 | Removed - unauthenticated duplicate of the ingest worker's `POST /rebuild-vectors` | - |
+| Search budget guards: cache-first, 30/min per-client rate limit, `degraded` keyword fallback; admin route removed | #236 | ✅ Complete | main (unreleased) |
+| Error and not-found pages, 429 handling, per-title metadata (web) | #239 | ✅ Complete | main (unreleased) |
+| Ingest guards: ±2-year and title-resemblance checks on every TMDB match | #238, #243 | ✅ Complete | main (unreleased) |
+| Seed validation in CI: duplicates, missing pins, silently dropped entries | #238, #241 | ✅ Complete | main (unreleased) |
+| Wrong-film cleanup: 28 re-pins, 14 production deletions | #244, #245 | ✅ Complete | main (unreleased) |
+| Daily ingest queue (`GET /queue`, 15/day); nightly retry skips re-pinned jobs | #249, #256 | ✅ Complete | main (unreleased) |
+| Re-baselinable retrieval gate (`rebaseline` input, catalog size recorded) | #256 | ✅ Complete | main (unreleased) |
+| Title ids capped at Vectorize's 64-byte limit | #257 | ✅ Complete | main (unreleased) |
+| Exact-title rule: a query naming a title ranks it first | #258 | ✅ Complete | main (unreleased) |
+| Latin American cinema expansion: 219 → 331 seed titles | #226–#253 | ✅ Merged; ingesting via the queue | main |
 
 **All features including the two v1.0.0 nice-to-haves (OpenAPI + ESLint) are production-ready and live.**
 
@@ -148,7 +158,7 @@ retrieval eval after every api deploy with per-category scores on the Eval page.
 
 Each feature has been:
 - ✅ Implemented end-to-end
-- ✅ Tested against production data (219 titles)
+- ✅ Tested against production data (219 titles at v1.2.0; 264+ since)
 - ✅ Reviewed in PR
 - ✅ Deployed to production
 - ✅ Verified live at [latino-canon-web.ai-builders-studio-latinx.workers.dev](https://latino-canon-web.ai-builders-studio-latinx.workers.dev)

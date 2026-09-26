@@ -220,8 +220,8 @@ budget on a given day.
 - **Check current usage before a large ingest batch**, not after — this is the
   single practical lesson from incident #3 above. Cloudflare dashboard → AI →
   Workers AI shows today's usage so far (see the alert below for a CLI query).
-- **Measured costs (2026-09-24):** live search ~0.5–0.7k/day; ingest batch days
-  3–11k (70B); groundedness eval ~2.8k per run (70B); retrieval eval ~0.15k hybrid /
+- **Measured costs (2026-09-24, ingest re-measured 2026-09-25):** live search
+  ~0.5–0.7k/day; the daily ingest queue ~3k (15 titles × ~200, 70B); groundedness eval ~2.8k per run (70B); retrieval eval ~0.15k hybrid /
   ~0.4k all modes.
 - **Rules:** at most one 70B job (groundedness run, blurb regeneration) per day, never
   on an ingest day; sample before full runs; weekly, not nightly, schedules.
@@ -345,6 +345,19 @@ code before blindly re-running it; if so, re-`POST /ingest` with `force: true`
 and the *complete* original params (including `seedInclusionTypes` and any
 pinned `tmdbId` — reconstructing an incomplete payload by hand is exactly what
 caused the Firefly cross-contamination in incident #2).
+
+### Alert: ingest queue held entries
+
+```bash
+curl -s https://latino-canon-ingest.ai-builders-studio-latinx.workers.dev/queue \
+  -H "authorization: Bearer $INGEST_ADMIN_TOKEN" | python3 -m json.tool
+```
+
+`next` is what the 08:00 UTC cron will start, `eligible` the whole backlog (it should
+fall by `INGEST_QUEUE_PER_DAY`, 15, each day). Anything in `held` needs a human: the
+seed's current pin already failed (check `GET /jobs`), or a job finished but no live
+title has that `tmdbId` (a slug collision). The fix is a corrected pin in the seed, not
+a retry - the nightly retry skips jobs the seed has since re-pinned.
 
 ### Alert: blurb approval count
 

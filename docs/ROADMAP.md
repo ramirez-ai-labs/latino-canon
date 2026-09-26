@@ -171,7 +171,8 @@ Order below: fix the measurements first, then what they measure.
   a trailing year - ranks that title first in hybrid search and skips the LLM rewrite
   (`apps/api/src/search/exact-title.ts`). Simulated on the golden set: 7 of 77 queries
   pin a title (6 known-item, *Como agua para chocolate*), all 7 the expected answer; no
-  plot/person/facet query pins. No neurons - it saves a rewrite call. *Keyword-only fallback is done:* a failed query embedding (e.g. neurons
+  plot/person/facet query pins. No neurons - it saves a rewrite call. Measured after
+  deploy (2026-09-26): known-item MRR 0.833 → 1.000, overall MRR 0.703 → 0.718. *Keyword-only fallback is done:* a failed query embedding (e.g. neurons
   exhausted) now returns keyword results flagged `degraded` - never cached, and the
   retrieval eval refuses to score them - instead of a 500.
 - [ ] **6. Better blurbs.** ~120 of ~140 blurbs the v3 judge flags fail on one "It
@@ -229,8 +230,8 @@ Order below: fix the measurements first, then what they measure.
   sample.
 
 **Workers AI budget** (10k neurons/day, resets 00:00 UTC; measured 2026-09-24 via the
-`aiInferenceAdaptiveGroups` analytics dataset). Live search ~0.5–0.7k/day; ingest batch
-days 3–11k (70B); groundedness judge ~2.8k/run; retrieval eval ~0.15k (hybrid) /
+`aiInferenceAdaptiveGroups` analytics dataset). Live search ~0.5–0.7k/day; the daily
+ingest queue ~3k (15 titles × ~200, 70B; re-measured 2026-09-25); groundedness judge ~2.8k/run; retrieval eval ~0.15k (hybrid) /
 ~0.4k (all modes). Rules: at most one 70B job (judge, blurb regeneration) per day and
 never on an ingest day; sample before full runs; no ad-hoc production eval runs; weekly,
 not nightly, schedules.
@@ -524,7 +525,7 @@ deferred rather than bundled in:
     whether to relax back to 0 approvals or actually bring in a second reviewer.
     Still open: clean up the `"community" as never` type-cast hack in
     `apps/web/src/lib/local-data.ts`.
-14. **Process rule, found the hard way (PR #40/#41): `deploy-api.yml` (runs
+14. ~~**Process rule, found the hard way (PR #40/#41): `deploy-api.yml` (runs
     migrations) and `ingest-new-titles.yml` (POSTs new titles for async ingestion)
     both trigger off the same merge push and run in parallel, with no ordering
     guarantee between them.** An editor migration that targets a title seeded in that
@@ -535,7 +536,9 @@ deferred rather than bundled in:
     on ingestion, or moving migrations after it), the rule is: a migration that
     tags/annotates a title introduced in the same PR ships as a **follow-up** PR after
     ingestion is confirmed complete via the live API, not bundled into the title's own
-    introducing PR.
+    introducing PR.~~ *Superseded (#249):* merging no longer ingests anything - the daily
+    queue (08:00 UTC) does, so there's no race left, just a delay. The follow-up-PR rule
+    still holds: a migration can't touch a title until the queue has made it live.
 15. **No tracking of cumulative Workers AI neuron usage across a day's ingest
     batches.** Found the hard way: growing the catalog by ~85 titles in one session
     (plus a ~60-title remediation re-ingest) burned 11.18k of the account's 10k daily

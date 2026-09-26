@@ -45,7 +45,7 @@ at 00:00 UTC. Running out breaks live search, not just ingest. Measured costs:
 | Job | Neurons |
 | --- | --- |
 | Live search | ~0.5–0.7k/day |
-| Ingest classify+blurb (70B), per batch day | 3–11k |
+| Ingest queue, classify+blurb (70B), 15 titles/day | ~3k (~200/title) |
 | Groundedness judge run | ~2.8k |
 | Retrieval eval | ~0.15k hybrid, ~0.4k all modes |
 
@@ -66,6 +66,10 @@ D1 FTS5 (BM25) and Vectorize (`bge-m3`, 1024-dim, multilingual) run in parallel 
 fused with RRF (`k=60`, weights `[2,1]` favoring lexical). The weights were tuned against
 the golden set, so don't retune them without an eval run. `MIN_SEMANTIC_SCORE = 0.35` is
 a deliberate recall@10 trade-off, documented in `semantic.ts`.
+
+A hybrid query that names a title (title, original title or alias after accent and case
+folding, optionally with a trailing year) pins that title first on page 1, before the
+rewrite runs (`apps/api/src/search/exact-title.ts`). An explicit filter turns the pin off.
 
 ### 4. Inferred filters re-rank; explicit filters exclude
 
@@ -133,9 +137,11 @@ twice (#211, #222). `search.test.ts` now fails if it comes back.
 ### Adding a migration
 
 Add `apps/api/migrations/NNNN_*.sql`. It applies automatically on the api deploy. A
-migration that tags or annotates a title added in the **same** PR will silently no-op,
-because it runs before ingestion finishes. Ship it as a follow-up PR once the title is
-live.
+migration that tags or annotates a title added in the **same** PR will silently no-op:
+the title isn't live until the daily queue ingests it (08:00 UTC, possibly days later if
+the queue is long). Ship it as a follow-up PR once the title is live. Keep comments on
+their own lines and free of semicolons - the runner splits on `;`, and a trailing
+comment becomes an empty statement D1 rejects.
 
 ### Adding a search facet
 
@@ -174,27 +180,31 @@ README and `monitoring.md`.
 1. **No daily cap on `/search`.** The per-client limit (30/min) stops bursts, but many
    IPs or one sustained caller can still drain the budget. Nothing tracks cumulative
    neuron spend in code (ROADMAP #15).
-2. **Spanish search lags:** recall@5 is 0.453, against 0.799 for the same queries in
-   English (ROADMAP 5b).
+2. **Spanish search lags:** recall@5 is 0.453, against 0.845 for English plot queries
+   (ROADMAP 5b).
 3. **Blurb groundedness is 0.682.** Most failures are one unsupported "It matters…"
    sentence (ROADMAP item 6).
 4. **The curation agent is a fixed 4-step pipeline.** No LLM chooses its tools.
 5. **`/titles/:id/similar` is a stub.**
 6. **`apps/web` has no tests.**
-7. **Deploy ordering:** migrations and new-title ingestion run in parallel on merge
-   (see "Adding a migration").
+7. **Seed titles go live a day or more after merge.** The queue ingests 15 a day, so a
+   migration that touches a new title must wait for it (see "Adding a migration").
+8. **Blurb approval is manual.** New blurbs stay unapproved until an editor approves them
+   (auto-approval via the groundedness judge is planned).
+9. **The retrieval gate compares against the last passing run.** A big catalog change
+   can shift recall legitimately; re-run `eval-retrieval.yml` with a `rebaseline` reason
+   rather than weakening the threshold.
 
 ## Future Work
 
 See `docs/ROADMAP.md` for the authoritative list. Current order:
 
-1. Exact-title matches always win (item 4).
-2. Rewrite rework: search on the user's original words and let the LLM extract filters
+1. Auto-approve blurbs that pass the groundedness judge (item 6).
+2. A remote MCP server over search, titles and curate.
+3. Spanish search: grow the Spanish golden queries, then the bilingual plan (5b).
+4. Rewrite rework: search on the user's original words and let the LLM extract filters
    only (item 5).
-3. Diagnose Spanish search (5b).
-4. A remote MCP server over search, titles and curate.
 5. Classifier eval (item 8).
-6. Better blurbs (item 6).
 
 ## Testing
 

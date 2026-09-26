@@ -1,8 +1,43 @@
 # Canon Ingestion Guide
 
-Two approaches to ingest titles into the latino-canon database:
+## The normal path: the daily ingest queue
 
-## Option 1: Seed-Only Load (Zero Quota Cost)
+Adding a title is a seed PR, not a command. Add a verified entry with a pinned `tmdbId`
+to `apps/ingest/src/seed/canon.seed.json` (see `CRITERIA.md`), open a `content:` PR, and
+merge it. Merging ingests nothing by itself. Once a day (cron `0 8 * * *`, 08:00 UTC) the
+ingest worker runs the queue (`apps/ingest/src/ingest-queue.ts`):
+
+1. Compare the seed with the live catalog by `tmdbId`. Any pinned entry whose id no live
+   title has is eligible, in seed-file order. A re-pinned entry (a corrected `tmdbId`)
+   counts as not live, so corrections drain the same way.
+2. Hold any entry whose job already tried that same pin: it failed a check a retry can't
+   fix (wrong film, bad pin), or finished without producing a live title.
+3. Start Workflows for the next `INGEST_QUEUE_PER_DAY` entries (15, in
+   `apps/ingest/wrangler.jsonc`), about 3k neurons a day at ~200 per title.
+
+At ingest, a TMDB match more than 2 years from the seed year, or whose titles don't
+resemble the seed title or an alias, is rejected (`isYearMismatch`, `isTitleMismatch`).
+
+**See what's next** without starting anything:
+
+```bash
+curl -s https://latino-canon-ingest.ai-builders-studio-latinx.workers.dev/queue \
+  -H "authorization: Bearer $INGEST_ADMIN_TOKEN"
+# { "next": [...today's refs], "eligible": 72, "held": [{ "ref", "reason" }] }
+```
+
+**Ingest now instead of waiting:** run the `ingest-new-titles.yml` workflow by hand
+(`gh workflow run ingest-new-titles.yml -f base_ref=<commit before the batch>`). Titles
+already live are skipped before any AI call. Check the day's neuron usage first
+(`docs/operations/monitoring.md`), because the queue will still run at 08:00.
+
+The rest of this guide covers the lower-level tools.
+
+## Lower-level tools
+
+Two approaches to ingest titles into the latino-canon database directly:
+
+### Option 1: Seed-Only Load (Zero Quota Cost)
 
 **Use case:** Quickly load seed data without TMDB fetching, classification, or blurb generation. Verifies JSON structure and database insertion.
 
@@ -25,6 +60,10 @@ INGEST_ADMIN_TOKEN=<your-token> INGEST_URL=https://latino-canon-ingest.<account>
 4. Skips existing titles silently
 5. **Does NOT** fetch TMDB, classify, generate blurbs, or cache posters
 
+Rows loaded this way have no `tmdb_id`, and the daily queue decides what's live by
+`tmdb_id`, so it would re-send them. Three were backfilled by migration 0024. Prefer the
+queue for anything meant to stay in the catalog.
+
 **Example output:**
 ```
 Response (200): {"inserted":31,"skipped":0,"details":{"inserted":[...],"skipped":[]}}
@@ -32,12 +71,13 @@ Response (200): {"inserted":31,"skipped":0,"details":{"inserted":[...],"skipped"
 
 ---
 
-## Option 2: Full Ingest Pipeline (Quota Cost: ~100–150 neurons/title)
+### Option 2: Full Ingest Pipeline (Quota Cost: ~200 neurons/title)
 
 **Use case:** Complete ingestion with TMDB metadata, AI classification, and blurb generation.
 
-**Cost:** roughly **100–150 Workers AI neurons per title**: two 70B calls (classify,
-blurb) plus a small 8B content-advisory call and one embedding. Measured: an ~85-title
+**Cost:** roughly **200 Workers AI neurons per title** (re-measured 2026-09-25: 6 titles
+took usage from 3.38k to 4.6k): two 70B calls (classify, blurb) plus a small 8B
+content-advisory call and one embedding. Measured: an ~85-title
 session burned ~11k neurons, over the 10k daily allocation (see
 [monitoring.md incident #3](operations/monitoring.md)). Keep a day's batch well under ~60
 titles, and don't ingest on a day that also runs the groundedness eval (~2.8k).
@@ -76,26 +116,6 @@ INGEST_ADMIN_TOKEN=<your-token> INGEST_URL=https://latino-canon-ingest.<account>
 - Posts in batches of 4 titles with 5-second delays between batches (keeps neuron usage steady)
 - Each title runs as an independent Workflow for retry resilience
 - Failed steps auto-retry with exponential backoff
-
----
-
-## Recommended Workflow
-
-For the current session (29 titles):
-
-```bash
-# 1. Validate seed load (1 minute, no quota)
-pnpm --filter @latino-canon/ingest seed:only
-
-# 2. Verify data appears in D1/UI
-# - Check pagination works with expanded dataset
-# - Spot-check a few seed titles in web UI
-
-# 3. Later: Run full ingest (5-10 minutes, ~58 neurons)
-pnpm --filter @latino-canon/ingest seed
-# Monitors jobs with: GET /jobs endpoint
-# Low-confidence results tagged for manual review
-```
 
 ---
 
@@ -187,10 +207,9 @@ INGEST_URL=https://latino-canon-ingest.<account>.workers.dev
 ## Free Tier Constraints
 
 - **Workers Workflows:** Free tier eligible
-- **Workers AI (Claude):** 10k neurons/day
-  - Classifier call: ~100-200 neurons per title
-  - Blurb call: ~100-200 neurons per title
-  - Batching (4 titles @ 5s delay) keeps costs smooth
+- **Workers AI:** 10k neurons/day, account-wide, resets 00:00 UTC
+  - Classify + blurb (Llama 3.3 70B): ~200 neurons per title together
+  - The daily queue's 15 titles cost ~3k
 - **D1:** Included (reads/writes under 1M/day)
 - **R2 (Posters):** ~$0.015/GB (likely <$1/month for full catalog)
 

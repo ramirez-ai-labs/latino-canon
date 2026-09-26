@@ -234,7 +234,7 @@ manual override for ingesting new entries immediately.
 | Resource | Free/day | This project's expected load |
 |---|---|---|
 | Workers requests | 100,000 | search + page views |
-| Workers AI neurons | 10,000 | live search ~0.5–0.7k/day; ingest batch days 3–11k; evals below (measured 2026-09-24) |
+| Workers AI neurons | 10,000 | live search ~0.5–0.7k/day; ingest queue ~3k/day; evals below (measured 2026-09-24/25) |
 | D1 rows read | 5,000,000 | search + detail pages |
 | D1 rows written | 100,000 | ingestion + feedback |
 | Vectorize queried dims | 30M/mo | 1024 dims × topK 20 × queries |
@@ -272,7 +272,7 @@ Measured costs (2026-09-24, Workers AI analytics, `aiInferenceAdaptiveGroups`):
 | Job | Model | Neurons |
 |---|---|---|
 | Live search (query rewrite + embedding) | 8B + bge-m3 | ~0.5–0.7k/day |
-| Ingest classify + blurb | 70B | 3–11k per batch day |
+| Ingest classify + blurb (daily queue, 15 titles) | 70B | ~3k/day (~200 per title) |
 | Groundedness eval, 212 blurbs | 70B | ~2.8k per run |
 | Retrieval eval, 77 queries | 8B + bge-m3 | ~0.15k hybrid / ~0.4k all modes |
 
@@ -292,7 +292,7 @@ by accident.
 
 ## Evaluation results
 
-*(Last refreshed 2026-09-24, against the live catalog of 219 titles. Both evals now run
+*(Last refreshed 2026-09-26, against the live catalog of 264 titles. Both evals now run
 from CI and record to `eval_runs`; the live history is on the site's Eval page.)*
 
 ### Retrieval
@@ -304,17 +304,18 @@ passing run on the same golden set. Current baseline, hybrid, by query type:
 
 | query type | n | recall@5 | MRR |
 |---|---|---|---|
-| known-item (exact titles, typos, aliases) | 7 | 1.000 | 0.857 |
-| person (director/actor named) | 10 | 0.800 | 0.783 |
-| plot (half-remembered descriptions) | 44 | 0.799 | 0.774 |
+| known-item (exact titles, typos, aliases) | 7 | 1.000 | 1.000 |
+| person (director/actor named) | 10 | 0.800 | 0.665 |
+| plot (half-remembered descriptions) | 44 | 0.845 | 0.746 |
 | facet (genre, kind, decade asks) | 8 | 0.616 | 0.650 |
-| **spanish** | 8 | **0.453** | 0.445 |
-| **all** | 77 | **0.763** | 0.736 |
+| **spanish** | 8 | **0.453** | 0.448 |
+| **all** | 77 | **0.789** | 0.718 |
 
 The Spanish queries are mostly translations of English plot queries that pass - the
 clearest gap against this project's bilingual-search goal, and next on the
-[roadmap](docs/ROADMAP.md). Exact titles always land in the top 5 but not always first
-("y tu mama tambien" ranks #2), which is the next retrieval fix.
+[roadmap](docs/ROADMAP.md). Exact titles now always rank first: a query that names a
+title pins it to the top ([#258](https://github.com/ramirez-ai-labs/latino-canon/pull/258)),
+which took known-item MRR from 0.833 to 1.000.
 
 How the number got here is part of the story. Hybrid recall@5 was 0.889 on the original
 16-title catalog and 15 queries; the same queries against the 219-title catalog drop to
@@ -354,12 +355,15 @@ the [release notes](https://github.com/ramirez-ai-labs/latino-canon/releases/tag
 what's built vs. what's next, and a prioritized backlog. See [docs/operations/monitoring.md](docs/operations/monitoring.md)
 for how to operate this in production — resource names, AI Gateway/neuron-budget checks, and an
 incident response runbook built around six real production incidents. See [docs/FEATURES_COMPLETED.md](docs/FEATURES_COMPLETED.md)
-for a summary of all shipped features through v1.0.0.
+for a summary of all shipped features. Since v1.2.0, `main` adds search budget guards
+(cache-first, rate limit, keyword fallback), a daily ingest queue, TMDB match guards and
+seed validation in CI, and the exact-title rule.
 
 The ingest resolve → fetch → normalize → persist → classify → embed → blurb path
 is implemented and has been run end-to-end against live TMDB/OMDb and a deployed
-Workflow — all 219 canon titles are ingested, classified, embedded, and blurbed in
-production D1/Vectorize, not just covered by fixture tests.
+Workflow — 264 titles are live in production D1/Vectorize (ingested, classified,
+embedded, blurbed), not just covered by fixture tests. The seed holds 331 after the Latin
+American cinema expansion; the daily queue ingests the rest at 15 a day.
 
 `GET /titles/:id` hydrates the full `Title` (metadata + credits + tags + approved
 blurb, with each source's cited id and text) from D1 rather than returning a raw row, and poster images are served from R2
