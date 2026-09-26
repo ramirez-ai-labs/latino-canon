@@ -44,6 +44,26 @@ export function stripCitations(text: string): string {
   return text.replace(CITATION_RE, "");
 }
 
+// Found live (2026-09-26, the first judge-gated batch): 7 of 12 auto-approved blurbs named
+// their sources in the prose - "according to s1", "says a1", "according to OMDb",
+// "according to [s1]". Every claim was still sourced, so the groundedness judge passed
+// them, but readers saw raw ids and card teasers (stripCitations) read "according to ."
+// The judge measures support, not presentation; this is the presentation check.
+const BARE_SOURCE_ID_RE = /\b[a-z]\d{1,2}\b/;
+const NAMES_A_SOURCE_RE = /\baccording to\b|\bas (?:stated|noted|reported|listed) (?:in|by)\b|\b(?:OMDb|TMDB|IMDb)\b|\bthe (?:synopsis|source)\b/i;
+
+/**
+ * What a reader would see wrong in a blurb that citation markers can't fix. Empty means
+ * clean. A false positive only leaves a blurb for an editor, so the checks lean strict.
+ */
+export function blurbTextProblems(text: string): string[] {
+  const prose = stripCitations(text);
+  const problems: string[] = [];
+  if (BARE_SOURCE_ID_RE.test(prose)) problems.push("bare source id");
+  if (NAMES_A_SOURCE_RE.test(prose)) problems.push("names its source");
+  return problems;
+}
+
 /** Split blurb text into plain segments and cited source ids, in order, for footnote rendering. */
 export function splitCitations(text: string): ({ text: string } | { cite: string })[] {
   const parts: ({ text: string } | { cite: string })[] = [];
