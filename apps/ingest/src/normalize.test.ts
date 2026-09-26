@@ -8,6 +8,24 @@ describe("slugId", () => {
     expect(slugId("Real Women Have Curves", 2002)).toBe("real-women-have-curves-2002");
     expect(slugId("¿Qué culpa tiene el niño?", 2016)).toBe("que-culpa-tiene-el-nino-2016");
   });
+
+  it("caps an id at Vectorize's 64-byte limit, cutting at a word boundary", () => {
+    const id = slugId("The Bronze Screen: 100 Years of the Latino Image in American Cinema", 2002);
+    expect(id).toBe("the-bronze-screen-100-years-of-the-latino-image-in-american-2002");
+    expect(id.length).toBeLessThanOrEqual(64); // slugs are ASCII, so length = bytes
+  });
+
+  it("drops a word cut in half by the cap", () => {
+    const id = slugId("An Extraordinarily Long Title That Keeps Going Past The Vectorize Limit", 2020);
+    expect(id).toBe("an-extraordinarily-long-title-that-keeps-going-past-the-2020");
+    expect(id.length).toBeLessThanOrEqual(64);
+  });
+
+  it("leaves ids under the cap unchanged - the longest live one included", () => {
+    expect(slugId("Aristotle and Dante Discover the Secrets of the Universe", 2023)).toBe(
+      "aristotle-and-dante-discover-the-secrets-of-the-universe-2023",
+    );
+  });
 });
 
 const params: IngestParams = { ref: "Mi Familia (1995)", title: "Mi Familia", year: 1995, kind: "film" };
