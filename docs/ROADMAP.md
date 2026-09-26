@@ -166,9 +166,12 @@ Order below: fix the measurements first, then what they measure.
 - [x] **2. Re-baseline v3 (run 1 complete)** — Baseline established: **0.682** (211/212 blurbs).
   Genre backfill 52% → 100%, content-advisory backfill 55% → 100%. Vectorize rebuilt with
   all 223 titles re-embedded. Run 2 (consistency check) TBD later UTC day.
-- [ ] **4. Exact-title match always wins.** A normalized title, original-title or alias
-  match ranks first and skips the LLM rewrite ("y tu mama tambien" currently ranks #2).
-  No neurons. *Keyword-only fallback is done:* a failed query embedding (e.g. neurons
+- [x] **4. Exact-title match always wins.** A query that is a title's whole name - display
+  title, original title or alias, ignoring case, accents and punctuation, optionally with
+  a trailing year - ranks that title first in hybrid search and skips the LLM rewrite
+  (`apps/api/src/search/exact-title.ts`). Simulated on the golden set: 7 of 77 queries
+  pin a title (6 known-item, *Como agua para chocolate*), all 7 the expected answer; no
+  plot/person/facet query pins. No neurons - it saves a rewrite call. *Keyword-only fallback is done:* a failed query embedding (e.g. neurons
   exhausted) now returns keyword results flagged `degraded` - never cached, and the
   retrieval eval refuses to score them - instead of a 500.
 - [ ] **6. Better blurbs.** ~120 of ~140 blurbs the v3 judge flags fail on one "It
@@ -206,7 +209,7 @@ Order below: fix the measurements first, then what they measure.
   5. FTS5's `unicode61` tokenizer has no Spanish stemming; prefix matching covers part of it.
 
   *Fixes, cheapest first; each PR reports English and Spanish recall from the retrieval eval:*
-  1. **Exact-title rule** (#4, no neurons).
+  1. **Exact-title rule** (#4, no neurons). *Done.*
   2. **Bilingual lexical fixes** (no neurons): an English + Spanish stopword list in
      `toFtsMatch`, `original_title` weighted equal to `title`, and a boost for a
      whole-phrase match.
