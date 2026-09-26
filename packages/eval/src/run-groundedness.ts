@@ -105,7 +105,7 @@ async function main() {
       const j = await judge(t.blurb.text, sources);
       results.push({ titleId: id, ...j });
     } catch (e) {
-      // The judge model (a small 8B instruct model) occasionally ignores the
+      // The judge model (Llama 3.3 70B) occasionally ignores the
       // "return JSON only" instruction and free-writes its reasoning instead -
       // one bad completion shouldn't discard every score already computed in
       // this run, so skip and keep going rather than letting main() throw.
