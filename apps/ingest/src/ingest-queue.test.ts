@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SeedTitle } from "./seed-diff.js";
-import { planQueue, type JobRow } from "./ingest-queue.js";
+import { isStaleRetry, planQueue, type JobRow } from "./ingest-queue.js";
 import { jobIdFor } from "./workflow-rules.js";
 
 const film = (title: string, year: number, tmdbId?: number): SeedTitle => ({
@@ -61,5 +61,23 @@ describe("planQueue", () => {
 
   it("a limit of 0 pauses the queue", () => {
     expect(planQueue([heli], [], [], 0).picked).toEqual([]);
+  });
+});
+
+describe("isStaleRetry", () => {
+  it("is stale when the seed now pins a different tmdbId than the job tried", () => {
+    expect(isStaleRetry({ ref: "Heli (2013)", tmdbId: 202389 }, [heli])).toBe(true);
+  });
+
+  it("is stale when the job searched unpinned and the seed has since pinned it", () => {
+    expect(isStaleRetry({ ref: "Heli (2013)" }, [heli])).toBe(true);
+  });
+
+  it("is not stale when the job used the seed's current pin - a real retry", () => {
+    expect(isStaleRetry({ ref: "Heli (2013)", tmdbId: 186935 }, [heli])).toBe(false);
+  });
+
+  it("is never stale for a ref the seed doesn't list (a manual /ingest)", () => {
+    expect(isStaleRetry({ ref: "Retry Me (2020)", tmdbId: 1 }, [heli])).toBe(false);
   });
 });

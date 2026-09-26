@@ -10,6 +10,17 @@ describe("checkGate", () => {
     expect(checkGate(0.78, 0.8, 0.03).pass).toBe(true);
     expect(checkGate(0.76, 0.8, 0.03).pass).toBe(false);
   });
+
+  it("rebaseline accepts a drop past the limit and records why", () => {
+    const g = checkGate(0.753, 0.786, 0.03, { reason: "catalog grew 237 -> 265, no ranking change" });
+    expect(g.pass).toBe(true);
+    expect(g.delta).toBeCloseTo(-0.033);
+    expect(g.rebaseline?.reason).toContain("catalog grew");
+  });
+
+  it("rebaseline refuses an empty reason", () => {
+    expect(() => checkGate(0.7, 0.8, 0.03, { reason: " " })).toThrow("reason");
+  });
 });
 
 describe("goldenSetHash", () => {

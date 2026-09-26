@@ -360,7 +360,7 @@ exact title, it is accepted whatever its year: the ±2-year guard (`isYearMismat
 
 **Ingest backlog (2026-09-25, compared by `tmdbId` against the live catalog):** 265
 titles live; **72 pinned seed entries not yet live**, 43 from the cinema list and 29
-re-pinned or other entries (including *Colada*). The daily queue takes 5 a day, about 15
+re-pinned or other entries (including *Colada*). The daily queue takes 15 a day (raised from 5 on 2026-09-26), about 5
 days. Two manual runs on 2026-09-25 ingested 24 titles
 (`gh workflow run ingest-new-titles.yml -f base_ref=<commit before a batch>`); titles
 already live are skipped before any AI call, so only new ones cost neurons. Measured cost:

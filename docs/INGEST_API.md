@@ -157,7 +157,7 @@ List pending and errored ingest jobs (up to 200 most recent).
 
 What the daily cron (08:00 UTC) will ingest next, without starting anything. The queue
 takes seed entries that pin a `tmdbId` no live title has, in seed-file order, up to
-`INGEST_QUEUE_PER_DAY` (default 5) per day.
+`INGEST_QUEUE_PER_DAY` (15) per day.
 
 ```json
 {

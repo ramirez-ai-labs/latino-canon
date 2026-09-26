@@ -148,7 +148,9 @@ pnpm eval:groundedness   # 70B LLM judge checks each blurb's claims against its 
 In CI, `.github/workflows/eval-retrieval.yml` runs the retrieval eval against the live api
 after every api deploy (hybrid) and weekly (all modes), records it to `eval_runs`, and fails
 when hybrid recall@5 drops more than 0.03 against the last passing run on the same golden
-set. Groundedness runs are triggered by hand (`eval-groundedness.yml`), since each costs
+set. Each run records the catalog size. When a drop comes from new titles rather than a code
+change - the ingest queue grows the catalog daily - re-run it from **Actions** with the
+`rebaseline` input and a reason; that run becomes the new baseline, with the reason recorded. Groundedness runs are triggered by hand (`eval-groundedness.yml`), since each costs
 about a quarter of the daily Workers AI allocation. Both histories are on the site's Eval page.
 
 A narrower, CI-enforced version of the retrieval eval runs on every PR with zero setup:
@@ -218,7 +220,7 @@ Adding a title to the canon is a normal PR: edit
 inclusion-type verification checklist first — open a PR, get it reviewed. Merging
 doesn't ingest anything by itself: the ingest worker's daily cron (08:00 UTC) runs an
 **ingest queue** (`apps/ingest/src/ingest-queue.ts`) that takes the next
-`INGEST_QUEUE_PER_DAY` (default 5) pinned seed entries not yet live and starts their
+`INGEST_QUEUE_PER_DAY` (15) pinned seed entries not yet live and starts their
 Workflows, so ingest volume stays inside the neuron budget however many content PRs
 merge in a day. A re-pinned entry counts as not live, so corrections drain the same way.
 `GET /queue` on the ingest worker shows what's next and anything held (an entry whose

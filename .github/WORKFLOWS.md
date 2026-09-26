@@ -63,7 +63,7 @@ All workflows are organized by category below. Each entry includes the trigger c
 
 Merged seed titles are **not** ingested by a workflow. The ingest worker's daily cron
 (08:00 UTC) runs the ingest queue (`apps/ingest/src/ingest-queue.ts`): the next
-`INGEST_QUEUE_PER_DAY` (default 5) pinned seed entries whose TMDB id isn't live.
+`INGEST_QUEUE_PER_DAY` (15) pinned seed entries whose TMDB id isn't live.
 `GET /queue` on the ingest worker previews it.
 
 ### ingest-new-titles.yml
@@ -139,7 +139,7 @@ Merged seed titles are **not** ingested by a workflow. The ingest worker's daily
 | Commit to main + api changes | deploy-api | ✅ | — | Deploy API |
 | Commit to main + ingest changes | deploy-ingest | ✅ | — | Deploy ingest |
 | Commit to main + web changes | deploy-web | ✅ | — | Deploy frontend |
-| Daily 08:00 UTC (ingest worker cron) | ingest queue, 5 titles | ✅ | — | Ingest data |
+| Daily 08:00 UTC (ingest worker cron) | ingest queue, 15 titles | ✅ | — | Ingest data |
 | Manual trigger from Actions UI | ingest-new-titles | — | ✅ | Ingest now (override) |
 | deploy-api succeeds | eval-retrieval (hybrid) | ✅ | — | Catch search regressions |
 | Sundays 09:30 UTC | eval-retrieval (all modes) | ✅ | ✅ | Weekly search baseline |
@@ -157,7 +157,7 @@ Merged seed titles are **not** ingested by a workflow. The ingest worker's daily
 → Check `deploy-*` logs for Cloudflare token or migration errors
 
 ### "New titles didn't appear in search"
-→ Titles ingest via the daily queue, 5 a day. Check `GET /queue` on the ingest worker
+→ Titles ingest via the daily queue, 15 a day. Check `GET /queue` on the ingest worker
 for the order and any held entries, then `GET /jobs` for errors
 
 ### "Eval results aren't showing on /eval page"

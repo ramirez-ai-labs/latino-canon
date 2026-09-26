@@ -88,7 +88,7 @@ pnpm --filter @latino-canon/web deploy
 
 ## 8. GitHub Actions: manual ingest override
 
-New canon titles are ingested by the ingest worker's daily queue (5 a day,
+New canon titles are ingested by the ingest worker's daily queue (15 a day,
 `INGEST_QUEUE_PER_DAY` in `apps/ingest/wrangler.jsonc`), not on merge.
 `.github/workflows/ingest-new-titles.yml` is a manual override that ingests titles
 added since a given ref immediately. It needs the *deployed* ingest worker's URL and admin token as

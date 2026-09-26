@@ -79,6 +79,21 @@ export function planQueue(seed: SeedTitle[], live: LiveTitle[], jobs: JobRow[], 
   return { picked: eligible.slice(0, limit), eligible: eligible.length, held };
 }
 
+/**
+ * A retry the queue should own instead: the seed now pins this ref to a different
+ * tmdbId than the job tried. Replaying the old params re-runs a known-wrong pin (or an
+ * unpinned search that already failed) - found 2026-09-25, when the nightly retry replayed
+ * The Battle of Chile and La vendedora de rosas unpinned after #244 had pinned both. The
+ * queue sees the new pin as eligible and ingests it. Refs the seed doesn't list (manual
+ * /ingest calls) are never stale.
+ */
+export function isStaleRetry(params: Pick<IngestParams, "ref" | "tmdbId">, seed: SeedTitle[]): boolean {
+  const entry = seed.find((t) => t.ref === params.ref);
+  return entry !== undefined && entry.tmdbId !== undefined && entry.tmdbId !== params.tmdbId;
+}
+
+export const seedTitles = (): SeedTitle[] => (seedFile as { titles: SeedTitle[] }).titles;
+
 export function perDayLimit(env: Env): number {
   const n = Number(env.INGEST_QUEUE_PER_DAY);
   return Number.isInteger(n) && n >= 0 ? n : DEFAULT_PER_DAY;
@@ -89,8 +104,7 @@ export async function loadQueuePlan(env: Env): Promise<QueuePlan> {
     env.DB.prepare("SELECT tmdb_id AS tmdbId, kind FROM titles WHERE tmdb_id IS NOT NULL").all<LiveTitle>(),
     env.DB.prepare("SELECT id, status, params FROM ingest_jobs").all<JobRow>(),
   ]);
-  const seed = (seedFile as { titles: SeedTitle[] }).titles;
-  return planQueue(seed, live.results, jobs.results, perDayLimit(env));
+  return planQueue(seedTitles(), live.results, jobs.results, perDayLimit(env));
 }
 
 /** The cron's step: start today's batch. Idempotent within a day only via job state - run it once a day. */
