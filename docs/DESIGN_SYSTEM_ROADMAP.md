@@ -9,6 +9,8 @@ Comprehensive modern UI redesign transforming Latino Canon from functional to pr
 
 **Design Vision:** Premium. Intelligent. Alive.
 
+> **Under review (2026-09-27):** this palette (indigo, purple gradients, glassmorphism) reads as a generic AI-product look rather than a film canon. Three film-culture directions are proposed in [design/IDENTITY_DIRECTIONS.md](design/IDENTITY_DIRECTIONS.md); Phase 4 waits on that decision.
+
 ---
 
 ## Phase 1: Design System & Home Page Redesign ✅
