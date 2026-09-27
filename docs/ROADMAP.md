@@ -575,6 +575,44 @@ deferred rather than bundled in:
     time, least trustworthy first (#214), and inferred filters on queries with real
     content only re-rank (#215) - see Week 4.
 
+## Long-term: developer experience
+
+- [ ] **Cloudflare's managed MCP servers as the debugging and troubleshooting tool.**
+  Operating this project today means `wrangler` commands, a hand-written GraphQL query for
+  neuron usage, `wrangler d1 execute` for data checks, and remembering which dashboard
+  holds which log (`docs/operations/monitoring.md`). Cloudflare runs managed remote MCP
+  servers (catalog: [cloudflare/mcp-server-cloudflare](https://github.com/cloudflare/mcp-server-cloudflare))
+  that Claude Code can connect to over OAuth, turning those checks into plain questions
+  asked in the same session as the code:
+  - *Observability*: "show today's `ingest.blurb_judge` logs where outcome was held",
+    "did the 08:00 cron fail, and on which title?", "which requests to `/search` 429'd?"
+  - *Cloudflare API* (`search()` / `execute()` over the whole API): "neurons used
+    yesterday, by model", "rows in `blurbs` by `approved_by`", "is the latest
+    `latino-canon-mcp` deployment the one CI just shipped?"
+  - *Documentation*: Workers, Vectorize and D1 limits answered from Cloudflare's docs
+    instead of from memory.
+
+  **Guardrails, decided up front:**
+  - Authenticate with a **read-only** API token (Workers/D1/AI/Logs read). `execute()` can
+    call any endpoint, including deletes, so the token is the boundary, not the prompt.
+  - Production changes still go through a PR (migrations, seed edits) or the
+    authenticated ingest endpoints. MCP is for looking, not changing.
+  - Connect per developer in Claude Code (`claude mcp add`, user scope). No committed
+    `.mcp.json`: every contributor would be prompted to OAuth into an account they may
+    not have.
+
+  **Done when:**
+  - Each monitoring.md manual check ("alert") has an "ask Claude" line next to its
+    command.
+  - One incident drill has been run end to end through MCP: find a held blurb, trace its
+    job, and read the judge's unsupported claims, without a dashboard.
+  - Costs are measured: analytics and log reads, no Workers AI.
+
+  **Why it's long-term, not now:** the manual checks work, and the queue, blurb gate and
+  MCP server come first. It pairs with the public MCP server (`apps/mcp`): *serving* MCP
+  to users, and *operating* the system through MCP. It's also a talk and interview point
+  for platform and DevEx roles.
+
 ## Post-v1.0.0 Nice-to-Haves (Completed)
 
 - [x] **Self-hosted Swagger UI for both workers** — **Done** ([PR #174](https://github.com/ramirez-ai-labs/latino-canon/pull/174), fixed in [PR #175](https://github.com/ramirez-ai-labs/latino-canon/pull/175)).
