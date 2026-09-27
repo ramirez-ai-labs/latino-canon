@@ -48,6 +48,25 @@ function formatDate(iso: string): string {
 // "known-item" -> "Known-item" (CSS `capitalize` gives "Known-Item").
 const sentenceCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+/** The terms this page uses, in plain words. Collapsed by default: beginners open it, experts skip it. */
+const GLOSSARY: [string, string][] = [
+  ["Golden set", "Our test searches, each with the title(s) a good search should return, checked by hand against the live catalog."],
+  [
+    "Query types",
+    "Known-item (a title, like \"Selena\"), person (a director or actor), plot (a half-remembered story), facet (a genre, decade or kind, like \"Mexican family stories from the 90s\"), and Spanish.",
+  ],
+  ["Recall@5", "The share of test searches whose right answer appears in the top 5 results."],
+  ["MRR", "Mean reciprocal rank: how high the first right answer ranks - 1 for first place, ½ for second, ⅓ for third - averaged over all searches."],
+  ["Hybrid search", "Two searches combined: keyword matching (BM25), which finds exact words, and meaning matching (embeddings), which finds related ideas even in other words or languages."],
+  ["Deploy gate", "The rule that re-runs the tests after every code change and flags it if recall@5 drops more than 0.03 below the last passing run."],
+  ["Baseline", "The run a new one is compared against. Changing the golden set starts a new baseline, because scores only compare on the same tests."],
+  ["Groundedness", "The share of a note's claims that its cited sources (the synopsis, credits, awards) actually support."],
+  ["LLM judge", "An AI model (Llama 3.3 70B) that reads a note and its sources and lists any claim no source backs. Its version is frozen, so scores stay comparable."],
+  ["Approved by the judge", "A new note the judge found fully supported and properly cited, so it's shown without waiting for a person."],
+  ["Held for an editor", "A note with at least one unsupported claim. It isn't shown until an editor approves it, or a rewrite passes."],
+  ["Invalid run", "A past run we found was measuring the wrong thing. It stays on the record, labeled, rather than being deleted."],
+];
+
 const signed = (n: number, digits = 3) => `${n >= 0 ? "+" : "−"}${Math.abs(n).toFixed(digits)}`;
 
 /**
@@ -76,15 +95,30 @@ function Delta({ value, suffix }: { value: number; suffix: string }) {
   );
 }
 
-function Tile({ label, value, children }: { label: string; value: React.ReactNode; children?: React.ReactNode }) {
+/**
+ * A headline number with its expert detail (children) and, for readers new to evals, one
+ * plain-language sentence saying what the number means. The metric's real name stays in
+ * the label, so the page teaches the vocabulary rather than hiding it.
+ */
+function Tile({ label, value, plain, children }: { label: string; value: React.ReactNode; plain?: React.ReactNode; children?: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-border bg-surface px-4 py-3.5">
+    <div className="flex flex-col rounded-xl border border-border bg-surface px-4 py-3.5">
       <div className="text-xs text-muted">{label}</div>
       <div className="mt-1 text-3xl font-semibold tracking-tight text-text">{value}</div>
       <div className="mt-1.5 space-y-0.5 leading-snug">{children}</div>
+      {plain && <p className="mt-2.5 border-t border-border pt-2.5 text-[0.8rem] leading-snug text-text/80">{plain}</p>}
     </div>
   );
 }
+
+// One real golden-set query per type, so "the weakest type" reads as a search people make.
+const EXAMPLE_QUERY: Record<string, string> = {
+  facet: "Mexican family stories from the 90s",
+  "known-item": "Selena",
+  plot: "coming of age at the border",
+  person: "Lin-Manuel Miranda musical Washington Heights",
+  spanish: "películas de Gregory Nava",
+};
 
 function Section({ title, lead, children }: { title: string; lead?: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -156,9 +190,47 @@ export default async function EvalPage() {
         the sources they were written from. This page shows what those checks find.
       </p>
 
+      {/* For readers new to evals: what the three numbers mean, on one real test search. */}
+      <section aria-labelledby="how-to-read" className="mt-6 max-w-3xl rounded-xl border border-border bg-surface px-5 py-4">
+        <h2 id="how-to-read" className="text-base font-semibold">
+          How to read this page
+        </h2>
+        <p className="mt-1.5 text-sm text-text/85">
+          We keep {retrieval?.n ?? "a set of"} test searches with known right answers, like{" "}
+          <em>&ldquo;dos estafadores venden estampillas falsas a un coleccionista&rdquo;</em> →{" "}
+          <Link href="/title/nine-queens-2000" className="text-accent hover:underline">
+            <em>Nine Queens</em>
+          </Link>
+          . After every code change we run all of them and look at where the right answer lands.
+        </p>
+        <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
+          <div>
+            <dt className="font-semibold text-text">Recall@5</dt>
+            <dd className="mt-0.5 text-text/80">Did the right answer make the top 5 results? The share of searches where it did.</dd>
+          </div>
+          <div>
+            <dt className="font-semibold text-text">MRR</dt>
+            <dd className="mt-0.5 text-text/80">
+              How high it ranked: first place scores 1, second ½, third ⅓, and so on, averaged over every search.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-semibold text-text">Groundedness</dt>
+            <dd className="mt-0.5 text-text/80">
+              An AI judge checks each &ldquo;why it matters&rdquo; note against the sources it was written from. 1.0 means every
+              claim is backed up.
+            </dd>
+          </div>
+        </dl>
+      </section>
+
       <div className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {retrieval && recall5(retrieval) != null && (
-          <Tile label="Search recall@5" value={recall5(retrieval)!.toFixed(3)}>
+          <Tile
+            label="Search recall@5"
+            value={recall5(retrieval)!.toFixed(3)}
+            plain={<>About {Math.round(recall5(retrieval)! * 100)} of every 100 test searches find the right title in the top 5 results.</>}
+          >
             {previousRetrieval && recall5(previousRetrieval) != null ? (
               <Delta value={recall5(retrieval)! - recall5(previousRetrieval)!} suffix="vs previous run" />
             ) : (
@@ -168,13 +240,18 @@ export default async function EvalPage() {
           </Tile>
         )}
         {gate && gate.status === "none" && (
-          <Tile label="Deploy gate" value="Baseline">
+          <Tile
+            label="Deploy gate"
+            value="Baseline"
+            plain="The test set just changed, so this run sets the bar the next code change must meet."
+          >
             <div className="text-xs text-muted">First run on a new query set; the next deploy is gated against it</div>
           </Tile>
         )}
         {gate && gate.status !== "none" && (
           <Tile
             label="Deploy gate"
+            plain={`Every code change re-runs the tests. If search gets worse by more than ${GATE_MAX_DROP}, the change is flagged.`}
             value={
               <span className="flex items-center gap-2">
                 <span aria-hidden style={{ color: gate.status === "pass" ? STATUS_GOOD : STATUS_CRITICAL }}>
@@ -192,7 +269,11 @@ export default async function EvalPage() {
           </Tile>
         )}
         {latest?.meanScore != null && (
-          <Tile label="Blurb groundedness" value={latest.meanScore.toFixed(3)}>
+          <Tile
+            label="Blurb groundedness"
+            value={latest.meanScore.toFixed(3)}
+            plain={<>On average, {Math.round(latest.meanScore * 100)}% of the claims in a &ldquo;why it matters&rdquo; note are backed by its sources.</>}
+          >
             {previousSameJudge?.meanScore != null && (
               <Delta value={latest.meanScore - previousSameJudge.meanScore} suffix="vs previous run" />
             )}
@@ -202,7 +283,11 @@ export default async function EvalPage() {
           </Tile>
         )}
         {weakest && strongest && weakest !== strongest && (
-          <Tile label="Weakest query type" value={sentenceCase(weakest.category)}>
+          <Tile
+            label="Weakest query type"
+            value={sentenceCase(weakest.category)}
+            plain={EXAMPLE_QUERY[weakest.category] ? <>Searches like &ldquo;{EXAMPLE_QUERY[weakest.category]}&rdquo; are the hardest for us right now.</> : undefined}
+          >
             <div className="text-xs text-muted">
               recall@5 {weakest.recall5.toFixed(3)}, against {strongest.recall5.toFixed(3)} for {strongest.category}
             </div>
@@ -355,6 +440,18 @@ export default async function EvalPage() {
             </p>
           )}
         </div>
+      </details>
+
+      <details className="mt-3 rounded-xl border border-border bg-surface">
+        <summary className="cursor-pointer select-none px-4 py-3 font-semibold">Glossary</summary>
+        <dl className="grid gap-x-6 gap-y-3 px-4 pb-4 text-sm sm:grid-cols-[11rem_1fr]">
+          {GLOSSARY.map(([term, meaning]) => (
+            <div key={term} className="contents">
+              <dt className="font-semibold text-text">{term}</dt>
+              <dd className="text-text/80">{meaning}</dd>
+            </div>
+          ))}
+        </dl>
       </details>
 
       <details className="mt-3 rounded-xl border border-border bg-surface">
