@@ -63,7 +63,11 @@ jobs:
           headers=(-H "content-type: application/json" -H "accept: application/json, text/event-stream")
           call() { curl -sf "${headers[@]}" -H "mcp-protocol-version: 2025-11-25" "$MCP_URL" -d "$1"; }
 
-          init=$(curl -sf "${headers[@]}" "$MCP_URL" -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"deploy-smoke","version":"0"}}}')
+          # A new version can take a few seconds to serve, and a brand-new workers.dev
+          # hostname longer: the first deploy (2026-09-27) failed here, ~15s after deploy,
+          # on a server that answered fine a minute later. Retry initialize for up to ~90s;
+          # once it answers, the rest runs against a live server.
+          init=$(curl -sf --retry 9 --retry-delay 10 --retry-all-errors "${headers[@]}" "$MCP_URL" -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"deploy-smoke","version":"0"}}}')
           echo "$init" | jq -e '.result.serverInfo.name == "latino-canon"' > /dev/null
 
           tools=$(call '{"jsonrpc":"2.0","id":2,"method":"tools/list"}')
