@@ -51,6 +51,10 @@ export function stripCitations(text: string): string {
 // The judge measures support, not presentation; this is the presentation check.
 const BARE_SOURCE_ID_RE = /\b[a-z]\d{1,2}\b/;
 const NAMES_A_SOURCE_RE = /\baccording to\b|\bas (?:stated|noted|reported|listed) (?:in|by)\b|\b(?:OMDb|TMDB|IMDb)\b|\bthe (?:synopsis|source)\b/i;
+// "…won 18 awards, says [d0] and [a1]." (Heli, same batch) strips to "…, says and." - a
+// citation verb left with nothing to attribute. Only verbs that can't end a real clause:
+// "states", "notes", "reports" can ("…premiered in the United States [a1].").
+const DANGLING_CITATION_VERB_RE = /\b(?:says|per)\b\s*(?:and\b\s*)?(?=[.,;:]|$)/;
 
 /**
  * What a reader would see wrong in a blurb that citation markers can't fix. Empty means
@@ -60,7 +64,11 @@ export function blurbTextProblems(text: string): string[] {
   const prose = stripCitations(text);
   const problems: string[] = [];
   if (BARE_SOURCE_ID_RE.test(prose)) problems.push("bare source id");
-  if (NAMES_A_SOURCE_RE.test(prose)) problems.push("names its source");
+  if (NAMES_A_SOURCE_RE.test(prose) || DANGLING_CITATION_VERB_RE.test(prose)) problems.push("names its source");
+  // Five of the same batch's approved blurbs had no markers at all (Behavior, The Violin,
+  // The Pope's Toilet...): sourced, so the judge passed them, but with no footnotes a
+  // reader can't see what backs them - the one thing this canon's blurbs promise.
+  if (!/\[[a-z]\d/.test(text)) problems.push("no citations");
   return problems;
 }
 

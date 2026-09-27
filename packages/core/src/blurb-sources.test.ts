@@ -61,12 +61,24 @@ describe("blurbTextProblems", () => {
       blurbTextProblems(
         "The Year My Parents Went on Vacation is a film set in a Jewish neighborhood in 1970 Brazil, according to s1. The film won 32 awards, says a1.",
       ),
-    ).toEqual(["bare source id", "names its source"]);
+    ).toEqual(["bare source id", "names its source", "no citations"]);
     expect(blurbTextProblems("Casa Grande is a coming-of-age drama from Brazil, according to [s1].")).toEqual(["names its source"]);
     expect(blurbTextProblems("Rat Fever is a film about a poet in Recife. It won 28 awards, according to OMDb.")).toEqual([
       "names its source",
+      "no citations",
     ]);
-    expect(blurbTextProblems("The film won 32 awards, says a1.")).toEqual(["bare source id"]);
+    expect(blurbTextProblems("The film won 32 awards, says a1.")).toEqual(["bare source id", "no citations"]);
+    expect(
+      blurbTextProblems(
+        "Heli is a film where a young man must protect his family [s1]. The film was directed by Amat Escalante and won 18 awards, says [d0] and [a1].",
+      ),
+    ).toEqual(["names its source"]);
+  });
+
+  it("flags a blurb with no citation markers, which renders with no footnotes", () => {
+    expect(blurbTextProblems("Behavior is a film about a boy's bond with his teacher. It was directed by Ernesto Daranas and won 21 awards.")).toEqual([
+      "no citations",
+    ]);
   });
 
   it("passes cited prose, including numbers and names that look like ids", () => {
@@ -74,5 +86,7 @@ describe("blurbTextProblems", () => {
     expect(blurbTextProblems("Directed by Javier Ruiz Caldera and Alberto de Toro [d0, d1].")).toEqual([]);
     expect(blurbTextProblems("7 Boxes is set in Asunción in 2012 [s1]. It won 8 awards [a1].")).toEqual([]);
     expect(blurbTextProblems("Virus-32 follows a mother in Montevideo [s1]. It premiered in the United States [a1].")).toEqual([]);
+    expect(blurbTextProblems("A reporter notes the town's silence as it tells its story [s1].")).toEqual([]);
+    expect(blurbTextProblems("It is set in the southern states [s1]. She says little [s1].")).toEqual([]);
   });
 });
