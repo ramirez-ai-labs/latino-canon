@@ -390,6 +390,34 @@ export const ingestOpenApiSpec = {
         },
       },
     },
+    "/regenerate-blurbs": {
+      post: {
+        summary: "Rewrite old blurbs under the current prompt",
+        description:
+          "Rewrites up to 10 blurbs written before the ingest gate: unapproved ones first, then approved ones " +
+          "with an unsupported significance claim or citation-style problems. A rewrite replaces the old blurb " +
+          "only if it passes the gate (v3 judge at 1.0, clean citations); otherwise the old blurb stays and the " +
+          "attempt is recorded, and the title is retried after 7 days. ~100 neurons per title (70B). " +
+          "dryRun returns the backlog by reason and the next batch without any AI call.",
+        tags: ["Admin"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  limit: { type: "number", default: 10, maximum: 10 },
+                  dryRun: { type: "boolean", default: false },
+                },
+              },
+            },
+          },
+        },
+        responses: { "200": { description: "{ considered, byReason, replaced, held, errors, next? }" } },
+      },
+    },
     "/backfill-content-advisory": {
       post: {
         summary: "Backfill content-advisory classification (general/mature)",

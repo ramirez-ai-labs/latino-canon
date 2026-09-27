@@ -153,7 +153,7 @@ export class IngestWorkflow extends WorkflowEntrypoint<Env, IngestParams> {
       const blurb = await step.do(
         "generate blurb",
         { retries: { limit: 2, delay: "30 seconds" } },
-        () => blurbForIngest(this.env, title, classification, raw.ratings?.awards ?? null),
+        () => blurbForIngest(this.env, title, raw.ratings?.awards ?? null),
       );
       await step.do("write blurb (unapproved)", () => writeBlurb(this.env, title.id, blurb));
 

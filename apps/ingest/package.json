@@ -15,6 +15,7 @@
     "backfill:gender": "tsx scripts/backfill-gender.ts",
     "backfill:genres": "tsx scripts/backfill-genres.ts",
     "backfill:content-advisory": "tsx scripts/backfill-content-advisory.ts",
+    "regenerate:blurbs": "tsx scripts/regenerate-blurbs.ts",
     "rebuild:vectors": "tsx scripts/rebuild-vectors.ts"
   },
   "dependencies": {

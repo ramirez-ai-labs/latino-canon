@@ -259,6 +259,28 @@ Classify `general` / `mature` for titles whose `content_advisory` is still null,
 
 ---
 
+### `POST /regenerate-blurbs` (Admin)
+
+Rewrite blurbs written before the ingest gate (#261–#263) under the current prompt. Candidates, in
+order: unapproved blurbs, then approved ones with an unsupported significance claim ("It matters as…"),
+then approved ones with citation-style problems; most popular first within each. **A rewrite replaces
+the old blurb only if it passes the gate** (v3 judge at 1.0, clean inline citations), and is then
+approved by the judge. Otherwise the old blurb stays exactly as it was, the attempt is recorded in
+`blurbs.regen_attempted_at`, and the title is retried after 7 days. Up to 10 titles per call.
+
+```bash
+pnpm --filter @latino-canon/ingest regenerate:blurbs --dry-run   # backlog by reason, no AI calls
+pnpm --filter @latino-canon/ingest regenerate:blurbs 20          # a day's batch, in calls of 10
+```
+
+**Request:** `{ "limit": 10, "dryRun": false }` · **Response:**
+`{ "considered", "byReason": {unapproved, significance, citations}, "replaced": [], "held": [{titleId, score, problems, unsupported}], "errors": [], "next"? }`
+
+**Cost:** ~100 neurons per title (one 70B blurb call + ~13 for the judge). Budget rule: one 70B job a
+day besides the ingest queue, capped at ~2k, so about 20 titles a day.
+
+---
+
 ### `POST /rebuild-vectors` (Admin)
 
 Re-embed one page of titles from D1 and upsert them to Vectorize, with exactly the text and
