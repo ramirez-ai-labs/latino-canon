@@ -242,8 +242,8 @@ Worker** / **Deploy ingest Worker** manually.
 
 Pull requests are labeled automatically by changed area and conventional title
 prefix. Releases are created manually from **Actions -> Release** using the next
-semantic version (current: `1.5.0`); the workflow creates a tag like
-`latino-canon-v1.5.0`, generates release notes from merged PRs since the last tag,
+semantic version (current: `1.5.1`); the workflow creates a tag like
+`latino-canon-v1.5.1`, generates release notes from merged PRs since the last tag,
 and supports prereleases.
 
 Adding a title to the canon is a normal PR: edit
