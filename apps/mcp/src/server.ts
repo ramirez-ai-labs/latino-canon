@@ -12,7 +12,7 @@ import {
 } from "@latino-canon/core";
 import { z } from "zod";
 import { ApiError, type ApiClient } from "./api.js";
-import { cardSummary, rankedSummary, titleDetail } from "./format.js";
+import { cardSchema, cardSummary, detailSchema, rankedSchema, rankedSummary, titleDetail } from "./format.js";
 
 export const SERVER_NAME = "latino-canon";
 export const SERVER_VERSION = "1.0.0";
@@ -32,7 +32,16 @@ the canon's notes are grounded in their sources, and answers built on them shoul
 // Every tool reads the public catalog and changes nothing.
 const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false } as const;
 
-const json = (value: unknown): CallToolResult => ({ content: [{ type: "text", text: JSON.stringify(value, null, 2) }] });
+/**
+ * Structured output (MCP 2025-06-18+): typed `structuredContent` that the SDK validates
+ * against the tool's outputSchema, plus the same JSON as text for clients that predate it,
+ * as the spec recommends. The JSON round-trip drops `undefined` optionals, which a JSON
+ * Schema validator would otherwise see as present-but-invalid.
+ */
+function json(value: Record<string, unknown>): CallToolResult {
+  const text = JSON.stringify(value, null, 2);
+  return { content: [{ type: "text", text }], structuredContent: JSON.parse(text) as Record<string, unknown> };
+}
 const failure = (text: string): CallToolResult => ({ isError: true, content: [{ type: "text", text }] });
 
 /** One api call per tool, with the api's own failures turned into something a model can act on. */
@@ -81,6 +90,12 @@ export function buildServer(api: ApiClient, webUrl: string): McpServer {
         inclusionType: z.enum(INCLUSION_TYPES).optional().describe("Why a title is in the canon"),
         limit: z.number().int().min(1).max(10).default(5),
       },
+      outputSchema: {
+        query: z.string(),
+        interpretedAs: z.string().optional().describe("How the query was interpreted, when it was rewritten"),
+        note: z.string().optional(),
+        results: z.array(cardSchema),
+      },
       annotations: READ_ONLY,
     },
     (args) =>
@@ -114,6 +129,7 @@ export function buildServer(api: ApiClient, webUrl: string): McpServer {
         "confidence), and its sourced 'why it matters' note when an editor or the groundedness judge has " +
         "approved one.",
       inputSchema: { id: z.string().min(1).max(64).describe('Title id, e.g. "coco-2017"') },
+      outputSchema: detailSchema.shape,
       annotations: READ_ONLY,
     },
     ({ id }) =>
@@ -135,6 +151,7 @@ export function buildServer(api: ApiClient, webUrl: string): McpServer {
         id: z.string().min(1).max(64).describe('Title id, e.g. "coco-2017"'),
         limit: z.number().int().min(1).max(12).default(6),
       },
+      outputSchema: { like: z.string(), results: z.array(cardSchema) },
       annotations: READ_ONLY,
     },
     ({ id, limit }) =>
@@ -162,6 +179,12 @@ export function buildServer(api: ApiClient, webUrl: string): McpServer {
       inputSchema: {
         query: z.string().min(1).max(200).describe("The recommendation request, in the person's words"),
         limit: z.number().int().min(1).max(10).default(5),
+      },
+      outputSchema: {
+        query: z.string(),
+        interpretation: z.string(),
+        reasoning: z.array(z.string()).describe("The agent's steps, in order"),
+        picks: z.array(rankedSchema),
       },
       annotations: READ_ONLY,
     },

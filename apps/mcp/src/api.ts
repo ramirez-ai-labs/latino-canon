@@ -6,6 +6,8 @@ export interface ApiFetcher {
 export interface Env {
   API: ApiFetcher;
   WEB_URL: string;
+  /** Comma-separated Host headers /mcp accepts. */
+  ALLOWED_HOSTS: string;
 }
 
 /** A non-2xx api response; tools turn the status into a message the model can act on. */

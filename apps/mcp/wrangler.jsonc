@@ -15,6 +15,10 @@
 
   "vars": {
     // Title links in tool results point at the public site.
-    "WEB_URL": "https://latino-canon-web.ai-builders-studio-latinx.workers.dev"
+    "WEB_URL": "https://latino-canon-web.ai-builders-studio-latinx.workers.dev",
+    // Host headers /mcp answers to (comma-separated) - DNS-rebinding protection, see
+    // src/index.ts. localhost:8789 is `wrangler dev`; it can't reach the deployed Worker,
+    // which Cloudflare only routes to for its own hostname.
+    "ALLOWED_HOSTS": "latino-canon-mcp.ai-builders-studio-latinx.workers.dev,localhost:8789"
   }
 }

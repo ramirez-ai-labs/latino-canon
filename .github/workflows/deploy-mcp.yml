@@ -54,13 +54,26 @@ jobs:
       - name: Deploy MCP Worker
         run: pnpm --filter @latino-canon/mcp run deploy
 
-      # What a client does first: initialize, then list tools. Costs no neurons - neither
-      # call reaches a tool. A failure here means claude.ai's connector would fail too.
+      # What a client does: initialize, list tools, then call them. get_title and
+      # similar_titles cost no neurons (a D1 read and a cached Vectorize query-by-id), so
+      # this exercises the whole path - transport, output-schema validation, service
+      # binding, api - for free. A failure here means claude.ai's connector would fail too.
       - name: Smoke test the live server
         run: |
           headers=(-H "content-type: application/json" -H "accept: application/json, text/event-stream")
-          init=$(curl -sf "${headers[@]}" "$MCP_URL" -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"deploy-smoke","version":"0"}}}')
+          call() { curl -sf "${headers[@]}" -H "mcp-protocol-version: 2025-11-25" "$MCP_URL" -d "$1"; }
+
+          init=$(curl -sf "${headers[@]}" "$MCP_URL" -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"deploy-smoke","version":"0"}}}')
           echo "$init" | jq -e '.result.serverInfo.name == "latino-canon"' > /dev/null
-          tools=$(curl -sf "${headers[@]}" -H "mcp-protocol-version: 2025-06-18" "$MCP_URL" -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}')
+
+          tools=$(call '{"jsonrpc":"2.0","id":2,"method":"tools/list"}')
           echo "$tools" | jq -r '.result.tools[].name'
           echo "$tools" | jq -e '[.result.tools[].name] | sort == ["curate","get_title","search_titles","similar_titles"]' > /dev/null
+          echo "$tools" | jq -e 'all(.result.tools[]; .outputSchema.type == "object")' > /dev/null
+
+          title=$(call '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"get_title","arguments":{"id":"coco-2017"}}}')
+          echo "$title" | jq -e '.result.isError != true and .result.structuredContent.title == "Coco" and (.result.structuredContent.url | test("/title/coco-2017$"))' > /dev/null
+
+          similar=$(call '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"similar_titles","arguments":{"id":"coco-2017","limit":3}}}')
+          echo "$similar" | jq -r '.result.structuredContent.results[].title'
+          echo "$similar" | jq -e '.result.isError != true and (.result.structuredContent.results | length) > 0' > /dev/null

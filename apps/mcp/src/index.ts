@@ -27,12 +27,35 @@ function withCors(res: Response): Response {
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
 }
 
+/**
+ * The MCP spec requires servers to guard against DNS rebinding, where a hostile page gets
+ * a browser to send requests to the server under the attacker's own hostname. Checking
+ * the host blocks that outright: a rebound request is addressed to the attacker's host.
+ * Read from the request URL, not a `Host` header - fetch treats Host as a forbidden header,
+ * so runtimes differ on exposing it (Node's Request never does), and the SDK's own check
+ * reads the header. The URL is built from the Host the client sent, everywhere.
+ *
+ * Origin is deliberately not restricted: these tools serve public data to any client
+ * (CORS is "*"), and hosted clients such as claude.ai may send an Origin of their own,
+ * which an allowlist would silently break.
+ */
+function hostAllowed(request: Request, env: Env): boolean {
+  const allowed = env.ALLOWED_HOSTS.split(",").map((h) => h.trim()).filter(Boolean);
+  return allowed.includes(new URL(request.url).host);
+}
+
 export async function handleMcp(request: Request, env: Env): Promise<Response> {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
+  if (!hostAllowed(request, env)) {
+    return Response.json(
+      { jsonrpc: "2.0", error: { code: -32000, message: `Invalid host: ${new URL(request.url).host}` }, id: null },
+      { status: 403 },
+    );
+  }
 
   const server = buildServer(new ApiClient(env.API, request.headers.get("cf-connecting-ip")), env.WEB_URL);
-  // sessionIdGenerator undefined = stateless mode; JSON responses instead of an SSE
-  // stream, since no tool streams progress.
+  // Stateless mode; JSON responses instead of an SSE stream, since no tool streams progress.
+  // Host validation happens above (hostAllowed), not via the SDK's header-based option.
   const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
   await server.connect(transport);
   return withCors(await transport.handleRequest(request));

@@ -107,6 +107,13 @@ describe("tools/list", () => {
     for (const t of tools) expect(t.annotations?.readOnlyHint).toBe(true);
   });
 
+  it("declares an output schema for every tool (structured output)", async () => {
+    const { tools } = await (await connect(fakeApi({}).api)).listTools();
+    for (const t of tools) expect(t.outputSchema?.type, t.name).toBe("object");
+    const getTitle = tools.find((t) => t.name === "get_title")!;
+    expect(getTitle.outputSchema?.required).toEqual(expect.arrayContaining(["title", "whyInCanon", "url"]));
+  });
+
   it("sends the canon's instructions on initialize", async () => {
     const client = await connect(fakeApi({}).api);
     expect(client.getInstructions()).toContain("Latino-directed");
@@ -168,6 +175,14 @@ describe("get_title", () => {
     });
   });
 
+  it("returns the same record as structuredContent, validated against its output schema", async () => {
+    const { api } = fakeApi({ "/titles/coco-2017": () => Response.json(title(true)) });
+    const res = await (await connect(api)).callTool({ name: "get_title", arguments: { id: "coco-2017" } });
+    expect(res.structuredContent).toEqual(parsed(res));
+    // originalTitle equals the title, so it's omitted - not sent as undefined.
+    expect(res.structuredContent).not.toHaveProperty("originalTitle");
+  });
+
   it("leaves out a blurb no editor or judge has approved", async () => {
     const { api } = fakeApi({ "/titles/coco-2017": () => Response.json(title(false)) });
     const body = parsed(await (await connect(api)).callTool({ name: "get_title", arguments: { id: "coco-2017" } }));
@@ -212,6 +227,18 @@ describe("similar_titles and curate", () => {
 });
 
 describe("POST /mcp over HTTP", () => {
+  it("refuses a Host it doesn't serve (DNS-rebinding protection)", async () => {
+    const res = await handleMcp(
+      new Request("https://attacker.example/mcp", {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+      }),
+      { API: fakeApi({}).api, WEB_URL: WEB, ALLOWED_HOSTS: "mcp.test" },
+    );
+    expect(res.status).toBe(403);
+  });
+
   it("answers initialize statelessly with JSON, with CORS for browser clients", async () => {
     const res = await handleMcp(
       new Request("https://mcp.test/mcp", {
@@ -224,7 +251,7 @@ describe("POST /mcp over HTTP", () => {
           params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "t", version: "0" } },
         }),
       }),
-      { API: fakeApi({}).api, WEB_URL: WEB },
+      { API: fakeApi({}).api, WEB_URL: WEB, ALLOWED_HOSTS: "mcp.test" },
     );
     expect(res.status).toBe(200);
     expect(res.headers.get("access-control-allow-origin")).toBe("*");
@@ -244,7 +271,7 @@ describe("POST /mcp over HTTP", () => {
         },
         body: JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list" }),
       }),
-      { API: fakeApi({}).api, WEB_URL: WEB },
+      { API: fakeApi({}).api, WEB_URL: WEB, ALLOWED_HOSTS: "mcp.test" },
     );
     expect(res.status).toBe(200);
     const body = await res.json<{ result: { tools: { name: string }[] } }>();

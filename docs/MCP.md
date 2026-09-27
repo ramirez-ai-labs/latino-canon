@@ -33,8 +33,9 @@ npx @modelcontextprotocol/inspector
 
 ## Tools
 
-All four are read-only (`readOnlyHint: true`) and return JSON a model can quote. Every title carries a `url`
-to its page on the site.
+All four are read-only (`readOnlyHint: true`). Each declares an **output schema** and returns typed
+`structuredContent` (MCP structured output), plus the same JSON as text for older clients. The SDK validates
+every result against its schema. Every title carries a `url` to its page on the site.
 
 | Tool | Arguments | What it does | Backed by |
 |---|---|---|---|
@@ -70,6 +71,11 @@ apps/api  (/search, /titles, /similar, /agents/curate)
   bucket: the limit protects the neuron budget, not per-user fairness.
 - **Only approved notes.** `get_title` leaves out a blurb that neither an editor nor the groundedness judge
   has approved, the same rule the site follows.
+- **DNS-rebinding protection.** The spec requires servers to guard against DNS rebinding. `/mcp` only
+  answers requests addressed to its own host (`ALLOWED_HOSTS` in `wrangler.jsonc`), which a rebound request
+  never is. The host comes from the request URL rather than a `Host` header, which the fetch spec forbids
+  and runtimes expose inconsistently. `Origin` is intentionally not allowlisted: the data is public (CORS
+  `*`), and a hosted client like claude.ai may send an Origin of its own.
 - **Workers-safe validation.** The SDK's default JSON Schema validator (Ajv) compiles schemas with
   `new Function`, which Workers forbid. The server uses the SDK's `CfWorkerJsonSchemaValidator`.
 
@@ -84,8 +90,9 @@ apps/api  (/search, /titles, /similar, /agents/curate)
 ## Operating it
 
 - **Deploys:** `.github/workflows/deploy-mcp.yml` on changes to `apps/mcp/**` or `packages/core/**`. After
-  deploying it runs `initialize` and `tools/list` against the live URL and fails if the four tools aren't
-  there.
+  deploying it acts as a client against the live URL: `initialize`, `tools/list` (all four tools, each with
+  an output schema), then real calls to `get_title("coco-2017")` and `similar_titles`. Both cost no neurons,
+  and it checks their structured results. A failure means a connected assistant would fail too.
 - **Logs:** each tool call logs `{"event":"mcp.tool","tool":…,"outcome":"ok"|"error","ms":…}` to Workers
   Logs (`latino-canon-mcp` → Observability).
 - **Tests:** `pnpm --filter @latino-canon/mcp test` connects the SDK's own `Client` to the server over an
