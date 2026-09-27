@@ -203,6 +203,22 @@ export interface RankedHit {
 
 export type EvalType = "groundedness" | "retrieval";
 
+/**
+ * One UTC day of the ingest blurb gate (GET /eval-runs/blurb-gate): every verdict the v3
+ * judge recorded that day - new ingests and rewrites that passed - plus how many old
+ * blurbs /regenerate-blurbs attempted. A held rewrite keeps its old blurb and verdict, so
+ * it shows only in rewritesAttempted.
+ */
+export interface BlurbGateDay {
+  date: string;
+  judged: number;
+  approved: number;
+  held: number;
+  meanScore: number | null;
+  rewritesAttempted: number;
+  rewritesReplaced: number;
+}
+
 export interface EvalRun {
   id: number;
   evalType: EvalType;

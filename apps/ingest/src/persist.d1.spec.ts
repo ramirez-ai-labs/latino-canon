@@ -294,6 +294,17 @@ describe("recordBlurbVerdict", () => {
     expect(await read("verdict-reset-2020")).toEqual({ approved: 0, approved_by: null, groundedness: null, judge_version: null });
   });
 
+  it("stamps judged_at with the verdict, and a text change clears it", async () => {
+    await persistTitle(env, makeTitle({ id: "verdict-when-2020", tmdbId: 107 }));
+    await writeBlurb(env, "verdict-when-2020", blurb(text));
+    await recordBlurbVerdict(env, "verdict-when-2020", text, { score: 1, judgeVersion: 3, pass: true });
+    const judged = await env.DB.prepare("SELECT judged_at FROM blurbs WHERE title_id = ?").bind("verdict-when-2020").first<{ judged_at: string | null }>();
+    expect(judged?.judged_at).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+    await writeBlurb(env, "verdict-when-2020", blurb("A regenerated blurb with different text, long enough too."));
+    const reset = await env.DB.prepare("SELECT judged_at FROM blurbs WHERE title_id = ?").bind("verdict-when-2020").first<{ judged_at: string | null }>();
+    expect(reset?.judged_at).toBeNull();
+  });
+
   it("re-ingesting the same text keeps the verdict and the judge's approval", async () => {
     await persistTitle(env, makeTitle({ id: "verdict-keep-2020", tmdbId: 106 }));
     await writeBlurb(env, "verdict-keep-2020", blurb(text));

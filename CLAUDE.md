@@ -192,8 +192,10 @@ README and `monitoring.md`.
    translated queries whose English originals also miss, and Spanish words that
    keyword-match the wrong title ("casa mágica" → *Casa Grande*); lexical is weighted
    2:1 in RRF (ROADMAP 5b).
-3. **Blurb groundedness is 0.682.** Most failures are one unsupported "It matters…"
-   sentence (ROADMAP item 6).
+3. **Blurb groundedness is 0.685** (2026-09-27 v3 run). Most failures are one
+   unsupported "It matters…" sentence from the old prompt. New blurbs are gated at
+   ingest; the old ones are being rewritten through `/regenerate-blurbs` - 254 in the
+   backlog, about 20 a day (ROADMAP item 6).
 4. **The curation agent is a fixed 4-step pipeline.** No LLM chooses its tools.
 5. **`apps/web` has no tests.**
 6. **Seed titles go live a day or more after merge.** The queue ingests 15 a day, so a
@@ -201,8 +203,10 @@ README and `monitoring.md`.
 7. **Only fully supported, properly cited blurbs auto-approve.** Ingest runs the v3 judge
    on each new blurb and approves it at score 1.0 with clean citations - inline `[s1]`
    markers, no source ids or names in the prose (`blurbTextProblems`, #262/#263)
-   (`approved_by = 'judge'`). Anything lower, the 63
-   blurbs from before the gate, and any blurb whose judge call failed wait for an editor.
+   (`approved_by = 'judge'`). Anything lower, blurbs from before the gate that no rewrite
+   has replaced yet, and any blurb whose judge call failed wait for an editor. The Eval
+   page's "New blurbs, checked daily" chart (`GET /eval-runs/blurb-gate`) is the gate's
+   record.
 8. **The retrieval gate compares against the last passing run.** A big catalog change
    can shift recall legitimately; re-run `eval-retrieval.yml` with a `rebaseline` reason
    rather than weakening the threshold.
@@ -211,10 +215,14 @@ README and `monitoring.md`.
 
 See `docs/ROADMAP.md` for the authoritative list. Current order:
 
-1. Spanish search: grow the Spanish golden queries, then the bilingual plan (5b).
-2. Rewrite rework: search on the user's original words and let the LLM extract filters
-   only (item 5).
-3. Classifier eval (item 8).
+1. Rewrite the pre-gate blurbs: ~20 a day through `/regenerate-blurbs`, more once the
+   ingest queue drains (item 6).
+2. Facet and Spanish ranking: search on the user's original words and let the LLM
+   extract filters only (item 5); Spanish keyword collisions (5b). Facet (0.627) is the
+   weakest query type.
+3. Cartelera steps 2-4: layouts for home, cards and title pages
+   (`docs/design/IDENTITY_DIRECTIONS.md`).
+4. Classifier eval (item 8), then an agentic curation v2 and an MCP tool-selection eval.
 
 ## Testing
 

@@ -1,5 +1,5 @@
 import "server-only";
-import type { Collection, CurationResponse, EvalRun, SearchResponse, Title, TitleCard } from "@latino-canon/core";
+import type { BlurbGateDay, Collection, CurationResponse, EvalRun, SearchResponse, Title, TitleCard } from "@latino-canon/core";
 import { localCollection, localCollections, localSearch, localTitle } from "./local-data";
 
 /**
@@ -64,6 +64,7 @@ function localFetch<T>(path: string): T {
   // eval_runs is CI-written only (see apps/api/src/routes/eval-runs.ts) - nothing
   // to show against local mock data, so LOCAL_DEV just renders an empty history.
   if (url.pathname === "/eval-runs") return { runs: [] } as T;
+  if (url.pathname === "/eval-runs/blurb-gate") return { days: [] } as T;
   return localSearch({
     q: url.searchParams.get("q") ?? undefined,
     kind: url.searchParams.get("kind") ?? undefined,
@@ -103,6 +104,7 @@ export const getSimilarTitles = (id: string, limit = 8) =>
   apiFetch<{ titleId: string; results: TitleCard[] }>(`/titles/${id}/similar?limit=${limit}`);
 export const listCollections = () => apiFetch<{ collections: Collection[] }>(`/collections`);
 export const getCollection = (slug: string) => apiFetch<Collection>(`/collections/${slug}`);
+export const getBlurbGateDaily = (days = 14) => apiFetch<{ days: BlurbGateDay[] }>(`/eval-runs/blurb-gate?days=${days}`);
 export const listEvalRuns = (limit = 20, type?: EvalRun["evalType"]) =>
   apiFetch<{ runs: EvalRun[] }>(`/eval-runs?limit=${limit}${type ? `&type=${type}` : ""}`);
 
