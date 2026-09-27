@@ -83,3 +83,10 @@ jobs:
           similar=$(call '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"similar_titles","arguments":{"id":"coco-2017","limit":3}}}')
           echo "$similar" | jq -r '.result.structuredContent.results[].title'
           echo "$similar" | jq -e '.result.isError != true and (.result.structuredContent.results | length) > 0' > /dev/null
+
+          # Real clients (Claude Code, VS Code) also open a GET stream after initialize.
+          # This server has none, so it must answer 405 at once - an open, silent stream
+          # broke `claude mcp add` on 2026-09-27 while every POST check above passed.
+          status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 -H "accept: text/event-stream" -H "mcp-protocol-version: 2025-11-25" "$MCP_URL")
+          echo "GET /mcp -> $status"
+          test "$status" = "405"

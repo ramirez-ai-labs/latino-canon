@@ -298,3 +298,41 @@ describe("POST /mcp over HTTP", () => {
     expect(body.result.tools.map((t) => t.name).sort()).toEqual(["curate", "get_title", "search_titles", "similar_titles"]);
   });
 });
+
+describe("GET and DELETE /mcp", () => {
+  it("answers the client's stream request with 405 instead of an empty stream that never closes", async () => {
+    // The request Claude Code sends after initialize; a 200 event stream here made it
+    // fail with InvalidHTTPResponse (2026-09-27).
+    const res = await handleMcp(
+      new Request("https://mcp.test/mcp", {
+        method: "GET",
+        headers: { accept: "text/event-stream", "mcp-protocol-version": "2025-06-18" },
+      }),
+      { API: fakeApi({}).api, WEB_URL: WEB, ALLOWED_HOSTS: "mcp.test" },
+    );
+    expect(res.status).toBe(405);
+    expect(res.headers.get("allow")).toBe("POST, OPTIONS");
+    expect(res.headers.get("content-type")).toMatch(/application\/json/);
+    expect(res.headers.get("access-control-allow-origin")).toBe("*");
+    const body = await res.json<{ error: { code: number } }>();
+    expect(body.error.code).toBe(-32000);
+  });
+
+  it("answers DELETE with 405: there are no sessions to end", async () => {
+    const res = await handleMcp(new Request("https://mcp.test/mcp", { method: "DELETE" }), {
+      API: fakeApi({}).api,
+      WEB_URL: WEB,
+      ALLOWED_HOSTS: "mcp.test",
+    });
+    expect(res.status).toBe(405);
+  });
+
+  it("still refuses a foreign Host before anything else", async () => {
+    const res = await handleMcp(new Request("https://attacker.example/mcp", { method: "GET" }), {
+      API: fakeApi({}).api,
+      WEB_URL: WEB,
+      ALLOWED_HOSTS: "mcp.test",
+    });
+    expect(res.status).toBe(403);
+  });
+});
