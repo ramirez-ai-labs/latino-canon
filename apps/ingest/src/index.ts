@@ -7,6 +7,7 @@ import { rebuildVectors, reindexFts, writeAliases, writeContentAdvisory } from "
 import { classifyContentAdvisory } from "./ai.js";
 import { ingestOpenApiSpec } from "./openapi.js";
 import { loadQueuePlan, runIngestQueue } from "./ingest-queue.js";
+import { regenerateBlurbs } from "./blurb-regen.js";
 
 export { IngestWorkflow } from "./workflow.js";
 
@@ -19,6 +20,8 @@ export default {
    *   POST /backfill-gender           { limit?: number }      → TMDB-only, no Workers AI neurons
    *   POST /backfill-genres           { limit?: number }      → TMDB-only, no Workers AI neurons
    *   POST /backfill-content-advisory { limit?: number }      → LLM classification (small model)
+   *   POST /regenerate-blurbs  { limit?, dryRun? }             → rewrite old blurbs; replace only
+   *                                                               those that pass the gate (70B)
    *   POST /aliases         { titleId, aliases: {alias, kind}[] } → backfill aliases for a
    *                                                               title already ingested
    *   POST /rebuild-vectors  { offset?, limit? }              → re-embed a page of titles into
@@ -335,6 +338,16 @@ export default {
       }
 
       return Response.json({ checked: titles.length, updated, errors });
+    }
+
+    // Rewrites old blurbs under the current prompt; a rewrite replaces the old blurb only
+    // when it passes the ingest gate (see blurb-regen.ts). 70B calls: at most 10 titles per
+    // call so one request stays well inside a Worker's time limits - scripts/
+    // regenerate-blurbs.ts batches a day's run. dryRun sizes the backlog without AI calls.
+    if (req.method === "POST" && url.pathname === "/regenerate-blurbs") {
+      const { limit, dryRun } = (await req.json().catch(() => ({}))) as { limit?: number; dryRun?: boolean };
+      const result = await regenerateBlurbs(env, { limit: Math.min(Math.max(limit ?? 10, 1), 10), dryRun: dryRun === true });
+      return Response.json(result);
     }
 
     // Re-embeds one page of titles from D1 and upserts them to Vectorize with the same

@@ -184,9 +184,11 @@ Order below: fix the measurements first, then what they measure.
   First gated batch (2026-09-26): the judge passed 12 of 15, but a UI spot check found 7
   of those naming their sources in the prose ("according to s1") or citing nothing, so
   approval now also requires clean inline citations (`blurbTextProblems`, #262, #263).
-  **Still open:** regenerating the ~140 existing flagged blurbs under the new prompt -
-  check the first queue days' pass rate before spending 70B neurons on it, then do it
-  in daily batches (one 70B blurb call + ~13 for the judge per title).
+  *Regeneration tooling done:* `POST /regenerate-blurbs` (ingest) rewrites old blurbs and
+  replaces one only when the rewrite passes the gate - a visible blurb is never swapped
+  for a worse one; held titles wait 7 days. **Still open:** running it - check the first
+  queue days' pass rate under the citation checks, size the backlog with
+  `regenerate:blurbs --dry-run`, then ~20 titles a day (~2k neurons).
 - [ ] **5. Rewrite rework.** *Cache-first is done:* the cache is checked before the LLM
   call, keyed on the normalized raw query, and uncached queries are rate-limited per
   client (30/min, Rate Limiting binding). Still open: search on the user's original words (the rewrite drops content words like
