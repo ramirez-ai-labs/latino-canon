@@ -242,8 +242,8 @@ Worker** / **Deploy ingest Worker** manually.
 
 Pull requests are labeled automatically by changed area and conventional title
 prefix. Releases are created manually from **Actions -> Release** using the next
-semantic version (current: `1.4.0`); the workflow creates a tag like
-`latino-canon-v1.4.0`, generates release notes from merged PRs since the last tag,
+semantic version (current: `1.5.0`); the workflow creates a tag like
+`latino-canon-v1.5.0`, generates release notes from merged PRs since the last tag,
 and supports prereleases.
 
 Adding a title to the canon is a normal PR: edit
@@ -325,7 +325,7 @@ by accident.
 
 ## Evaluation results
 
-*(Last refreshed 2026-09-26, against the live catalog of 264 titles. Both evals now run
+*(Last refreshed 2026-09-27, against the live catalog of 279 titles. Both evals now run
 from CI and record to `eval_runs`; the live history is on the site's Eval page.)*
 
 ### Retrieval
@@ -338,15 +338,19 @@ passing run on the same golden set. Current baseline, hybrid, by query type:
 | query type | n | recall@5 | MRR |
 |---|---|---|---|
 | known-item (exact titles, typos, aliases) | 7 | 1.000 | 1.000 |
-| person (director/actor named) | 10 | 0.800 | 0.665 |
-| plot (half-remembered descriptions) | 44 | 0.845 | 0.746 |
-| facet (genre, kind, decade asks) | 8 | 0.616 | 0.650 |
-| **spanish** | 8 | **0.453** | 0.448 |
-| **all** | 77 | **0.789** | 0.718 |
+| person (director/actor named) | 10 | 0.800 | 0.698 |
+| plot (half-remembered descriptions) | 44 | 0.822 | 0.760 |
+| facet (genre, kind, decade asks) | 8 | **0.627** | 0.650 |
+| spanish (original titles, native plots, people) | 28 | 0.835 | 0.727 |
+| **all** | 97 | **0.820** | 0.752 |
 
-The Spanish queries are mostly translations of English plot queries that pass - the
-clearest gap against this project's bilingual-search goal, and next on the
-[roadmap](docs/ROADMAP.md). Exact titles now always rank first: a query that names a
+The Spanish set grew from 8 queries, mostly translations of English plot queries (0.453),
+to 28 that include original Spanish titles, native Spanish plot descriptions and people
+([#274](https://github.com/ramirez-ai-labs/latino-canon/pull/274)). Every original-title and
+person query now passes. The remaining Spanish misses are translations whose English
+originals also miss, and Spanish words that keyword-match the wrong title ("casa mágica"
+ranks *Casa Grande* first), which makes facet queries ("Mexican family stories from the 90s")
+the weakest type now - next on the [roadmap](docs/ROADMAP.md). Exact titles now always rank first: a query that names a
 title pins it to the top ([#258](https://github.com/ramirez-ai-labs/latino-canon/pull/258)),
 which took known-item MRR from 0.833 to 1.000.
 
@@ -386,13 +390,14 @@ or sources actually change.
 
 ## Status
 
-**v1.4.0.** v1.3.0 hardened the system for scale: search budget guards (cache-first,
-per-client rate limit, keyword fallback), TMDB match guards and seed validation in CI, a
-daily ingest queue, the exact-title rule, and blurbs gated at ingest by the groundedness
-judge. v1.4.0 opens the canon to AI assistants: a remote MCP server ([docs/MCP.md](docs/MCP.md))
-that lets Claude, ChatGPT or Cursor search it and quote its sourced notes inside a
-conversation, plus `GET /titles/:id/similar` and "More like this" on title pages (see the
-[release notes](https://github.com/ramirez-ai-labs/latino-canon/releases/tag/latino-canon-v1.4.0)). See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind
+**v1.5.0.** v1.4.0 opened the canon to AI assistants: a remote MCP server
+([docs/MCP.md](docs/MCP.md)) that lets Claude, ChatGPT or Cursor search it and quote its
+sourced notes, plus `GET /titles/:id/similar` and "More like this". v1.5.0 gives the project
+its own look and a sharper view of its quality: the Cartelera identity (a festival-program
+design, paper and ink by default with a dark mode on a toggle), an Eval page that leads with
+what the evals found, a Spanish golden set grown from 8 to 28 queries, and tooling to rewrite
+old blurbs that replaces one only when the rewrite passes the gate (see the
+[release notes](https://github.com/ramirez-ai-labs/latino-canon/releases/tag/latino-canon-v1.5.0)). See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind
 what's built vs. what's next, and a prioritized backlog. See [docs/operations/monitoring.md](docs/operations/monitoring.md)
 for how to operate this in production — resource names, AI Gateway/neuron-budget checks, and an
 incident response runbook built around six real production incidents. See [docs/FEATURES_COMPLETED.md](docs/FEATURES_COMPLETED.md)

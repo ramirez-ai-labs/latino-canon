@@ -201,10 +201,10 @@ Returns `topResults`, the `extractedIntent`, and a step-by-step `reasoning` arra
 
 ## Retrieval Quality
 
-**Golden Query Set:** 77 curated queries in five categories, 264 titles (hybrid mode, 2026-09-26)
-- **Recall@5:** 0.789 (79% of correct answers in the top 5 results)
-- **Recall@10:** 0.858 (86% in the top 10)
-- **MRR (Mean Reciprocal Rank):** 0.718 (how high the first correct result ranks, on average); 1.000 on known-item queries
+**Golden Query Set:** 97 curated queries in five categories (28 in Spanish), 279 titles (hybrid mode, 2026-09-27)
+- **Recall@5:** 0.820 (82% of correct answers in the top 5 results)
+- **Recall@10:** 0.871 (87% in the top 10)
+- **MRR (Mean Reciprocal Rank):** 0.752 (how high the first correct result ranks, on average); 1.000 on known-item queries
 - Runs after every api deploy and weekly; per-category scores are on the site's Eval page.
 
 **Blurb Groundedness:** Mean 0.682 (211 blurbs, judge v3)
