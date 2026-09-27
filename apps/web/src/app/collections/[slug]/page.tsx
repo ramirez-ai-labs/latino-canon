@@ -13,7 +13,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
     <>
       <section className="mb-8">
         <h1 className="mb-1 text-2xl font-bold tracking-tight sm:text-3xl">
-          <span className="bg-gradient-to-r from-primary via-accent to-accent-cyan bg-clip-text text-transparent">
+          <span className="italic text-accent">
             {collection.title}
           </span>
         </h1>

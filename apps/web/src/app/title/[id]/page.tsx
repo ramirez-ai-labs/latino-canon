@@ -89,14 +89,9 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
 
   return (
     <article className="relative">
-      <div
-        aria-hidden
-        className="gradient-mesh pointer-events-none absolute -inset-x-6 -top-6 h-[420px] rounded-3xl opacity-60 blur-2xl"
-      />
       <div className="relative grid grid-cols-1 gap-8 sm:grid-cols-[240px_1fr]">
         <div className="group relative aspect-2/3 w-full overflow-hidden rounded-2xl bg-surface-raised shadow-[var(--shadow-xl)] animate-slide-in-up">
           <Image src={posterUrl(title.posterKey)} alt="" fill sizes="240px" className="object-cover" priority />
-          <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-bg/70 via-transparent to-transparent" />
         </div>
         <div className="glass-heavy animate-slide-in-up rounded-2xl p-6" style={{ animationDelay: "80ms" }}>
         <div className="flex flex-wrap items-center gap-2.5">
