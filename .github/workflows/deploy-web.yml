@@ -51,3 +51,12 @@ jobs:
 
       - name: Deploy web Worker
         run: pnpm --filter @latino-canon/web run deploy
+
+      # apps/web has no unit tests, and the OpenNext build can pass while a page throws at
+      # request time. Fetch the pages readers use - home, search, a title, Evals, About (its
+      # colophon must name this release), a 404 - and check the theme wiring ships. No
+      # Workers AI calls (search is checked by browsing). Retries while the deploy propagates.
+      - name: Smoke test the live site
+        run: pnpm exec tsx scripts/smoke-web.ts
+        env:
+          WEB_URL: https://latino-canon-web.ai-builders-studio-latinx.workers.dev

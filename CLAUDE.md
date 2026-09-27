@@ -197,7 +197,10 @@ README and `monitoring.md`.
    ingest; the old ones are being rewritten through `/regenerate-blurbs` - 254 in the
    backlog, about 20 a day (ROADMAP item 6).
 4. **The curation agent is a fixed 4-step pipeline.** No LLM chooses its tools.
-5. **`apps/web` has no tests.**
+5. **`apps/web` has no unit tests.** A post-deploy smoke test (`scripts/smoke-web.ts`, run by
+   `deploy-web.yml`) checks that home, search, a title, Evals, About and a 404 render, that
+   About names the release, and that both themes ship. It catches a broken page after
+   deploy, not before.
 6. **Seed titles go live a day or more after merge.** The queue ingests 15 a day, so a
    migration that touches a new title must wait for it (see "Adding a migration").
 7. **Only fully supported, properly cited blurbs auto-approve.** Ingest runs the v3 judge

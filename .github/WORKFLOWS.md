@@ -58,13 +58,12 @@ All workflows are organized by category below. Each entry includes the trigger c
 - **Requires**: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
 
 ### deploy-web.yml
-- **Trigger**: On commit to `main` + changes to `apps/web/**`
-- **Purpose**: Deploy Next.js frontend to Cloudflare Pages
+- **Trigger**: On commit to `main` + changes to `apps/web/**`, `packages/core/**`, or the root `package.json` (the About page shows the release version)
+- **Purpose**: Deploy the Next.js frontend as the `latino-canon-web` Worker
 - **What it does**:
-  - Builds Next.js 15 with OpenNext
-  - Deploys to Cloudflare Pages (static + API routes)
-  - Auto-invalidates cache on deployment
-- **Duration**: ~2 minutes
+  - Builds Next.js 15 with OpenNext and deploys it to Cloudflare Workers (static assets + server rendering)
+  - **Smoke-tests the live site** (`scripts/smoke-web.ts`): home, search (by browsing, so no Workers AI), a title page, Evals, About (its colophon must name this release) and a 404 must render with their key content, and the theme init script plus both palettes must ship. Each check retries while the deploy propagates; any failure fails the job
+- **Duration**: ~3 minutes
 - **Requires**: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
 
 
