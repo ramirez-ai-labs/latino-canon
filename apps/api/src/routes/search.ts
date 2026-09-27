@@ -58,7 +58,6 @@ searchRoute.get("/", async (c) => {
     return c.json({ error: "Rate limit exceeded - try again in a minute" }, 429);
   }
 
-  let effectiveQuery = input.q;
   let interpretation: QueryInterpretation | null = null;
 
   // A query that is a title's exact name ranks that title first (see exactTitleIds) and
@@ -71,16 +70,21 @@ searchRoute.get("/", async (c) => {
       : [];
   if (exact.length) console.warn(JSON.stringify({ event: "search.exact_title", titleIds: exact }));
 
-  // Natural-language queries: let the LLM lift filters out of the phrase.
+  // Natural-language queries: let the LLM lift filters out of the phrase - filters only.
+  // Retrieval runs on the user's own words, not the rewrite's cleaned text: the rewrite
+  // dropped the words that found the answer ("telenovela parody series" -> "parody
+  // series", losing Jane the Virgin) or padded the query ("Mexican family stories from the
+  // 90s" -> "... the familias community household"). The cleaned text still decides
+  // whether a query is filter-only ("animation films" -> "films"), where it's reliable.
   if (input.q && exact.length === 0) {
     interpretation = await rewriteQuery(makeLlmClient(c.env), input.q);
-    if (interpretation) effectiveQuery = interpretation.cleanedQuery || input.q;
   }
 
   // How inferred filters are applied - strict for a filter-only query, a ranking boost
   // otherwise - lives in runSearch, shared with the curation agent.
   const plan = await runSearch(c.env, {
-    query: effectiveQuery,
+    query: input.q,
+    cleanedQuery: interpretation?.cleanedQuery || undefined,
     mode: input.mode,
     explicit: explicitFilters,
     inferred: interpretation?.filters ?? {},

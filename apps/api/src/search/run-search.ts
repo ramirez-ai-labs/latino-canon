@@ -42,7 +42,15 @@ export interface SearchPlanResult {
 export async function runSearch(
   env: Env,
   opts: {
+    /** The text retrieval runs on - for /search, the user's own words. */
     query: string;
+    /**
+     * The query rewrite's cleaned text. It tells a filter-only ask ("animation films" ->
+     * "films") from one with real content, and hybrid search also runs it by keyword next
+     * to `query` (see retrieve). Absent for the curation agent, which passes its own
+     * cleaned text as `query`.
+     */
+    cleanedQuery?: string;
     mode: SearchMode;
     explicit: SearchFilters;
     inferred: SearchFilters;
@@ -60,7 +68,7 @@ export async function runSearch(
   const all: SearchFilters = { ...definedInferred, ...explicit };
   const inferred: SearchFilters = Object.fromEntries(Object.entries(definedInferred).filter(([k]) => !(k in explicit)));
 
-  if (!query || (Object.keys(all).length > 0 && isFillerQuery(query))) {
+  if (!query || (Object.keys(all).length > 0 && isFillerQuery(opts.cleanedQuery ?? query))) {
     let hits = await browseByPopularity(env, all, limit, offset);
     if (hits.length > 0) return { hits, applied: all, dropped: [], filterMode: "strict", degraded };
     for (const relaxed of relaxedFilterSets(all, explicit)) {
@@ -78,12 +86,13 @@ export async function runSearch(
     return { hits: [], applied: all, dropped: [], filterMode: "strict", degraded };
   }
 
+  const focusQuery = opts.cleanedQuery;
   if (Object.keys(inferred).length === 0) {
-    const hits = await retrieve(env, { query, mode, filters: explicit, limit, onDegraded });
+    const hits = await retrieve(env, { query, focusQuery, mode, filters: explicit, limit, onDegraded });
     return { hits, applied: explicit, dropped: [], filterMode: "strict", degraded };
   }
 
-  const pool = await retrieve(env, { query, mode, filters: explicit, limit: Math.max(limit, BOOST_POOL), onDegraded });
+  const pool = await retrieve(env, { query, focusQuery, mode, filters: explicit, limit: Math.max(limit, BOOST_POOL), onDegraded });
   const facets = await loadFacets(env, pool.map((h) => h.titleId));
   const hits = rerankWithBoosts(pool, (id) => {
     const f = facets.get(id);

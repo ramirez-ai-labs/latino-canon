@@ -191,9 +191,14 @@ Order below: fix the measurements first, then what they measure.
   `regenerate:blurbs --dry-run`, then ~20 titles a day (~2k neurons).
 - [ ] **5. Rewrite rework.** *Cache-first is done:* the cache is checked before the LLM
   call, keyed on the normalized raw query, and uncached queries are rate-limited per
-  client (30/min, Rate Limiting binding). Still open: search on the user's original words (the rewrite drops content words like
-  "telenovela"); LLM extracts filters only; lower the `tags` column's BM25 weight.
-  Saves neurons.
+  client (30/min, Rate Limiting binding). *Original words done (2026-09-27, #284):* retrieval
+  runs on the user's own words; the rewrite's cleaned text is used for filters, for
+  filter-only detection, and as a second keyword list (RRF `[1,1,1]`); keyword search
+  drops EN/ES stopwords. Measured on a non-live preview version, 97 queries: recall@5
+  0.825 -> 0.845, recall@10 0.860 -> 0.905, MRR 0.749 -> 0.768; genre/era/kind 0.564 ->
+  0.764. Trade-offs: Spanish MRR 0.732 -> 0.686, one person query #5 -> #6. Still open:
+  the inferred-filter boost over-rewards a wrong genre guess (genre=Music for "musical"
+  keeps In the Heights at #5-6); lower the `tags` column's BM25 weight.
 - [ ] **5b. Bilingual search.** Spanish recall@5 0.453 vs 0.845 for English plot queries
   (2026-09-26), measured on only 8 Spanish queries. *Golden set grown first (2026-09-27):* 28
   Spanish queries, each tagged in its note by what it tests - `[original-title]` (exact, partial,
