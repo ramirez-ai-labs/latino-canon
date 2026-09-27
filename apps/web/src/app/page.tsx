@@ -62,20 +62,14 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-20">
-      {/* Hero Section with Gradient Mesh */}
-      <section className="relative overflow-hidden rounded-3xl px-6 py-24 text-center sm:px-12 sm:py-32">
-        <div aria-hidden className="gradient-mesh absolute inset-0 pointer-events-none" />
-        <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(240, 147, 251, 0.15) 0%, transparent 50%)'
-        }} />
+      {/* Hero */}
+      <section className="relative px-6 py-20 text-center sm:px-12 sm:py-28">
 
         <div className="relative mx-auto max-w-3xl">
           <h1 className="text-balance text-5xl sm:text-6xl font-800 tracking-tight leading-tight">
             The Latino film canon,
             <br />
-            <span className="bg-gradient-to-r from-[#667eea] via-[#f093fb] to-[#4facfe] bg-clip-text text-transparent">
-              searchable.
-            </span>
+            <span className="italic text-accent">searchable.</span>
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-balance text-lg text-muted leading-relaxed">
@@ -91,10 +85,7 @@ export default async function HomePage() {
       </section>
 
       {/* Why We're Different Section */}
-      <section className="relative overflow-hidden rounded-3xl glass-heavy px-6 py-12 sm:px-12 sm:py-16">
-        <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(240, 147, 251, 0.05) 100%)'
-        }} />
+      <section className="relative border-y-[1.5px] border-ink-rule px-6 py-12 sm:px-12 sm:py-16">
 
         <div className="relative mx-auto max-w-3xl">
           <h2 className="text-4xl font-bold text-text">Why we are different.</h2>
@@ -106,7 +97,7 @@ export default async function HomePage() {
           <div className="mt-10 grid gap-6 sm:grid-cols-2">
             <div className="space-y-2">
               <h3 className="font-semibold text-text flex items-center gap-2">
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white text-xs font-bold">1</span>
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-on-accent text-xs font-bold">1</span>
                 Search however you remember it
               </h3>
               <p className="text-sm text-muted">Plot, theme, era, filmmaker, in English or Spanish</p>
@@ -114,7 +105,7 @@ export default async function HomePage() {
 
             <div className="space-y-2">
               <h3 className="font-semibold text-text flex items-center gap-2">
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-r from-[#f093fb] to-[#f5576c] text-white text-xs font-bold">2</span>
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-on-accent text-xs font-bold">2</span>
                 Browse curated collections
               </h3>
               <p className="text-sm text-muted">Core Canon, Border Stories, Directors, Breakthrough Firsts</p>
@@ -126,7 +117,7 @@ export default async function HomePage() {
 
             <div className="mt-6 grid gap-6 text-base text-muted">
               <div className="flex gap-4">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-[#667eea] to-[#764ba2] flex items-center justify-center text-white text-xs font-bold mt-0.5">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-accent flex items-center justify-center text-on-accent text-xs font-bold mt-0.5">
                   1
                 </div>
                 <div>
@@ -136,7 +127,7 @@ export default async function HomePage() {
               </div>
 
               <div className="flex gap-4">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-[#f093fb] to-[#f5576c] flex items-center justify-center text-white text-xs font-bold mt-0.5">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-accent flex items-center justify-center text-on-accent text-xs font-bold mt-0.5">
                   2
                 </div>
                 <div>
@@ -146,7 +137,7 @@ export default async function HomePage() {
               </div>
 
               <div className="flex gap-4">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-[#4facfe] to-[#00f2fe] flex items-center justify-center text-white text-xs font-bold mt-0.5">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-accent flex items-center justify-center text-on-accent text-xs font-bold mt-0.5">
                   3
                 </div>
                 <div>
@@ -223,11 +214,7 @@ export default async function HomePage() {
         </div>
         <Link
           href="/catalog"
-          className="inline-flex items-center justify-center px-8 py-4 rounded-full font-semibold text-white transition-all duration-300 hover-lift"
-          style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            boxShadow: '0 0 30px rgba(102, 126, 234, 0.4)'
-          }}
+          className="inline-flex items-center justify-center rounded-full bg-accent px-8 py-4 font-semibold text-on-accent transition-colors hover:bg-accent/90"
         >
           Browse the full catalog
         </Link>

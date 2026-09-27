@@ -155,11 +155,8 @@ export default async function SearchPage({
           {(results as RankedTitle[]).map((ranked, idx) => (
             <div
               key={ranked.title.id}
-              className="glass-light rounded-2xl p-4 flex gap-4 hover-lift transition-all duration-300 border border-border/50 hover:border-border"
-              style={{
-                background: "linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(240, 147, 251, 0.05) 100%)",
-                animation: `slide-in-up 0.6s ease-out ${idx * 100}ms both`,
-              }}
+              className="flex gap-4 rounded-2xl border border-border bg-surface p-4 transition-colors hover:border-accent/60"
+              style={{ animation: `slide-in-up 0.6s ease-out ${idx * 100}ms both` }}
             >
               <div className="flex-shrink-0" style={{ width: "150px" }}>
                 <TitleCard title={ranked.title} />
@@ -171,7 +168,7 @@ export default async function SearchPage({
                 <div className="mt-3 flex items-center gap-2">
                   <div className="flex-1 bg-surface-raised rounded-full h-1.5 overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-[#667eea] to-[#f093fb]"
+                      className="h-full bg-accent"
                       style={{ width: `${Math.round(ranked.score * 100)}%` }}
                     />
                   </div>
@@ -192,7 +189,6 @@ export default async function SearchPage({
               }}
             >
               <div className="relative rounded-xl overflow-hidden transition-all duration-300 hover-lift">
-                <div className="absolute inset-0 glass opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10 rounded-xl" />
                 <TitleCard title={t} />
               </div>
             </div>

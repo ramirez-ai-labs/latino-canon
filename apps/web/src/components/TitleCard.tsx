@@ -33,11 +33,6 @@ export function TitleCard({ title, className }: { title: TitleCardData; classNam
           sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 200px"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        <div
-          aria-hidden
-          className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          style={{ background: "linear-gradient(135deg, rgba(102,126,234,0.35) 0%, rgba(240,147,251,0.35) 100%)" }}
-        />
       </div>
       <div className="p-3">
         <div className="flex items-center gap-1.5">

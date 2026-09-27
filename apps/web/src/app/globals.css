@@ -1,37 +1,80 @@
 @import "tailwindcss";
 
-@theme {
+/*
+ * Cartelera - the festival-program identity (docs/design/IDENTITY_DIRECTIONS.md).
+ * Light (paper, ink, cinnabar) is the default; dark (Filmoteca: warm charcoal, amber) is
+ * opt-in via the header toggle, which sets data-theme="dark" on <html>. Components use the
+ * same token names in both themes - `@theme inline` makes each utility read the runtime
+ * variable, so switching the attribute re-themes everything without a rebuild.
+ *
+ * Contrast (WCAG, on the surface): light text 14.2, muted 5.2, accent 5.0, data 6.0;
+ * dark text 14.4, muted 6.3, accent 8.3, data 7.7. The data hue (charts) passed the
+ * dataviz palette validator on each theme's surface.
+ */
+:root {
+  --bg: #f4efe6;
+  --surface: #ece5d8;
+  --surface-raised: #e3dac9;
+  --border: #d4c9b6;
+  --ink-rule: #1b1712;
+  --text: #1b1712;
+  --muted: #655c50;
+  --accent: #b3301b;
+  --data: #1a6fb0;
+  --gold: #8a5a00;
+  --on-accent: #fbf8f2;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #121110;
+  --surface: #1c1a17;
+  --surface-raised: #26231f;
+  --border: #34302a;
+  --ink-rule: #4a443b;
+  --text: #efe9df;
+  --muted: #a39a8c;
+  --accent: #e3a857;
+  --data: #4a9ad0;
+  --gold: #d9b36a;
+  --on-accent: #121110;
+  color-scheme: dark;
+}
+
+@theme inline {
   --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
 
-  /* Modern Base Colors */
-  --color-bg: #0f0f1e;
-  --color-surface: #1a1225;
-  --color-surface-raised: #2a1f3d;
-  --color-border: #3d2852;
-  --color-text: #f4f4f5;
-  --color-muted: #a8a0b8;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-ink-rule: var(--ink-rule);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-data: var(--data);
+  --color-gold: var(--gold);
 
-  /* Modern Gradient Accents */
-  --color-primary: #667eea;
-  --color-primary-dark: #764ba2;
-  --color-accent: #f093fb;
-  --color-accent-alt: #f5576c;
-  --color-accent-cyan: #4facfe;
-  --color-accent-cyan-light: #00f2fe;
-  --color-gold: #ffd89b;
+  /* Legacy names from the previous palette, kept so existing classes resolve until each
+   * component moves to the names above (IDENTITY_DIRECTIONS.md, steps 2-4). */
+  --color-primary: var(--accent);
+  --color-primary-dark: var(--accent);
+  --color-accent-alt: var(--accent);
+  --color-accent-cyan: var(--data);
+  --color-accent-cyan-light: var(--data);
+  --color-primary-muted: color-mix(in oklab, var(--accent) 12%, transparent);
+  --color-accent-muted: color-mix(in oklab, var(--accent) 12%, transparent);
+  --color-cyan-muted: color-mix(in oklab, var(--data) 12%, transparent);
 
-  /* Muted variants for transparency */
-  --color-primary-muted: rgba(102, 126, 234, 0.15);
-  --color-accent-muted: rgba(240, 147, 251, 0.15);
-  --color-cyan-muted: rgba(79, 172, 254, 0.15);
-
-  /* Depth & Shadow System */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 20px rgba(102, 126, 234, 0.4);
-  --shadow-glow-accent: 0 0 20px rgba(240, 147, 251, 0.4);
+  /* Print, not glass: soft paper shadows, and no glow. */
+  --shadow-sm: 0 1px 2px rgb(27 23 18 / 0.08);
+  --shadow-md: 0 4px 12px rgb(27 23 18 / 0.1);
+  --shadow-lg: 0 10px 28px rgb(27 23 18 / 0.14);
+  --shadow-xl: 0 18px 44px rgb(27 23 18 / 0.18);
+  --shadow-glow: 0 0 0 1px var(--accent);
+  --shadow-glow-accent: 0 0 0 1px var(--accent);
 }
 
 @layer base {
@@ -45,6 +88,13 @@
     color: var(--color-text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+  }
+
+  /* Cartelera headlines: the display serif, tight like a program's titles. */
+  h1,
+  h2 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
   }
 
   a {
@@ -103,55 +153,33 @@
     text-wrap: balance;
   }
 
-  /* Glassmorphism */
-  .glass {
-    @apply backdrop-blur-md;
-    background: rgba(26, 18, 37, 0.4);
-    border: 1px solid rgba(61, 40, 82, 0.5);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  }
-
-  .glass-light {
-    @apply backdrop-blur-sm;
-    background: rgba(26, 18, 37, 0.3);
-    border: 1px solid rgba(61, 40, 82, 0.3);
-  }
-
+  /* The previous palette's glass and gradient utilities, flattened to Cartelera's print
+   * look: a plain surface with a hairline, no blur, no gradient. Kept as names so pages
+   * that still use them render correctly until they're rewritten. */
+  .glass,
+  .glass-light,
   .glass-heavy {
-    @apply backdrop-blur-lg;
-    background: rgba(26, 18, 37, 0.5);
-    border: 1px solid rgba(61, 40, 82, 0.6);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+    background: var(--surface);
+    border: 1px solid var(--border);
   }
 
-  /* Gradient Backgrounds */
-  .gradient-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  }
-
+  .gradient-primary,
   .gradient-accent {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: var(--accent);
   }
 
   .gradient-cyan {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background: var(--data);
   }
 
   .gradient-mesh {
-    background:
-      radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.2) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(240, 147, 251, 0.2) 0%, transparent 50%),
-      radial-gradient(circle at 40% 40%, rgba(79, 172, 254, 0.2) 0%, transparent 50%),
-      linear-gradient(135deg, #0f0f1e 0%, #1a1225 100%);
+    background: none;
   }
 
   /* Animations */
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
-  }
-
+  .animate-float,
   .animate-glow-pulse {
-    animation: glow-pulse 2s ease-in-out infinite;
+    animation: none;
   }
 
   .animate-slide-in-up {
@@ -163,8 +191,7 @@
   }
 
   .animate-gradient-flow {
-    animation: gradient-flow 3s ease infinite;
-    background-size: 200% 200%;
+    animation: none;
   }
 
   /* Hover Effects */
@@ -181,7 +208,7 @@
   }
 
   .hover-glow:hover {
-    box-shadow: var(--shadow-glow);
+    border-color: var(--accent);
   }
 
   /* Motion Preferences */

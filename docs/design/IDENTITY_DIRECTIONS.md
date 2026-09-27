@@ -101,7 +101,7 @@ the change needs to be small before the talk.
 **Chosen: Cartelera** (2026-09-27). Implementation, in order, each its own PR with desktop and mobile
 screenshots:
 
-1. **Tokens and type:** the paper, ink, cinnabar and muted palette in `globals.css`; Fraunces for display and
+1. ✅ **Tokens and type:** the paper, ink, cinnabar and muted palette in `globals.css`; Fraunces for display and
    notes, Inter for UI; drop the glass, gradient and glow utilities. Re-check chart hues on the paper
    surface with the palette validator.
 2. **Shell and home:** header with the ink rule, numbered sections, the hero and search as a program entry.
@@ -109,5 +109,5 @@ screenshots:
    its cinnabar rule and footnoted sources.
 4. **Catalog, collections, Evals, About:** carry the system through.
 
-**Still open:** whether to ship a dark mode, and if so whether it uses Filmoteca's palette (the
-recommendation above) or stays light-only at first.
+**Dark mode (decided 2026-09-27):** light (Cartelera) is the default for everyone; a header button switches
+to a dark theme built from Filmoteca's palette, remembered per reader. Step 1 ships both.
