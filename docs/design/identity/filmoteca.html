@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Latino Canon · Filmoteca — the archive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0} a{color:inherit;text-decoration:none} img{display:block}
+.wrap{max-width:1120px;margin:0 auto;padding:0 32px}
+header .wrap{display:flex;justify-content:space-between;align-items:center;height:68px} nav{display:flex;gap:28px}
+.hero{padding:72px 0 56px} .try{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.rail{display:grid;grid-template-columns:repeat(5,1fr);gap:20px} .card img{width:100%;aspect-ratio:2/3;object-fit:cover}
+.feature{display:grid;grid-template-columns:220px 1fr;gap:40px;align-items:start} .feature img{width:100%;aspect-ratio:2/3;object-fit:cover}
+.tags{display:flex;gap:8px;flex-wrap:wrap} .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.search{gap:16px} .go{white-space:nowrap} section{padding:44px 0} sup{font-size:.7em;margin-left:1px}
+@media (max-width:760px){.rail{grid-template-columns:repeat(2,1fr)} .feature{grid-template-columns:1fr} .feature img{max-width:200px} nav{display:none} .stats{grid-template-columns:1fr}}
+
+.filmoteca{background:#121110;color:#efe9df;font:16px/1.55 Inter,system-ui,sans-serif}
+.filmoteca header{border-bottom:1px solid #34302a} .filmoteca .logo{font:600 22px Newsreader,serif}
+.filmoteca .logo i{font:500 11px 'IBM Plex Mono',monospace;color:#e3a857;font-style:normal;margin-left:10px;letter-spacing:.1em}
+.filmoteca nav a{font:500 12px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#a39a8c;text-transform:uppercase}
+.filmoteca .kicker{font:500 12px 'IBM Plex Mono',monospace;color:#e3a857;letter-spacing:.12em;margin-bottom:16px}
+.filmoteca h1{font:400 58px/1.08 Newsreader,serif;letter-spacing:-.02em;max-width:860px}
+.filmoteca h1 em{color:#e3a857}
+.filmoteca .search{margin-top:34px;display:flex;justify-content:space-between;background:#1c1a17;border:1px solid #34302a;padding:18px 20px;max-width:760px;font:400 19px Newsreader,serif;color:#a39a8c;font-style:italic}
+.filmoteca .go{font:500 12px 'IBM Plex Mono',monospace;color:#e3a857;font-style:normal;letter-spacing:.08em}
+.filmoteca .try{font:13px 'IBM Plex Mono',monospace;color:#a39a8c} .filmoteca .try span{border:1px solid #34302a;padding:3px 8px}
+.filmoteca .try em{font-style:normal;color:#e3a857}
+.filmoteca h2{font:500 12px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#a39a8c;margin-bottom:22px;display:flex;gap:12px;align-items:center}
+.filmoteca h2::after{content:"";flex:1;height:10px;background:repeating-linear-gradient(90deg,#34302a 0 6px,transparent 6px 14px)}
+.filmoteca .card{background:#1c1a17;border:1px solid #34302a;padding:10px}
+.filmoteca .card .t{font:600 18px/1.2 Newsreader,serif;margin-top:10px} .filmoteca .sub{font:12px 'IBM Plex Mono',monospace;color:#a39a8c;margin:4px 0 8px}
+.filmoteca .tag{font:500 11px 'IBM Plex Mono',monospace;color:#e3a857;letter-spacing:.04em}
+.filmoteca .tags .tag{background:#2a241c;padding:3px 8px}
+.filmoteca .feature{background:#1c1a17;border:1px solid #34302a;padding:24px}
+.filmoteca .ftitle{font:600 44px/1 Newsreader,serif} .filmoteca .fmeta{font:13px 'IBM Plex Mono',monospace;color:#a39a8c;margin:12px 0 16px}
+.filmoteca .fmeta::before{content:"LC-0412 · 35mm · ";color:#e3a857}
+.filmoteca .why{margin-top:24px;border-top:1px dashed #34302a;padding-top:16px;max-width:640px}
+.filmoteca .why .label{font:500 12px 'IBM Plex Mono',monospace;color:#e3a857;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+.filmoteca .why p{font:400 19px/1.55 Newsreader,serif} .filmoteca sup{color:#e3a857;font-family:'IBM Plex Mono'}
+.filmoteca .src{list-style:none;margin-top:12px;font:12px/1.7 'IBM Plex Mono',monospace;color:#a39a8c} .filmoteca .src b{color:#e3a857;margin-right:8px}
+.filmoteca .stat{background:#1c1a17;border:1px solid #34302a;padding:16px}
+.filmoteca .stat .k{font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#a39a8c}
+.filmoteca .stat .v{font:600 38px Newsreader,serif;color:#efe9df;margin-top:4px}
+.filmoteca footer{border-top:1px solid #34302a;padding:22px 0 40px;font:12px 'IBM Plex Mono',monospace;color:#a39a8c}
+
+</style></head>
+<body class="filmoteca">
+<header><div class="wrap"><div class="logo">Latino Canon<i>ARCHIVO</i></div><nav><a href='#'>Explore</a><a href='#'>Catalog</a><a href='#'>Collections</a><a href='#'>Evals</a><a href='#'>About</a></nav></div></header>
+<main class="wrap">
+  <div class="hero">
+    <div class="kicker">CATALOG · 331 TITLES · EST. 2026</div>
+    <h1>An archive of Latino cinema you can <em>ask</em>, in English or Spanish.</h1>
+    <div class="search"><span class="q">the one where the siblings cross into Mexico…</span><span class="go">SEARCH ↵</span></div>
+    <div class="try"><em>Try</em><span>películas de Gregory Nava</span><span>Coco</span><span>a documentary about the Chicano movement</span></div>
+  </div>
+  <section><h2>Recently catalogued</h2><div class="rail"><a class="card" href="#"><img src="https://latino-canon-api.ai-builders-studio-latinx.workers.dev/posters/coco-2017.jpg" alt=""><div class="meta"><div class="t">Coco</div><div class="sub">2017 · Lee Unkrich</div><span class="tag">About the community</span></div></a><a class="card" href="#"><img src="https://latino-canon-api.ai-builders-studio-latinx.workers.dev/posters/selena-1997.jpg" alt=""><div class="meta"><div class="t">Selena</div><div class="sub">1997 · Gregory Nava</div><span class="tag">Latino-directed</span></div></a><a class="card" href="#"><img src="https://latino-canon-api.ai-builders-studio-latinx.workers.dev/posters/y-tu-mama-tambien-2001.jpg" alt=""><div class="meta"><div class="t">Y Tu Mamá También</div><div class="sub">2001 · Alfonso Cuarón</div><span class="tag">Latino-directed</span></div></a><a class="card" href="#"><img src="https://latino-canon-api.ai-builders-studio-latinx.workers.dev/posters/real-women-have-curves-2002.jpg" alt=""><div class="meta"><div class="t">Real Women Have Curves</div><div class="sub">2002 · Patricia Cardoso</div><span class="tag">Latina-directed</span></div></a><a class="card" href="#"><img src="https://latino-canon-api.ai-builders-studio-latinx.workers.dev/posters/a-fantastic-woman-2017.jpg" alt=""><div class="meta"><div class="t">A Fantastic Woman</div><div class="sub">2017 · Sebastián Lelio</div><span class="tag">Breakthrough first</span></div></a></div></section>
+  <section><h2>Catalog card</h2>
+    <div class="feature"><img src="https://latino-canon-api.ai-builders-studio-latinx.workers.dev/posters/el-norte-1983.jpg" alt="">
+      <div><div class="ftitle">El Norte</div>
+        <div class="fmeta">1983 · Gregory Nava · US · Guatemala · 139 min</div>
+        <div class="tags"><span class="tag">Latino-directed</span><span class="tag">Latino-created</span><span class="tag">About the community</span><span class="tag">Breakthrough first</span></div>
+        <div class="why"><div class="label">Why it's in the canon</div><p>El Norte (1983) follows Guatemalan siblings who flee persecution and cross Mexico to reach the United States<sup>[s1]</sup>. Directed by Gregory Nava, it was nominated for the Academy Award for Best Original Screenplay<sup>[a1]</sup>.</p><ol class="src"><li><b>s1</b> Synopsis (TMDB)</li><li><b>d0</b> El Norte (1983) is directed by Gregory Nava.</li><li><b>a1</b> Awards (OMDb): Nominated for 1 Oscar.</li></ol></div>
+      </div></div></section>
+  <section><h2>Quality control</h2><div class="stats"><div class="stat"><div class="k">Search recall@5</div><div class="v">0.782</div></div><div class="stat"><div class="k">Deploy gate</div><div class="v">✓ Passed</div></div><div class="stat"><div class="k">Blurb groundedness</div><div class="v">0.685</div></div></div></section>
+</main>
+<footer><div class="wrap">Latino Canon Archive — every note is checked against its sources before it's shown.</div></footer>
+</body></html>
