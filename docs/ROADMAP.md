@@ -181,6 +181,9 @@ Order below: fix the measurements first, then what they measure.
   work so the model stops calling a film by a character's name. The approval path is
   decided: ingest runs the v3 judge on each new blurb and auto-approves it at 1.0
   (`approved_by = 'judge'`, score in `blurbs.groundedness`); the rest wait for an editor.
+  First gated batch (2026-09-26): the judge passed 12 of 15, but a UI spot check found 7
+  of those naming their sources in the prose ("according to s1") or citing nothing, so
+  approval now also requires clean inline citations (`blurbTextProblems`, #262, #263).
   **Still open:** regenerating the ~140 existing flagged blurbs under the new prompt -
   check the first queue days' pass rate before spending 70B neurons on it, then do it
   in daily batches (one 70B blurb call + ~13 for the judge per title).
@@ -189,11 +192,12 @@ Order below: fix the measurements first, then what they measure.
   client (30/min, Rate Limiting binding). Still open: search on the user's original words (the rewrite drops content words like
   "telenovela"); LLM extracts filters only; lower the `tags` column's BM25 weight.
   Saves neurons.
-- [ ] **5b. Bilingual search.** Spanish recall@5 0.453 vs 0.799 for the same queries in
-  English. The catalog expansion made it more visible: about 120 Latin American films are
+- [ ] **5b. Bilingual search.** Spanish recall@5 0.453 vs 0.845 for English plot queries
+  (2026-09-26). The catalog expansion made it more visible: about 120 Latin American films are
   live under TMDB's English titles, and a search for the exact Spanish title ranks the film
   #2 or #3 (checked 2026-09-25: "Viaje" → #2 behind *The Wind Journeys*, "El silencio de
-  Neto" → #3, "y tu mama tambien" → #3, down from #2).
+  Neto" → #3, "y tu mama tambien" → #3, down from #2). The exact-title rule (#258) now pins
+  a title whose whole name is the query; the gap remains for partial and translated titles.
 
   *Diagnosis (2026-09-25, code review against a standard search pipeline):* query
   understanding → hybrid retrieval (BM25 + dense) → fusion (RRF) → rerank → business
@@ -380,6 +384,27 @@ about 200 neurons per title (dashboard headline, 3.38k → 4.6k for 6 titles).
 'Latino'". The CSV's 7 Haiti titles are marked `OUT_OF_SCOPE` and dropped from Phase 2.
 
 ---
+
+### Week 6: hardening, v1.3.0, agent access, v1.4.0 (2026-09-26 → 27)
+
+- [x] **Blurb gate at ingest** (#261–#263): sourced-facts prompt, OMDb awards source,
+  v3 judge auto-approval, citation-style checks. See item 6.
+- [x] **SDLC hardening** (#264): weekly dependency audit (`security-audit.yml`, postcss
+  advisories cleared), ingest deploy waits for the api's migrations, lint warning caps.
+- [x] **Release v1.3.0** (#265): search guards, match guards, the ingest queue, exact-title,
+  the blurb gate.
+- [x] **`GET /titles/:id/similar`** (#266): Vectorize query-by-id, zero neurons, cached;
+  "More like this" on title pages. The last stub in the public API.
+- [x] **Remote MCP server** (#267, #269): `apps/mcp`, four read-only tools for any MCP
+  client, stateless and authless, structured output, DNS-rebinding host check, live
+  smoke test on deploy. See `docs/MCP.md`.
+- [x] **DevEx plan** (#268): Cloudflare's managed MCP servers for debugging, under
+  "Long-term: developer experience".
+- [x] **Release v1.4.0**: the remote MCP server and `/similar`.
+
+**Next:** check the blurb gate's pass rate under the citation checks, then regenerate old
+blurbs (~20/day under the 70B budget rule); grow the Spanish golden set, then 5b; a web
+smoke test and a decision on `/feedback`; classifier eval after the queue drains (~Oct 1).
 
 ## Immediate (do first — small, high-visibility)
 

@@ -1,6 +1,6 @@
 # Post-Week 3 Major Features
 
-All features listed below have been implemented, tested, and deployed to production (v1.0.0 through v1.3.0).
+All features listed below have been implemented, tested, and deployed to production (v1.0.0 through v1.4.0).
 
 ## Feature Inventory
 
@@ -152,8 +152,8 @@ retrieval eval after every api deploy with per-category scores on the Eval page.
 | Exact-title rule: a query naming a title ranks it first | #258 | ✅ Complete | v1.3.0 |
 | Blurb gate: sourced-facts prompt, OMDb awards source, v3 judge auto-approval, citation-style checks | #261–#263 | ✅ Complete | v1.3.0 |
 | SDLC hardening: weekly dependency audit, migration-aware ingest deploys, lint warning caps | #264 | ✅ Complete | v1.3.0 |
-| `GET /titles/:id/similar` (Vectorize query-by-id, no neurons) and "More like this" on title pages | #266 | ✅ Complete | main (unreleased) |
-| Remote MCP server (`apps/mcp`): search, get title, similar, curate for any MCP client | #267 | ✅ Complete | main (unreleased) |
+| `GET /titles/:id/similar` (Vectorize query-by-id, no neurons) and "More like this" on title pages | #266 | ✅ Complete | v1.4.0 |
+| Remote MCP server (`apps/mcp`): search, get title, similar, curate for any MCP client; structured output, DNS-rebinding host check, live smoke test on deploy | #267, #269 | ✅ Complete | v1.4.0 |
 | Latin American cinema expansion: 219 → 331 seed titles | #226–#253 | ✅ Merged; ingesting via the queue (279 live at release) | v1.3.0 |
 
 **All features including the two v1.0.0 nice-to-haves (OpenAPI + ESLint) are production-ready and live.**

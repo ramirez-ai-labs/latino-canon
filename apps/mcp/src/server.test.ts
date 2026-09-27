@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiClient, type ApiFetcher } from "./api.js";
 import { handleMcp } from "./index.js";
 import { buildServer } from "./server.js";
+import rootPackage from "../../../package.json";
 
 const WEB = "https://web.test";
 
@@ -258,6 +259,25 @@ describe("POST /mcp over HTTP", () => {
     expect(res.headers.get("mcp-session-id")).toBeNull();
     const body = await res.json<{ result: { serverInfo: { name: string } } }>();
     expect(body.result.serverInfo.name).toBe("latino-canon");
+  });
+
+  it("reports the repo's release version, so clients know which release they're on", async () => {
+    const res = await handleMcp(
+      new Request("https://mcp.test/mcp", {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "initialize",
+          params: { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "t", version: "0" } },
+        }),
+      }),
+      { API: fakeApi({}).api, WEB_URL: WEB, ALLOWED_HOSTS: "mcp.test" },
+    );
+    const body = await res.json<{ result: { serverInfo: { version: string } } }>();
+    expect(body.result.serverInfo.version).toBe(rootPackage.version);
+    expect(rootPackage.version).toMatch(/^\d+\.\d+\.\d+/);
   });
 
   it("answers tools/list on its own request, as the deploy smoke test sends it", async () => {

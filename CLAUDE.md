@@ -195,8 +195,10 @@ README and `monitoring.md`.
 5. **`apps/web` has no tests.**
 6. **Seed titles go live a day or more after merge.** The queue ingests 15 a day, so a
    migration that touches a new title must wait for it (see "Adding a migration").
-7. **Only fully supported blurbs auto-approve.** Ingest runs the v3 judge on each new
-   blurb and approves it at score 1.0 (`approved_by = 'judge'`). Anything lower, the 63
+7. **Only fully supported, properly cited blurbs auto-approve.** Ingest runs the v3 judge
+   on each new blurb and approves it at score 1.0 with clean citations - inline `[s1]`
+   markers, no source ids or names in the prose (`blurbTextProblems`, #262/#263)
+   (`approved_by = 'judge'`). Anything lower, the 63
    blurbs from before the gate, and any blurb whose judge call failed wait for an editor.
 8. **The retrieval gate compares against the last passing run.** A big catalog change
    can shift recall legitimately; re-run `eval-retrieval.yml` with a `rebaseline` reason
@@ -242,7 +244,7 @@ pnpm --filter @latino-canon/mcp test          # tools via the SDK's own Client, 
   (`initialize` + `tools/list`) after deploying.
 - The api deploy applies D1 migrations first, then triggers the retrieval eval.
 - Groundedness runs are manual (`eval-groundedness.yml`).
-- Releases are cut from **Actions → Release** (semver; current `1.3.0`).
+- Releases are cut from **Actions → Release** (semver; current `1.4.0`).
 - CI secrets are `CLOUDFLARE_API_TOKEN` (needs D1:Edit) and `CLOUDFLARE_ACCOUNT_ID`.
   Worker secrets are `TMDB_API_KEY`, `OMDB_API_KEY` and `INGEST_ADMIN_TOKEN`, all on
   ingest. See `infra/README.md`.
