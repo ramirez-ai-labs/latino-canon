@@ -32,7 +32,7 @@ const RECORD = process.env.RECORD === "1";
 const GATE = process.env.GATE === "1";
 const MAX_DROP = Number(process.env.MAX_DROP ?? 0.03);
 const REBASELINE = process.env.REBASELINE?.trim() ? { reason: process.env.REBASELINE.trim() } : undefined;
-const MAX_RATE_LIMIT_WAITS = 20; // 77 queries x 3 modes at 30/min needs ~7; well past that, something's wrong
+const MAX_RATE_LIMIT_WAITS = 20; // 97 queries x 3 modes at 30/min needs ~9; well past that, something's wrong
 
 function loadQueries(): GoldQuery[] {
   const path = fileURLToPath(new URL("./datasets/queries.jsonl", import.meta.url));

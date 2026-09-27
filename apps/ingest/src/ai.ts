@@ -116,7 +116,10 @@ export interface BlurbGroundingResult {
  * has a source behind it. The award source is OMDb's awards line, fetched at ingest for
  * years and discarded until now: the one sourced way to say why a title is recognized.
  */
-export function blurbSources(t: Title, awards: string | null): ResolvedBlurbSource[] {
+/** What a blurb is written from - all ingest has, and all /regenerate-blurbs loads back from D1. */
+export type BlurbTitle = Pick<Title, "id" | "title" | "yearStart" | "synopsis" | "imdbId" | "credits">;
+
+export function blurbSources(t: BlurbTitle, awards: string | null): ResolvedBlurbSource[] {
   const work = `${t.title} (${t.yearStart})`;
   return [
     t.synopsis ? { id: "s1", kind: "synopsis" as const, ref: t.id, quote: null, text: t.synopsis } : null,
@@ -133,8 +136,7 @@ export function blurbSources(t: Title, awards: string | null): ResolvedBlurbSour
 
 export async function blurbForIngest(
   env: Env,
-  t: Title,
-  classification: ClassificationResult,
+  t: BlurbTitle,
   awards: string | null,
 ): Promise<BlurbGroundingResult> {
   const sources = blurbSources(t, awards);
@@ -146,7 +148,6 @@ export async function blurbForIngest(
     blurbUser(sources.map((s) => ({ id: s.id, kind: s.kind, text: s.text }))),
   );
   const result = parseLlm(blurbSchema, normalizeBlurbJson(extractJson(out)), "blurb");
-  void classification;
   return {
     result,
     // id + text are what the blurb cites and what the model saw - both needed for the
@@ -200,6 +201,6 @@ async function runLlm(
   return coerceLlmText(res.response);
 }
 
-function creditNames(t: Title, role: "director" | "writer" | "creator" | "cast"): string[] {
+function creditNames(t: Pick<Title, "credits">, role: "director" | "writer" | "creator" | "cast"): string[] {
   return t.credits.filter((c) => c.role === role).sort((a, b) => a.order - b.order).map((c) => c.person.name);
 }
