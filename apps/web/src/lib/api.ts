@@ -103,7 +103,8 @@ export const getSimilarTitles = (id: string, limit = 8) =>
   apiFetch<{ titleId: string; results: TitleCard[] }>(`/titles/${id}/similar?limit=${limit}`);
 export const listCollections = () => apiFetch<{ collections: Collection[] }>(`/collections`);
 export const getCollection = (slug: string) => apiFetch<Collection>(`/collections/${slug}`);
-export const listEvalRuns = (limit = 20) => apiFetch<{ runs: EvalRun[] }>(`/eval-runs?limit=${limit}`);
+export const listEvalRuns = (limit = 20, type?: EvalRun["evalType"]) =>
+  apiFetch<{ runs: EvalRun[] }>(`/eval-runs?limit=${limit}${type ? `&type=${type}` : ""}`);
 
 export async function listRecentTitles(limit = 5): Promise<Title[]> {
   const res = await apiFetch<{ titleIds: string[] }>(`/titles?recent=1&limit=${limit}`);
