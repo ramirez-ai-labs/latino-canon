@@ -11,11 +11,14 @@ import {
   type TitleCard,
 } from "@latino-canon/core";
 import { z } from "zod";
+import rootPackage from "../../../package.json";
 import { ApiError, type ApiClient } from "./api.js";
 import { cardSchema, cardSummary, detailSchema, rankedSchema, rankedSummary, titleDetail } from "./format.js";
 
 export const SERVER_NAME = "latino-canon";
-export const SERVER_VERSION = "1.0.0";
+// The repo's release version, so a client's serverInfo says which release it's talking to.
+// Bundled at build time; bumping the root package.json (the release process) updates it.
+export const SERVER_VERSION: string = rootPackage.version;
 
 const INSTRUCTIONS = `Latino Canon is an editorially curated catalog of Latino-led and Latino-focused films and
 series (US Latino and Latin American cinema, plus Spain and Brazil), each with a sourced note on why it's in

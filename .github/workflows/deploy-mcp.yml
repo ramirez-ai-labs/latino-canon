@@ -12,6 +12,8 @@ on:
       - "apps/mcp/**"
       - "packages/core/**"
       - "pnpm-lock.yaml"
+      # The server reports the root package.json version, so a release bump redeploys it.
+      - "package.json"
       - ".github/workflows/deploy-mcp.yml"
 
 permissions:

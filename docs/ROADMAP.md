@@ -385,7 +385,7 @@ about 200 neurons per title (dashboard headline, 3.38k → 4.6k for 6 titles).
 
 ---
 
-### Week 6: hardening, v1.3.0, agent access (2026-09-26 → 27)
+### Week 6: hardening, v1.3.0, agent access, v1.4.0 (2026-09-26 → 27)
 
 - [x] **Blurb gate at ingest** (#261–#263): sourced-facts prompt, OMDb awards source,
   v3 judge auto-approval, citation-style checks. See item 6.
@@ -400,6 +400,7 @@ about 200 neurons per title (dashboard headline, 3.38k → 4.6k for 6 titles).
   smoke test on deploy. See `docs/MCP.md`.
 - [x] **DevEx plan** (#268): Cloudflare's managed MCP servers for debugging, under
   "Long-term: developer experience".
+- [x] **Release v1.4.0**: the remote MCP server and `/similar`.
 
 **Next:** check the blurb gate's pass rate under the citation checks, then regenerate old
 blurbs (~20/day under the 70B budget rule); grow the Spanish golden set, then 5b; a web
