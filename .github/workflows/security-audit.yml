@@ -1,0 +1,46 @@
+name: Security audit
+
+# Dependabot is off (.github/dependabot.yml: its auto-PRs caused lockfile sync cycles),
+# which left nothing watching for advisories - by 2026-09-26 four postcss advisories (two
+# high) had piled up under next unnoticed. This is the replacement: no auto-PRs, just a
+# failing check. Weekly for new advisories against what's already locked, and on any PR
+# that changes the lockfile. Fix with a targeted `pnpm.overrides` entry in the root
+# package.json (see the postcss one) or a direct upgrade.
+
+on:
+  schedule:
+    - cron: "0 15 * * 1" # Mondays 15:00 UTC
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "pnpm-lock.yaml"
+      - "**/package.json"
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.28.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      # Production dependencies only: dev tooling never ships to a Worker. High and
+      # critical fail the check; moderate and low still print for review.
+      - name: Audit production dependencies
+        run: pnpm audit --prod --audit-level high

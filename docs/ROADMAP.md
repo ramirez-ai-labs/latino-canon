@@ -234,8 +234,9 @@ Order below: fix the measurements first, then what they measure.
 **Workers AI budget** (10k neurons/day, resets 00:00 UTC; measured 2026-09-24 via the
 `aiInferenceAdaptiveGroups` analytics dataset). Live search ~0.5–0.7k/day; the daily
 ingest queue ~3.2k (15 titles × ~200, 70B, re-measured 2026-09-25, + ~13 each for the blurb judge); groundedness judge ~2.8k/run; retrieval eval ~0.15k (hybrid) /
-~0.4k (all modes). Rules: at most one 70B job (judge, blurb regeneration) per day and
-never on an ingest day; sample before full runs; no ad-hoc production eval runs; weekly,
+~0.4k (all modes). Rules: besides the daily queue, at most one 70B job (judge, blurb
+regeneration) per day, capped at ~2k; a full judge run waits for a day with no queue run;
+sample before full runs; no ad-hoc production eval runs; weekly,
 not nightly, schedules.
 
 ### Week 5: Latin American cinema expansion (in progress)

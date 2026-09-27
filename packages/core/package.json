@@ -10,7 +10,7 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint src --ext .ts --max-warnings 3",
     "test": "vitest run"
   },
   "dependencies": {

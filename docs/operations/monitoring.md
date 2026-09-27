@@ -223,8 +223,10 @@ budget on a given day.
 - **Measured costs (2026-09-24, ingest re-measured 2026-09-25):** live search
   ~0.5–0.7k/day; the daily ingest queue ~3.2k (15 titles × ~200, 70B, + ~13 each for the blurb judge); groundedness eval ~2.8k per run (70B); retrieval eval ~0.15k hybrid /
   ~0.4k all modes.
-- **Rules:** at most one 70B job (groundedness run, blurb regeneration) per day, never
-  on an ingest day; sample before full runs; weekly, not nightly, schedules.
+- **Rules:** besides the daily ingest queue, at most one 70B job (blurb regeneration, a
+  sampled judge run) per day, capped at ~2k, so the planned day stays near 6k; a full
+  groundedness run (~2.8k) waits for a day with no queue run; sample before full runs;
+  weekly, not nightly, schedules.
 - `classify` and `blurb` (both on the 70B model) are the expensive calls, run
   twice per title during ingest. Query rewrite and embeddings (both on cheaper
   models, and embeddings only run once per title) are comparatively negligible.

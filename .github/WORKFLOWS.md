@@ -23,6 +23,15 @@ All workflows are organized by category below. Each entry includes the trigger c
 - **Duration**: ~10 seconds
 - **Critical**: NO (informational only)
 
+### security-audit.yml
+- **Trigger**: Mondays 15:00 UTC, on PRs that change `pnpm-lock.yaml` or a `package.json`, and manually
+- **Purpose**: Stand-in for Dependabot, which is off (its auto-PRs caused lockfile sync cycles)
+- **What it does**:
+  - `pnpm audit --prod --audit-level high`: fails on high/critical advisories in production dependencies
+  - Fix with a targeted `pnpm.overrides` entry in the root `package.json` (see the postcss one) or a direct upgrade
+- **Duration**: ~20 seconds
+- **Critical**: Not a required check; a failure is a to-do, not a merge block
+
 ---
 
 ## Deployments (Automatic on main commit)
@@ -38,11 +47,12 @@ All workflows are organized by category below. Each entry includes the trigger c
 - **Requires**: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
 
 ### deploy-ingest.yml
-- **Trigger**: On commit to `main` + changes to `apps/ingest/**`
+- **Trigger**: On commit to `main` + changes to `apps/ingest/**` or `packages/core/**`
 - **Purpose**: Deploy ingest Worker + cron jobs to production
 - **What it does**:
+  - If the push adds a D1 migration, waits for the same commit's `deploy-api` run (which applies it) and deploys only if it succeeded, so ingest never writes against an old schema
   - Deploys Workflow orchestration engine
-  - Configures nightly cron (8 AM UTC): retryErroredJobs, refreshPopularity
+  - Configures daily cron (8 AM UTC): ingest queue, retryErroredJobs, refreshPopularity
   - Binds to: D1, Vectorize, R2, AI binding, AI Gateway
 - **Duration**: ~30 seconds
 - **Requires**: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
@@ -145,6 +155,7 @@ Merged seed titles are **not** ingested by a workflow. The ingest worker's daily
 | Sundays 09:30 UTC | eval-retrieval (all modes) | ✅ | ✅ | Weekly search baseline |
 | Manual trigger from Actions UI | eval-groundedness | — | ✅ | Evaluate blurbs |
 | Manual trigger from Actions UI | release | — | ✅ | Cut release |
+| Mondays 15:00 UTC, lockfile PRs | security-audit | ✅ | ✅ | Catch vulnerable dependencies |
 
 ---
 

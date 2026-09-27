@@ -289,9 +289,10 @@ Measured costs (2026-09-24, Workers AI analytics, `aiInferenceAdaptiveGroups`):
 | Groundedness eval, 212 blurbs | 70B | ~2.8k per run |
 | Retrieval eval, 77 queries | 8B + bge-m3 | ~0.15k hybrid / ~0.4k all modes |
 
-Rules this project follows: at most one 70B job (groundedness run, blurb regeneration) per
-day and never on an ingest day; validate on a sample before full runs; schedules are weekly,
-not nightly, unless a deploy triggers them.
+Rules this project follows: besides the daily ingest queue, at most one 70B job
+(blurb regeneration, a sampled judge run) per day, capped at ~2k, so the planned day stays
+near 6k; a full groundedness run (~2.8k) waits for a day with no queue run; validate on a
+sample before full runs; schedules are weekly, not nightly, unless a deploy triggers them.
 
 Practical guidance: when growing the catalog by more than a handful of titles, spread
 large batches across more than one day rather than running them all at once, and treat
