@@ -223,8 +223,8 @@ Worker** / **Deploy ingest Worker** manually.
 
 Pull requests are labeled automatically by changed area and conventional title
 prefix. Releases are created manually from **Actions -> Release** using the next
-semantic version (current: `1.2.0`); the workflow creates a tag like
-`latino-canon-v1.2.0`, generates release notes from merged PRs since the last tag,
+semantic version (current: `1.3.0`); the workflow creates a tag like
+`latino-canon-v1.3.0`, generates release notes from merged PRs since the last tag,
 and supports prereleases.
 
 Adding a title to the canon is a normal PR: edit
@@ -367,16 +367,16 @@ or sources actually change.
 
 ## Status
 
-**v1.2.0.** Curation agent, female-lead search, genre and content-advisory facets, and a
-full UI redesign shipped after v1.0.0; v1.2.0 adds search index integrity fixes, a
-post-deploy retrieval eval, and a groundedness judge that actually sees its evidence (see
-the [release notes](https://github.com/ramirez-ai-labs/latino-canon/releases/tag/latino-canon-v1.2.0)). See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind
+**v1.3.0.** v1.2.0 added search index integrity fixes, a post-deploy retrieval eval, and a
+groundedness judge that actually sees its evidence. v1.3.0 hardens the system for scale:
+search budget guards (cache-first, per-client rate limit, keyword fallback), TMDB match
+guards and seed validation in CI, a daily ingest queue, the exact-title rule, and blurbs
+gated at ingest by the groundedness judge (see the
+[release notes](https://github.com/ramirez-ai-labs/latino-canon/releases/tag/latino-canon-v1.3.0)). See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind
 what's built vs. what's next, and a prioritized backlog. See [docs/operations/monitoring.md](docs/operations/monitoring.md)
 for how to operate this in production — resource names, AI Gateway/neuron-budget checks, and an
 incident response runbook built around six real production incidents. See [docs/FEATURES_COMPLETED.md](docs/FEATURES_COMPLETED.md)
-for a summary of all shipped features. Since v1.2.0, `main` adds search budget guards
-(cache-first, rate limit, keyword fallback), a daily ingest queue, TMDB match guards and
-seed validation in CI, and the exact-title rule.
+for a summary of all shipped features.
 
 The ingest resolve → fetch → normalize → persist → classify → embed → blurb path
 is implemented and has been run end-to-end against live TMDB/OMDb and a deployed
