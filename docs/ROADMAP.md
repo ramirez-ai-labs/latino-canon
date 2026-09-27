@@ -193,7 +193,10 @@ Order below: fix the measurements first, then what they measure.
   "telenovela"); LLM extracts filters only; lower the `tags` column's BM25 weight.
   Saves neurons.
 - [ ] **5b. Bilingual search.** Spanish recall@5 0.453 vs 0.845 for English plot queries
-  (2026-09-26). The catalog expansion made it more visible: about 120 Latin American films are
+  (2026-09-26), measured on only 8 Spanish queries. *Golden set grown first (2026-09-27):* 28
+  Spanish queries, each tagged in its note by what it tests - `[original-title]` (exact, partial,
+  unaccented), `[plot]` (native Spanish, not translations), `[person]` - so the fix can be
+  measured per failure mode. The first run on the new set is the 5b baseline. The catalog expansion made it more visible: about 120 Latin American films are
   live under TMDB's English titles, and a search for the exact Spanish title ranks the film
   #2 or #3 (checked 2026-09-25: "Viaje" → #2 behind *The Wind Journeys*, "El silencio de
   Neto" → #3, "y tu mama tambien" → #3, down from #2). The exact-title rule (#258) now pins

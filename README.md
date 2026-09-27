@@ -306,7 +306,7 @@ Measured costs (2026-09-24, Workers AI analytics, `aiInferenceAdaptiveGroups`):
 | Live search (query rewrite + embedding) | 8B + bge-m3 | ~0.5–0.7k/day |
 | Ingest classify + blurb + judge (daily queue, 15 titles) | 70B | ~3.2k/day (~200 per title + ~13 for the judge) |
 | Groundedness eval, 212 blurbs | 70B | ~2.8k per run |
-| Retrieval eval, 77 queries | 8B + bge-m3 | ~0.15k hybrid / ~0.4k all modes |
+| Retrieval eval, 97 queries | 8B + bge-m3 | ~0.15k hybrid / ~0.4k all modes |
 
 Rules this project follows: besides the daily ingest queue, at most one 70B job
 (blurb regeneration, a sampled judge run) per day, capped at ~2k, so the planned day stays
@@ -331,7 +331,7 @@ from CI and record to `eval_runs`; the live history is on the site's Eval page.)
 ### Retrieval
 
 `pnpm eval:retrieval` runs the golden query set (`packages/eval/src/datasets/queries.jsonl`,
-77 queries) against the deployed `api` worker, after every api deploy (hybrid mode) and
+97 queries) against the deployed `api` worker, after every api deploy (hybrid mode) and
 weekly (all modes). A run fails when hybrid recall@5 drops more than 0.03 against the last
 passing run on the same golden set. Current baseline, hybrid, by query type:
 
