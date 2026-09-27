@@ -306,6 +306,9 @@ actually does:
   check someone has to remember to run. There is no PagerDuty/email/Slack hook anywhere in this
   stack.
 - **No uptime monitoring.** Nothing pings the live endpoints on a schedule.
+- **No conversational debugging yet.** Every check below is a command or a dashboard.
+  Querying logs, analytics and D1 through Cloudflare's managed MCP servers from Claude
+  Code is planned, with a read-only token (ROADMAP, "Long-term: developer experience").
 - **No quota alerting beyond Cloudflare's own account-level emails** (KV, D1,
   Workers AI neurons) — the same "someone has to see the email" gap as incident
   #3's neuron budget, just for other resources. Nothing in this codebase watches
