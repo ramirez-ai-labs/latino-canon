@@ -13,7 +13,10 @@ import { jobIdFor } from "./workflow-rules.js";
  * so corrections drain through the same queue.
  */
 
-const DEFAULT_PER_DAY = 5;
+// Matches INGEST_QUEUE_PER_DAY in wrangler.jsonc. This only applies if that var goes
+// missing or malformed, and then it should keep today's pace, not quietly drop back to
+// the pre-#256 rate of 5.
+const DEFAULT_PER_DAY = 15;
 
 export interface LiveTitle {
   tmdbId: number;

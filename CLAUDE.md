@@ -53,8 +53,12 @@ Rules:
 
 - Never run production evals or backfills ad hoc to "check" something. Use targeted
   `curl` queries against the live api instead.
-- Run at most one 70B job (judge run, blurb regeneration) per day, and never on an ingest
-  day. Validate on a ~30-title sample first, then roll out in daily batches.
+- On top of the daily ingest queue (~3.2k), run at most one other 70B job a day, capped
+  at ~2k (e.g. ~20 blurb regenerations). That keeps the planned day near 6k with ~4k of
+  headroom for spikes and the account's other projects. A full groundedness run (~2.8k)
+  waits for a day with no queue run. Validate on a ~30-title sample first, then roll out
+  in daily batches. (The old rule, "never on an ingest day", blocked everything once the
+  queue made every day an ingest day.)
 - Add a handful of titles per day, not dozens.
 - Anything public that calls Workers AI needs a cache and a per-client limit in front of
   it (the Rate Limiting binding). Don't add per-request KV writes: the free tier allows
