@@ -102,7 +102,7 @@ metadata and broke every filtered semantic query (incident 4).
 
 ### 7. Evals are deploy gates, not demos
 
-- The retrieval eval (77-query golden set, per-category scores) runs after every api
+- The retrieval eval (97-query golden set, per-category scores) runs after every api
   deploy. It fails if hybrid recall@5 drops more than 0.03 against the last passing run
   on the same golden set.
 - The groundedness judge is **frozen at v3** (`GROUNDEDNESS_JUDGE_VERSION` in

@@ -145,7 +145,7 @@ export default async function EvalPage() {
     <article className="max-w-4xl">
       <h1 className="text-3xl font-bold tracking-tight">Evals</h1>
       <p className="mt-2 max-w-2xl text-muted">
-        Every api deploy is checked against 77 real search queries, and blurbs are checked claim by claim against
+        Every api deploy is checked against {retrieval?.n ?? "a set of"} real search queries, and blurbs are checked claim by claim against
         the sources they were written from. This page shows what those checks find.
       </p>
 
@@ -306,7 +306,7 @@ export default async function EvalPage() {
         <summary className="cursor-pointer select-none px-4 py-3 font-semibold">How these evals work</summary>
         <div className="space-y-3 px-4 pb-4 text-sm text-muted">
           <p>
-            <strong className="text-text">Retrieval</strong> runs the 77-query golden set (known titles, people,
+            <strong className="text-text">Retrieval</strong> runs the {retrieval?.n ?? ""}-query golden set (known titles, people,
             half-remembered plots, facets, Spanish) against the live api after every deploy and weekly. Recall@5 is the
             share of each query&apos;s correct titles in the top 5; MRR is how high the first one ranks.
           </p>

@@ -99,7 +99,7 @@ Merged seed titles are **not** ingested by a workflow. The ingest worker's daily
   weekly on Sundays 09:30 UTC; manual (`workflow_dispatch`, choose modes)
 - **Purpose**: post-deploy regression check for search quality
 - **What it does**:
-  - Runs the 77-query golden set (`packages/eval/src/datasets/queries.jsonl`) against the live api:
+  - Runs the 97-query golden set (`packages/eval/src/datasets/queries.jsonl`) against the live api:
     hybrid only after a deploy, all three modes weekly
   - Reports recall@5 / recall@10 / MRR / nDCG@10, overall and per query type
     (known-item, person, plot, facet, spanish)
