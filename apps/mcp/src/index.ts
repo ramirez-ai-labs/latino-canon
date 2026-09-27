@@ -16,7 +16,7 @@ import { SERVER_NAME, SERVER_VERSION, buildServer } from "./server.js";
 // Browser-based clients (the MCP Inspector) need CORS; hosted clients call server-side.
 const CORS = {
   "access-control-allow-origin": "*",
-  "access-control-allow-methods": "GET, POST, DELETE, OPTIONS",
+  "access-control-allow-methods": "POST, OPTIONS",
   "access-control-allow-headers": "content-type, accept, mcp-protocol-version, mcp-session-id, last-event-id",
   "access-control-expose-headers": "mcp-session-id, mcp-protocol-version",
 };
@@ -50,6 +50,19 @@ export async function handleMcp(request: Request, env: Env): Promise<Response> {
     return Response.json(
       { jsonrpc: "2.0", error: { code: -32000, message: `Invalid host: ${new URL(request.url).host}` }, id: null },
       { status: 403 },
+    );
+  }
+
+  // Found live (2026-09-27): `claude mcp add` failed with InvalidHTTPResponse. After
+  // initialize, clients open a GET stream for server-initiated messages; the stateless
+  // transport answered 200 text/event-stream and then sent nothing until the connection
+  // was cut, which Claude Code reads as a malformed response. A stateless server has
+  // nothing to push, and the spec's answer for "no stream here" is 405 - clients then
+  // carry on over POST. DELETE ends a session, and there are none.
+  if (request.method !== "POST") {
+    return Response.json(
+      { jsonrpc: "2.0", error: { code: -32000, message: "Method not allowed: this server is stateless and has no stream" }, id: null },
+      { status: 405, headers: { ...CORS, allow: "POST, OPTIONS" } },
     );
   }
 

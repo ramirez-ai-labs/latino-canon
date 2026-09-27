@@ -62,7 +62,10 @@ apps/api  (/search, /titles, /similar, /agents/curate)
 - **No model, no key.** The client brings the model and pays for it. This Worker only runs tools, so the
   project stays free-tier with no closed-model dependency.
 - **Stateless.** Every tool is one read against the api, so there's no session to keep. Each request gets a
-  fresh server and transport, and no Durable Object is needed.
+  fresh server and transport, and no Durable Object is needed. With nothing to push, `GET /mcp` (the
+  optional server-to-client stream) and `DELETE /mcp` (ending a session) answer **405**, as the spec
+  requires; clients carry on over POST. Before this, `GET` opened a silent stream that never closed, and
+  `claude mcp add` failed with `InvalidHTTPResponse`.
 - **Authless.** The tools expose exactly what the public api already serves. OAuth would matter for private
   or write tools, and there are none.
 - **Same protection as the site.** The api's cache, per-client rate limits and canon visibility gate apply to
