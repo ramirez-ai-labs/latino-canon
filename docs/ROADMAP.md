@@ -414,7 +414,7 @@ about 200 neurons per title (dashboard headline, 3.38k → 4.6k for 6 titles).
 - [x] **Eval page redesign** (#271, #272), **Spanish golden set 8 → 28** (#274), **blurb
   regeneration tooling** (#275), **Cartelera identity**: directions (#273) and step 1, tokens,
   type and a dark-mode toggle (#276).
-- [x] **Release v1.5.0.**
+- [x] **Release v1.5.0**, and **v1.5.1** for the About colophon (#278), which merged just after the v1.5.0 tag.
 
 **Next:** check the blurb gate's pass rate under the citation checks, then regenerate old
 blurbs (~20/day under the 70B budget rule); grow the Spanish golden set, then 5b; a web
