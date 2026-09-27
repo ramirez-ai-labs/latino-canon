@@ -36,11 +36,25 @@ function isInvalid(r: EvalRun): boolean {
   return r.evalType === "groundedness" && judgeVersion(r) < GROUNDEDNESS_MIN_VALID_JUDGE_VERSION;
 }
 
+/**
+ * Retrieval and groundedness runs are fetched separately. One mixed "latest 20" list let
+ * frequent retrieval runs (one per api deploy - 16 in the three days to 2026-09-27) push
+ * every groundedness run out of the window, taking the latest valid score, its
+ * lowest-scoring titles and the groundedness history off the page. Groundedness runs are
+ * manual and rare, so their whole recent history fits.
+ */
+const RETRIEVAL_RUNS_SHOWN = 15;
+const GROUNDEDNESS_RUNS_SHOWN = 20;
+
 export default async function EvalPage() {
-  const { runs } = await listEvalRuns(20);
-  const latest = runs.find((r) => r.evalType === "groundedness" && !isInvalid(r));
+  const [retrievalRuns, groundednessRuns] = await Promise.all([
+    listEvalRuns(RETRIEVAL_RUNS_SHOWN, "retrieval"),
+    listEvalRuns(GROUNDEDNESS_RUNS_SHOWN, "groundedness"),
+  ]);
+  const runs = [...retrievalRuns.runs, ...groundednessRuns.runs].sort((a, b) => b.runAt.localeCompare(a.runAt));
+  const latest = groundednessRuns.runs.find((r) => !isInvalid(r));
   const details = latest?.details as GroundednessDetails | null;
-  const retrieval = runs.find((r) => r.evalType === "retrieval");
+  const retrieval = retrievalRuns.runs[0];
   const retrievalDetails = retrieval?.details as RetrievalDetails | null;
   const categories = retrieval
     ? Object.entries(retrieval.metrics)
@@ -54,7 +68,7 @@ export default async function EvalPage() {
       <h1 className="mb-1 text-2xl font-bold tracking-tight">Eval History</h1>
       <p className="mb-6 text-sm text-muted">
         Retrieval runs (recall@k over the golden query set) run automatically after every api deploy and
-        nightly, and flag a deploy that drops hybrid recall@5 by more than 0.03. Groundedness runs (an LLM
+        weekly, and flag a deploy that drops hybrid recall@5 by more than 0.03. Groundedness runs (an LLM
         judge checking each blurb against its sources) are triggered manually from{" "}
         <code className="rounded bg-surface-raised px-1.5 py-0.5">.github/workflows/eval-groundedness.yml</code>.
       </p>
