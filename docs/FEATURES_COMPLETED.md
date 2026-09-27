@@ -1,6 +1,6 @@
 # Post-Week 3 Major Features
 
-All features listed below have been implemented, tested, and deployed to production (v1.0.0 through v1.4.0).
+All features listed below have been implemented, tested, and deployed to production (v1.0.0 through v1.5.0).
 
 ## Feature Inventory
 
@@ -154,6 +154,10 @@ retrieval eval after every api deploy with per-category scores on the Eval page.
 | SDLC hardening: weekly dependency audit, migration-aware ingest deploys, lint warning caps | #264 | ✅ Complete | v1.3.0 |
 | `GET /titles/:id/similar` (Vectorize query-by-id, no neurons) and "More like this" on title pages | #266 | ✅ Complete | v1.4.0 |
 | Remote MCP server (`apps/mcp`): search, get title, similar, curate for any MCP client; structured output, DNS-rebinding host check, live smoke test on deploy | #267, #269 | ✅ Complete | v1.4.0 |
+| Eval page leads with findings: headline tiles, retrieval trend with the deploy gate, weakest query types, why blurbs fail, titles to fix | #271, #272 | ✅ Complete | v1.5.0 |
+| Spanish golden set 8 → 28 queries, tagged by failure mode (original titles, native plots, people) | #274 | ✅ Complete | v1.5.0 |
+| Blurb regeneration (`POST /regenerate-blurbs`): rewrites replace old blurbs only when they pass the gate | #275 | ✅ Complete | v1.5.0 |
+| Cartelera identity: festival-program design, paper and ink by default, Filmoteca dark mode on a toggle | #273, #276 | ✅ Complete (step 1 of 4) | v1.5.0 |
 | Latin American cinema expansion: 219 → 331 seed titles | #226–#253 | ✅ Merged; ingesting via the queue (279 live at release) | v1.3.0 |
 
 **All features including the two v1.0.0 nice-to-haves (OpenAPI + ESLint) are production-ready and live.**

@@ -198,7 +198,12 @@ Order below: fix the measurements first, then what they measure.
   (2026-09-26), measured on only 8 Spanish queries. *Golden set grown first (2026-09-27):* 28
   Spanish queries, each tagged in its note by what it tests - `[original-title]` (exact, partial,
   unaccented), `[plot]` (native Spanish, not translations), `[person]` - so the fix can be
-  measured per failure mode. The first run on the new set is the 5b baseline. The catalog expansion made it more visible: about 120 Latin American films are
+  measured per failure mode. **Baseline (2026-09-27, 97 queries, 279 titles):** Spanish recall@5
+  0.835. Every `[original-title]` and `[person]` query passes; the misses are translations whose
+  English originals also miss (q72/q23, q74/q26, q76/q57) and one native plot (q87), with Spanish
+  words keyword-matching the wrong title ("casa mágica" → *Casa Grande*). So the next lever is the
+  lexical side - accent-aware Spanish stemming or stopwords in FTS, or the RRF weight on
+  Spanish-language queries - measured against this set. Facet (0.627) is now the weakest type. The catalog expansion made it more visible: about 120 Latin American films are
   live under TMDB's English titles, and a search for the exact Spanish title ranks the film
   #2 or #3 (checked 2026-09-25: "Viaje" → #2 behind *The Wind Journeys*, "El silencio de
   Neto" → #3, "y tu mama tambien" → #3, down from #2). The exact-title rule (#258) now pins
@@ -406,6 +411,10 @@ about 200 neurons per title (dashboard headline, 3.38k → 4.6k for 6 titles).
 - [x] **DevEx plan** (#268): Cloudflare's managed MCP servers for debugging, under
   "Long-term: developer experience".
 - [x] **Release v1.4.0**: the remote MCP server and `/similar`.
+- [x] **Eval page redesign** (#271, #272), **Spanish golden set 8 → 28** (#274), **blurb
+  regeneration tooling** (#275), **Cartelera identity**: directions (#273) and step 1, tokens,
+  type and a dark-mode toggle (#276).
+- [x] **Release v1.5.0.**
 
 **Next:** check the blurb gate's pass rate under the citation checks, then regenerate old
 blurbs (~20/day under the 70B budget rule); grow the Spanish golden set, then 5b; a web

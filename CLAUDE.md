@@ -187,8 +187,11 @@ README and `monitoring.md`.
 1. **No daily cap on `/search`.** The per-client limit (30/min) stops bursts, but many
    IPs or one sustained caller can still drain the budget. Nothing tracks cumulative
    neuron spend in code (ROADMAP #15).
-2. **Spanish search lags:** recall@5 is 0.453, against 0.845 for English plot queries
-   (ROADMAP 5b).
+2. **Spanish plot search lags where keywords collide.** On the 28-query Spanish set,
+   recall@5 is 0.835, and every original-title and person query passes. The misses are
+   translated queries whose English originals also miss, and Spanish words that
+   keyword-match the wrong title ("casa mágica" → *Casa Grande*); lexical is weighted
+   2:1 in RRF (ROADMAP 5b).
 3. **Blurb groundedness is 0.682.** Most failures are one unsupported "It matters…"
    sentence (ROADMAP item 6).
 4. **The curation agent is a fixed 4-step pipeline.** No LLM chooses its tools.
@@ -244,7 +247,7 @@ pnpm --filter @latino-canon/mcp test          # tools via the SDK's own Client, 
   (`initialize` + `tools/list`) after deploying.
 - The api deploy applies D1 migrations first, then triggers the retrieval eval.
 - Groundedness runs are manual (`eval-groundedness.yml`).
-- Releases are cut from **Actions → Release** (semver; current `1.4.0`).
+- Releases are cut from **Actions → Release** (semver; current `1.5.0`).
 - CI secrets are `CLOUDFLARE_API_TOKEN` (needs D1:Edit) and `CLOUDFLARE_ACCOUNT_ID`.
   Worker secrets are `TMDB_API_KEY`, `OMDB_API_KEY` and `INGEST_ADMIN_TOKEN`, all on
   ingest. See `infra/README.md`.
