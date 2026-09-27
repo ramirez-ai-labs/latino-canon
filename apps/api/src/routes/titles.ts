@@ -13,9 +13,13 @@ import {
   type TagSource,
   type Theme,
   type Title,
+  type TitleCard,
   type TitleKind,
 } from "@latino-canon/core";
 import type { Env } from "../bindings.js";
+import { hydrateCards } from "../db/cards.js";
+import { visibilityGateSql } from "../search/filters.js";
+import { MAX_SIMILAR, similarTitleHits } from "../search/similar.js";
 
 export const titlesRoute = new Hono<{ Bindings: Env }>();
 
@@ -214,5 +218,41 @@ titlesRoute.get("/:id", async (c) => {
   return c.json(body);
 });
 
-/** GET /titles/:id/similar — content-based neighbors from Vectorize (V1). */
-titlesRoute.get("/:id/similar", (c) => c.json({ todo: "vectorize nearest-neighbors by title id", results: [] }));
+export interface SimilarResponse {
+  titleId: string;
+  results: TitleCard[];
+}
+
+/**
+ * GET /titles/:id/similar?limit=6 — the titles nearest this one in embedding space, as
+ * cards. No Workers AI call (see similarTitleHits), but each lookup is a Vectorize query
+ * against the free tier's monthly queried-dimensions allowance, and title pages ask on
+ * every view - so results are cached like search's. The key sits under "search:" so
+ * POST /rebuild-search-cache clears it after a vector rebuild, and the deployed version
+ * is in it so a deploy never serves neighbors the previous code chose.
+ */
+titlesRoute.get("/:id/similar", async (c) => {
+  const id = c.req.param("id");
+  const requested = Number(c.req.query("limit") ?? "6");
+  const limit = Number.isInteger(requested) ? Math.min(Math.max(requested, 1), MAX_SIMILAR) : 6;
+
+  const version = c.env.CF_VERSION_METADATA?.id ?? "local";
+  const cacheKey = `search:similar:${version}:${id}:${limit}`;
+  const cached = await c.env.CACHE.get<SimilarResponse>(cacheKey, "json");
+  if (cached) return c.json(cached);
+
+  // Same visibility gate as GET /titles/:id: a title outside the canon has no page, so
+  // it has no neighbors either.
+  const gate = visibilityGateSql("t", 1);
+  const visible = await c.env.DB.prepare(`SELECT 1 FROM titles t WHERE t.id = ?1 AND ${gate.clause}`)
+    .bind(id, ...gate.params)
+    .first();
+  if (!visible) return c.json({ error: "not found" }, 404);
+
+  const hits = await similarTitleHits(c.env, id, limit);
+  const body: SimilarResponse = { titleId: id, results: (await hydrateCards(c.env, hits)).slice(0, limit) };
+  c.executionCtx.waitUntil(
+    c.env.CACHE.put(cacheKey, JSON.stringify(body), { expirationTtl: Number(c.env.SEARCH_CACHE_TTL_SECONDS) }),
+  );
+  return c.json(body);
+});
