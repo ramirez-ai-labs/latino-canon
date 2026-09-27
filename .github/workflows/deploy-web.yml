@@ -9,6 +9,8 @@ on:
       - "apps/web/**"
       - "packages/core/**"
       - "pnpm-lock.yaml"
+      # The About page shows the root package.json version, so a release bump redeploys it.
+      - "package.json"
       - ".github/workflows/deploy-web.yml"
 
 permissions:
