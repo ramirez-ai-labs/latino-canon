@@ -13,7 +13,7 @@ import {
   splitCitations,
   THEME_LABELS,
 } from "@latino-canon/core";
-import { ApiError, getTitle, posterUrl, search } from "@/lib/api";
+import { ApiError, getSimilarTitles, getTitle, posterUrl, search } from "@/lib/api";
 import { Badge } from "@/components/ui/Badge";
 import { TitleCard } from "@/components/TitleCard";
 import { Rail, RailItem } from "@/components/ui/Rail";
@@ -71,14 +71,21 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
   // hydrateCards uses for TitleCard.directorGender - drives led_by's gendered label.
   const directorGender = primaryCreativeLead(title.credits)?.person.gender ?? null;
 
-  // "Related" reuses the same theme filter /catalog already exposes rather than a new
-  // similarity endpoint - a shared theme is the one signal every title already carries.
+  // "More like this": the title's nearest neighbors in embedding space (GET
+  // /titles/:id/similar - no model call). This rail used to be every title sharing one
+  // theme tag, which ranked Coco's neighbors by a single label rather than by story. The
+  // theme list stays as the fallback for a title that has no vector yet (mid-ingest) or
+  // when the call fails, so the rail never disappears for a reason the reader can't see.
+  const similar = await getSimilarTitles(title.id).catch(() => ({ results: [] }));
   const primaryTheme = title.tags.find((t) => t.kind === "theme")?.slug as Theme | undefined;
-  const related = primaryTheme
-    ? (await search({ theme: primaryTheme, mode: "lexical", limit: 9 }).catch(() => ({ results: [] })))
-        .results.filter((t) => t.id !== title.id)
-        .slice(0, 8)
-    : [];
+  const related =
+    similar.results.length > 0
+      ? similar.results
+      : primaryTheme
+        ? (await search({ theme: primaryTheme, mode: "lexical", limit: 9 }).catch(() => ({ results: [] })))
+            .results.filter((t) => t.id !== title.id)
+            .slice(0, 8)
+        : [];
 
   return (
     <article className="relative">
@@ -228,7 +235,9 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
 
       {related.length > 0 && (
         <section className="mt-12">
-          <h2 className="mb-4 text-xl font-bold tracking-tight">Related titles</h2>
+          <h2 className="mb-4 text-xl font-bold tracking-tight">
+            {similar.results.length > 0 ? "More like this" : "Related titles"}
+          </h2>
           <Rail>
             {related.map((t, i) => (
               <RailItem

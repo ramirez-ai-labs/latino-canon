@@ -1,5 +1,5 @@
 import "server-only";
-import type { Collection, CurationResponse, EvalRun, SearchResponse, Title } from "@latino-canon/core";
+import type { Collection, CurationResponse, EvalRun, SearchResponse, Title, TitleCard } from "@latino-canon/core";
 import { localCollection, localCollections, localSearch, localTitle } from "./local-data";
 
 /**
@@ -58,6 +58,8 @@ function localFetch<T>(path: string): T {
   const url = new URL(path, "http://localhost");
   if (url.pathname === "/collections") return localCollections() as T;
   if (url.pathname.startsWith("/collections/")) return localCollection(url.pathname.slice("/collections/".length)) as T;
+  // Mock data has no vectors - the title page falls back to its theme-based list.
+  if (url.pathname.endsWith("/similar")) return { titleId: "", results: [] } as T;
   if (url.pathname.startsWith("/titles/")) return localTitle(url.pathname.slice("/titles/".length)) as T;
   // eval_runs is CI-written only (see apps/api/src/routes/eval-runs.ts) - nothing
   // to show against local mock data, so LOCAL_DEV just renders an empty history.
@@ -97,6 +99,8 @@ export function curateSearch(params: { q: string; limit?: number }): Promise<Cur
 }
 
 export const getTitle = (id: string) => apiFetch<Title>(`/titles/${id}`);
+export const getSimilarTitles = (id: string, limit = 8) =>
+  apiFetch<{ titleId: string; results: TitleCard[] }>(`/titles/${id}/similar?limit=${limit}`);
 export const listCollections = () => apiFetch<{ collections: Collection[] }>(`/collections`);
 export const getCollection = (slug: string) => apiFetch<Collection>(`/collections/${slug}`);
 export const listEvalRuns = (limit = 20) => apiFetch<{ runs: EvalRun[] }>(`/eval-runs?limit=${limit}`);

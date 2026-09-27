@@ -147,6 +147,31 @@ export const OPENAPI_SPEC = {
         },
       },
     },
+    "/titles/{id}/similar": {
+      get: {
+        operationId: "getSimilarTitles",
+        summary: "Titles like this one",
+        description:
+          "Nearest neighbors of the title in embedding space (the same bge-m3 vectors hybrid search uses), as " +
+          "search-result cards, most similar first. Queries Vectorize by the title's stored vector, so no model " +
+          "call is made. Neighbors below a 0.5 cosine score are dropped, so a title can return fewer than " +
+          "`limit`, and a title still being ingested returns none. Results are cached.",
+        tags: ["Catalog"],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", example: "coco-2017" } },
+          {
+            name: "limit",
+            in: "query",
+            required: false,
+            schema: { type: "integer", minimum: 1, maximum: 12, default: 6 },
+          },
+        ],
+        responses: {
+          "200": { description: "{ titleId, results: TitleCard[] }" },
+          "404": { description: "No such title in the canon" },
+        },
+      },
+    },
     "/collections": {
       get: {
         operationId: "listCollections",

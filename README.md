@@ -392,8 +392,8 @@ via a dedicated `/posters` route (`apps/api/src/routes/titles.ts`,
 Other open scaffold items: `semantic.ts`'s minimum score floor (`MIN_SEMANTIC_SCORE
 = 0.35`) is still a hand-picked heuristic — tested at 0.45 against the 62-query
 golden set and deliberately kept at 0.35 (a real recall@5-vs-recall@10 trade-off,
-not a clean win); `/titles/:id/similar` still returns a stub instead of Vectorize
-nearest-neighbors. Classify and blurb calls live in `apps/ingest/src/ai.ts`, calling
+not a clean win). `/titles/:id/similar` queries Vectorize by the title's own stored
+vector (no model call) and powers "More like this" on title pages. Classify and blurb calls live in `apps/ingest/src/ai.ts`, calling
 Workers AI directly; the api's `LlmClient` abstraction serves the runtime calls (query
 rewrite, the curation agent's tone scoring).
 

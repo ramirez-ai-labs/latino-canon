@@ -129,6 +129,23 @@ curl "https://latino-canon-api.ai-builders-studio-latinx.workers.dev/titles/coco
 
 ---
 
+### `GET /titles/{id}/similar`
+
+**Titles like this one, as search-result cards, most similar first.**
+
+Queries Vectorize with the title's own stored vector (the bge-m3 embedding hybrid search uses), so no model call is made and it costs no Workers AI neurons. Neighbors scoring below 0.5 are dropped: title-to-title scores sit around 0.59–0.80 (*Coco* → *Encanto* 0.70), so the floor only removes genuine outliers. A title can therefore return fewer than `limit`, and one still being ingested returns none.
+
+**Parameters:**
+- `limit`: 1–12, default 6
+
+```bash
+curl "https://latino-canon-api.ai-builders-studio-latinx.workers.dev/titles/coco-2017/similar?limit=4"
+```
+
+Returns `{ "titleId": "coco-2017", "results": [TitleCard, ...] }`, or 404 for a title outside the canon.
+
+---
+
 ### `GET /titles`
 
 **List title ids.**
@@ -222,6 +239,7 @@ Other endpoints have no per-client limit.
 ## Caching
 
 - **Search results** are cached in KV for **1 hour**, keyed by the deployed API version plus the query as sent (case and spacing normalized), explicit filters, mode, limit and offset. The cache is checked before the query rewrite, so a repeated query costs no Workers AI calls. A new deploy starts with an empty cache.
+- **Similar titles** are cached the same way (1 hour, keyed by deployed version, title and limit). `POST /rebuild-search-cache` clears them too, so a vector rebuild never leaves stale neighbors.
 - **Posters** are served with `Cache-Control: public, max-age=86400`.
 - Other responses aren't cached.
 

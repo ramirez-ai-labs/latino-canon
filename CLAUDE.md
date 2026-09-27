@@ -189,14 +189,13 @@ README and `monitoring.md`.
 3. **Blurb groundedness is 0.682.** Most failures are one unsupported "It matters…"
    sentence (ROADMAP item 6).
 4. **The curation agent is a fixed 4-step pipeline.** No LLM chooses its tools.
-5. **`/titles/:id/similar` is a stub.**
-6. **`apps/web` has no tests.**
-7. **Seed titles go live a day or more after merge.** The queue ingests 15 a day, so a
+5. **`apps/web` has no tests.**
+6. **Seed titles go live a day or more after merge.** The queue ingests 15 a day, so a
    migration that touches a new title must wait for it (see "Adding a migration").
-8. **Only fully supported blurbs auto-approve.** Ingest runs the v3 judge on each new
+7. **Only fully supported blurbs auto-approve.** Ingest runs the v3 judge on each new
    blurb and approves it at score 1.0 (`approved_by = 'judge'`). Anything lower, the 63
    blurbs from before the gate, and any blurb whose judge call failed wait for an editor.
-9. **The retrieval gate compares against the last passing run.** A big catalog change
+8. **The retrieval gate compares against the last passing run.** A big catalog change
    can shift recall legitimately; re-run `eval-retrieval.yml` with a `rebaseline` reason
    rather than weakening the threshold.
 
