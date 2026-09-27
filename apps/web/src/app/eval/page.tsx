@@ -52,8 +52,8 @@ const sentenceCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const GLOSSARY: [string, string][] = [
   ["Golden set", "Our test searches, each with the title(s) a good search should return, checked by hand against the live catalog."],
   [
-    "Query types",
-    "Known-item (a title, like \"Selena\"), person (a director or actor), plot (a half-remembered story), facet (a genre, decade or kind, like \"Mexican family stories from the 90s\"), and Spanish.",
+    "Search types",
+    "How the test searches are grouped: exact title (\"Selena\"; engineers call it known-item), by person (a director or actor), by plot (a half-remembered story), genre, era or kind (\"Mexican family stories from the 90s\"; called facet), and in Spanish.",
   ],
   ["Recall@5", "The share of test searches whose right answer appears in the top 5 results."],
   ["MRR", "Mean reciprocal rank: how high the first right answer ranks - 1 for first place, ½ for second, ⅓ for third - averaged over all searches."],
@@ -104,12 +104,28 @@ function Tile({ label, value, plain, children }: { label: string; value: React.R
   return (
     <div className="flex flex-col rounded-xl border border-border bg-surface px-4 py-3.5">
       <div className="text-xs text-muted">{label}</div>
-      <div className="mt-1 text-3xl font-semibold tracking-tight text-text">{value}</div>
+      {/* Numbers read big; a word value like "Genre, era or kind" steps down so it fits one line. */}
+      <div
+        className={`mt-1 font-semibold tracking-tight text-text ${typeof value === "string" && value.length > 12 ? "text-2xl" : "text-3xl"}`}
+      >
+        {value}
+      </div>
       <div className="mt-1.5 space-y-0.5 leading-snug">{children}</div>
       {plain && <p className="mt-2.5 border-t border-border pt-2.5 text-[0.8rem] leading-snug text-text/80">{plain}</p>}
     </div>
   );
 }
+
+// Query types by what a reader would call them. The golden set's category keys ("facet",
+// "known-item") are search-engineering jargon; the glossary maps the two.
+const QUERY_TYPE_NAME: Record<string, string> = {
+  facet: "Genre, era or kind",
+  "known-item": "Exact title",
+  person: "By person",
+  plot: "By plot",
+  spanish: "In Spanish",
+};
+const queryTypeName = (category: string) => QUERY_TYPE_NAME[category] ?? sentenceCase(category);
 
 // One real golden-set query per type, so "the weakest type" reads as a search people make.
 const EXAMPLE_QUERY: Record<string, string> = {
@@ -284,12 +300,12 @@ export default async function EvalPage() {
         )}
         {weakest && strongest && weakest !== strongest && (
           <Tile
-            label="Weakest query type"
-            value={sentenceCase(weakest.category)}
+            label="Weakest search type"
+            value={queryTypeName(weakest.category)}
             plain={EXAMPLE_QUERY[weakest.category] ? <>Searches like &ldquo;{EXAMPLE_QUERY[weakest.category]}&rdquo; are the hardest for us right now.</> : undefined}
           >
             <div className="text-xs text-muted">
-              recall@5 {weakest.recall5.toFixed(3)}, against {strongest.recall5.toFixed(3)} for {strongest.category}
+              recall@5 {weakest.recall5.toFixed(3)}, against {strongest.recall5.toFixed(3)} for {queryTypeName(strongest.category).toLowerCase()}
             </div>
           </Tile>
         )}
@@ -325,12 +341,12 @@ export default async function EvalPage() {
       {categories.length > 0 && (
         <Section
           title="Where search is weakest"
-          lead="Recall@5 by query type in the latest run: the share of each query's correct titles found in the top 5. Weakest first."
+          lead="Recall@5 by search type in the latest run: the share of each test search whose right answer is in the top 5. Weakest first."
         >
           <ul className="space-y-3">
             {categories.map((c) => (
               <li key={c.category} className="flex items-center gap-3 text-sm">
-                <span className="w-24 shrink-0 text-text">{sentenceCase(c.category)}</span>
+                <span className="w-36 shrink-0 text-text">{queryTypeName(c.category)}</span>
                 <Bar fraction={c.recall5} dim={c !== weakest} />
                 <span className="shrink-0 whitespace-nowrap text-right tabular-nums">
                   <span className="font-semibold text-text">{c.recall5.toFixed(3)}</span>
