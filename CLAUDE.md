@@ -4,13 +4,16 @@
 
 A search and curation product for Latino-led films and series: "type anything and find it"
 retrieval (including Spanish and half-remembered plots) over a small, editorially curated
-catalog with context on why each title matters. Live, with ~220 titles in production.
+catalog with context on why each title matters. Live, with ~280 titles in production.
 
-Three Cloudflare Workers plus shared packages, all on the **free tier**:
+Four Cloudflare Workers plus shared packages, all on the **free tier**:
 
 - `apps/web`: Next.js 15 on OpenNext. It calls `api` over a service binding.
-- `apps/api`: Hono. `/search` (hybrid / lexical / semantic), `/titles`, `/collections`,
-  `/agents/curate`, `/eval-runs`, and Swagger at `/docs`.
+- `apps/api`: Hono. `/search` (hybrid / lexical / semantic), `/titles`, `/titles/:id/similar`,
+  `/collections`, `/agents/curate`, `/eval-runs`, and Swagger at `/docs`.
+- `apps/mcp`: remote MCP server (Streamable HTTP at `/mcp`, stateless, authless). Four
+  read-only tools that call `api` over a service binding; it makes no LLM calls itself
+  - the client brings the model. See `docs/MCP.md`.
 - `apps/ingest`: Workflow + cron. Seed → TMDB/OMDb → D1 → classify → embed → blurb →
   review queue. Also hosts every admin endpoint, behind `INGEST_ADMIN_TOKEN`.
 - `packages/core`: types, zod schemas, taxonomy, RRF, prompts, the embedding contract
@@ -203,11 +206,10 @@ README and `monitoring.md`.
 
 See `docs/ROADMAP.md` for the authoritative list. Current order:
 
-1. A remote MCP server over search, titles and curate.
-2. Spanish search: grow the Spanish golden queries, then the bilingual plan (5b).
-3. Rewrite rework: search on the user's original words and let the LLM extract filters
+1. Spanish search: grow the Spanish golden queries, then the bilingual plan (5b).
+2. Rewrite rework: search on the user's original words and let the LLM extract filters
    only (item 5).
-4. Classifier eval (item 8).
+3. Classifier eval (item 8).
 
 ## Testing
 
@@ -215,6 +217,7 @@ See `docs/ROADMAP.md` for the authoritative list. Current order:
 pnpm typecheck && pnpm lint && pnpm test      # what validate-pr.yml runs, plus the web build
 pnpm --filter @latino-canon/api test          # workerd suite (*.test.ts) + node suite (*.node.spec.ts)
 pnpm --filter @latino-canon/ingest test       # unit + D1-backed suite (*.d1.spec.ts)
+pnpm --filter @latino-canon/mcp test          # tools via the SDK's own Client, fake api (plain node)
 ```
 
 - Suites that touch bindings run on real local D1/KV/R2 via
@@ -235,7 +238,8 @@ pnpm --filter @latino-canon/ingest test       # unit + D1-backed suite (*.d1.spe
 - Everything goes through a branch and a PR to `main`. No direct pushes.
 - Use conventional prefixes: `feat`, `fix`, `docs`, `content`, `design`, `chore`.
 - Merging deploys only the Worker(s) whose `apps/<name>/**` changed. A change under
-  `packages/core/**` redeploys all three.
+  `packages/core/**` redeploys all four. The MCP deploy smoke-tests the live server
+  (`initialize` + `tools/list`) after deploying.
 - The api deploy applies D1 migrations first, then triggers the retrieval eval.
 - Groundedness runs are manual (`eval-groundedness.yml`).
 - Releases are cut from **Actions → Release** (semver; current `1.3.0`).

@@ -67,6 +67,15 @@ All workflows are organized by category below. Each entry includes the trigger c
 - **Duration**: ~2 minutes
 - **Requires**: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
 
+
+### deploy-mcp.yml
+- **Trigger**: On commit to `main` + changes to `apps/mcp/**` or `packages/core/**`
+- **Purpose**: Deploy the remote MCP server (`latino-canon-mcp`)
+- **What it does**:
+  - Deploys the stateless Streamable HTTP server at `/mcp` (service binding to the api)
+  - Smoke-tests the live URL: `initialize`, then `tools/list` must return the four tools. No tool runs, so no neurons
+- **Duration**: ~40 seconds
+- **Requires**: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
 ---
 
 ## Data Ingestion
@@ -149,6 +158,7 @@ Merged seed titles are **not** ingested by a workflow. The ingest worker's daily
 | Commit to main + api changes | deploy-api | ✅ | — | Deploy API |
 | Commit to main + ingest changes | deploy-ingest | ✅ | — | Deploy ingest |
 | Commit to main + web changes | deploy-web | ✅ | — | Deploy frontend |
+| Commit to main + mcp changes | deploy-mcp | ✅ | — | Deploy MCP server + smoke test |
 | Daily 08:00 UTC (ingest worker cron) | ingest queue, 15 titles | ✅ | — | Ingest data |
 | Manual trigger from Actions UI | ingest-new-titles | — | ✅ | Ingest now (override) |
 | deploy-api succeeds | eval-retrieval (hybrid) | ✅ | — | Catch search regressions |

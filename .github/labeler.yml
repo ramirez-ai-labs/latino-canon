@@ -11,6 +11,10 @@ ingest:
   - changed-files:
       - any-glob-to-any-file:
           - "apps/ingest/**"
+mcp:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "apps/mcp/**"
 core:
   - changed-files:
       - any-glob-to-any-file:
