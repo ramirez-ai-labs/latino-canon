@@ -30,7 +30,11 @@ export interface TrendPoint {
   gate: GateStatus;
   /** Change against the last passing run, as the gate measured it. */
   gateDelta: number | null;
+  /** Which golden set the run used - scores only compare within one (the gate's own rule). */
+  goldenSetHash: string | null;
 }
+
+export const goldenSetHash = (r: EvalRun): string | null => (r.details as RetrievalDetails | null)?.goldenSetHash ?? null;
 
 export const recall5 = (r: EvalRun): number | null => r.metrics["hybrid.recall@5"] ?? r.meanScore;
 
@@ -46,7 +50,7 @@ export function trendPoints(runs: EvalRun[]): TrendPoint[] {
     .filter((r) => r.evalType === "retrieval" && recall5(r) != null)
     .map((r) => {
       const g = gateOf(r);
-      return { id: r.id, runAt: r.runAt, recall5: recall5(r)!, gate: g.status, gateDelta: g.delta };
+      return { id: r.id, runAt: r.runAt, recall5: recall5(r)!, gate: g.status, gateDelta: g.delta, goldenSetHash: goldenSetHash(r) };
     })
     .sort((a, b) => a.runAt.localeCompare(b.runAt));
 }

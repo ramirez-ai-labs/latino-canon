@@ -1,17 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
 import { GROUNDEDNESS_MIN_VALID_JUDGE_VERSION, type EvalRun, type Title } from "@latino-canon/core";
-import { getTitle, listEvalRuns, posterUrl } from "@/lib/api";
+import { getBlurbGateDaily, getTitle, listEvalRuns, posterUrl } from "@/lib/api";
 import {
   GATE_MAX_DROP,
   categoryScores,
   describeJudgeFailure,
   failurePatterns,
   gateOf,
+  goldenSetHash,
   recall5,
   trendPoints,
   type GroundednessDetails,
 } from "@/lib/eval-insights";
+import { BlurbGateDaily } from "@/components/eval/BlurbGateDaily";
 import { RetrievalTrend } from "@/components/eval/RetrievalTrend";
 import { Badge } from "@/components/ui/Badge";
 
@@ -107,9 +109,10 @@ function Bar({ fraction, dim }: { fraction: number; dim?: boolean }) {
 }
 
 export default async function EvalPage() {
-  const [retrievalRuns, groundednessRuns] = await Promise.all([
+  const [retrievalRuns, groundednessRuns, gateDaily] = await Promise.all([
     listEvalRuns(RETRIEVAL_RUNS_SHOWN, "retrieval"),
     listEvalRuns(GROUNDEDNESS_RUNS_SHOWN, "groundedness"),
+    getBlurbGateDaily(14).catch(() => ({ days: [] })),
   ]);
   const runs = [...retrievalRuns.runs, ...groundednessRuns.runs].sort((a, b) => b.runAt.localeCompare(a.runAt));
   const validGroundedness = groundednessRuns.runs.filter((r) => !isInvalid(r));
@@ -118,7 +121,11 @@ export default async function EvalPage() {
   const details = latest?.details as GroundednessDetails | null;
 
   const retrieval = retrievalRuns.runs[0];
-  const previousRetrieval = retrievalRuns.runs[1];
+  // Compare only within one golden set: the 77 -> 97 query change moved recall with no
+  // ranking change at all, and the gate itself never compares across sets.
+  const previousRetrieval = retrieval
+    ? retrievalRuns.runs.slice(1).find((r) => goldenSetHash(r) === goldenSetHash(retrieval))
+    : undefined;
   const gate = retrieval ? gateOf(retrieval) : null;
   const categories = retrieval ? categoryScores(retrieval) : [];
   const weakest = categories[0];
@@ -152,10 +159,17 @@ export default async function EvalPage() {
       <div className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {retrieval && recall5(retrieval) != null && (
           <Tile label="Search recall@5" value={recall5(retrieval)!.toFixed(3)}>
-            {previousRetrieval && recall5(previousRetrieval) != null && (
+            {previousRetrieval && recall5(previousRetrieval) != null ? (
               <Delta value={recall5(retrieval)! - recall5(previousRetrieval)!} suffix="vs previous run" />
+            ) : (
+              <div className="text-xs text-muted">First run on a new query set</div>
             )}
             <div className="text-xs text-muted">{retrieval.n} golden queries, hybrid</div>
+          </Tile>
+        )}
+        {gate && gate.status === "none" && (
+          <Tile label="Deploy gate" value="Baseline">
+            <div className="text-xs text-muted">First run on a new query set; the next deploy is gated against it</div>
           </Tile>
         )}
         {gate && gate.status !== "none" && (
@@ -208,6 +222,17 @@ export default async function EvalPage() {
         >
           <div className="rounded-xl border border-border bg-surface p-4">
             <RetrievalTrend points={points} />
+          </div>
+        </Section>
+      )}
+
+      {gateDaily.days.length > 0 && (
+        <Section
+          title="New blurbs, checked daily"
+          lead="Every new blurb is judged at ingest by the same groundedness judge, and approved only when every claim is supported and properly cited; the rest wait for an editor. This is the gate's daily record, at no extra cost - a full groundedness run spends about a quarter of the day's AI budget."
+        >
+          <div className="rounded-xl border border-border bg-surface p-4">
+            <BlurbGateDaily days={gateDaily.days} />
           </div>
         </Section>
       )}

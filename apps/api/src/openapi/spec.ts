@@ -260,6 +260,19 @@ export const OPENAPI_SPEC = {
         responses: { "200": { description: "Eval runs" } },
       },
     },
+    "/eval-runs/blurb-gate": {
+      get: {
+        operationId: "getBlurbGateDaily",
+        summary: "The ingest blurb gate, per day",
+        description:
+          "One row per UTC day, oldest first: blurbs the v3 groundedness judge approved and held at ingest, " +
+          "their mean score, and rewrites attempted and replaced by the regeneration backfill. " +
+          "A daily groundedness signal at no extra neuron cost.",
+        tags: ["Evaluation"],
+        parameters: [filterParam("days", "Days back, including today", { type: "integer", default: 14, maximum: 90 })],
+        responses: { "200": { description: "{ days: BlurbGateDay[] }" } },
+      },
+    },
   },
   components: {
     schemas: {

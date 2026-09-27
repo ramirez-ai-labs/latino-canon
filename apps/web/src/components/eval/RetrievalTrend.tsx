@@ -41,8 +41,19 @@ export function RetrievalTrend({ points }: { points: TrendPoint[] }) {
 
   const x = (i: number) => M.left + (i / (points.length - 1)) * PLOT_W;
   const y = (v: number) => M.top + (1 - (v - lo) / (hi - lo)) * PLOT_H;
-  const line = points.map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(p.recall5).toFixed(1)}`).join(" ");
-  const area = `${line} L${x(points.length - 1).toFixed(1)},${M.top + PLOT_H} L${x(0).toFixed(1)},${M.top + PLOT_H} Z`;
+  // Scores only compare within one golden set, so the line breaks where the set changed
+  // (77 -> 97 queries on 2026-09-27 rose 0.782 -> 0.820 with no ranking change) and a
+  // marked rule says why. Each run of same-set points is its own segment.
+  const segments: number[][] = [];
+  points.forEach((p, i) => {
+    if (i > 0 && p.goldenSetHash !== points[i - 1]!.goldenSetHash) segments.push([]);
+    if (segments.length === 0) segments.push([]);
+    segments[segments.length - 1]!.push(i);
+  });
+  const setChanges = segments.slice(1).map((seg) => seg[0]!);
+  const pathOf = (seg: number[]) => seg.map((i, k) => `${k === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(points[i]!.recall5).toFixed(1)}`).join(" ");
+  const areaOf = (seg: number[]) =>
+    `${pathOf(seg)} L${x(seg[seg.length - 1]!).toFixed(1)},${M.top + PLOT_H} L${x(seg[0]!).toFixed(1)},${M.top + PLOT_H} Z`;
   const last = points[points.length - 1]!;
   const failed = points.map((p, i) => ({ p, i })).filter(({ p }) => p.gate === "fail");
   const lowestFailed = failed.sort((a, b) => a.p.recall5 - b.p.recall5)[0];
@@ -95,8 +106,25 @@ export function RetrievalTrend({ points }: { points: TrendPoint[] }) {
           {fmtDate(last.runAt)}
         </text>
 
-        <path d={area} fill={SERIES} opacity={0.1} />
-        <path d={line} fill="none" stroke={SERIES} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        {segments.map((seg) => (
+          <g key={seg[0]}>
+            {seg.length > 1 && <path d={areaOf(seg)} fill={SERIES} opacity={0.1} />}
+            {seg.length > 1 && (
+              <path d={pathOf(seg)} fill="none" stroke={SERIES} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+            )}
+          </g>
+        ))}
+        {setChanges.map((i) => {
+          const cx = (x(i - 1) + x(i)) / 2;
+          return (
+            <g key={`set-${i}`}>
+              <line x1={cx} x2={cx} y1={M.top} y2={M.top + PLOT_H} stroke="var(--color-muted)" strokeWidth={1} />
+              <text x={cx - 6} y={M.top + 10} textAnchor="end" className="fill-muted text-[11px]">
+                new query set
+              </text>
+            </g>
+          );
+        })}
 
         {a && (
           <line x1={x(active!)} x2={x(active!)} y1={M.top} y2={M.top + PLOT_H} stroke="var(--color-muted)" strokeWidth={1} />

@@ -185,6 +185,10 @@ Returns `topResults`, the `extractedIntent`, and a step-by-step `reasoning` arra
 
 **Recorded eval runs, newest first** (retrieval and groundedness). Parameters: `type` (`retrieval` | `groundedness`), `limit` (up to 100). Written only by CI.
 
+### `GET /eval-runs/blurb-gate`
+
+**The ingest blurb gate, one row per UTC day, oldest first.** Every new blurb is judged at ingest by the v3 groundedness judge, so this is a daily groundedness signal at no extra neuron cost. Each day has `judged`, `approved` (by the judge), `held` (left for an editor), `meanScore`, and the rewrite backlog's progress: `rewritesAttempted` and `rewritesReplaced` (`POST /regenerate-blurbs` on the ingest worker). A held rewrite keeps its old blurb, so it counts only in `rewritesAttempted`. Parameter: `days` (1–90, default 14).
+
 ---
 
 ## Search Modes

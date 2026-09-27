@@ -265,6 +265,7 @@ export async function writeBlurb(env: Env, titleId: string, blurb: BlurbGroundin
        END,
        groundedness = CASE WHEN blurbs.text = excluded.text THEN blurbs.groundedness END,
        judge_version = CASE WHEN blurbs.text = excluded.text THEN blurbs.judge_version END,
+       judged_at = CASE WHEN blurbs.text = excluded.text THEN blurbs.judged_at END,
        approved_by = CASE
          WHEN blurbs.text = excluded.text AND blurbs.sources IN (excluded.sources, ?5) THEN blurbs.approved_by
        END`,
@@ -297,6 +298,7 @@ export async function recordBlurbVerdict(
     `UPDATE blurbs SET
        groundedness = ?3,
        judge_version = ?4,
+       judged_at = datetime('now'),
        approved_by = CASE WHEN ?5 = 1 AND approved = 0 THEN 'judge' ELSE approved_by END,
        approved = CASE WHEN ?5 = 1 THEN 1 ELSE approved END
      WHERE title_id = ?1 AND text = ?2`,
