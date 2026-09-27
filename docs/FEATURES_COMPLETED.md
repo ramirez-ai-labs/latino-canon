@@ -1,6 +1,6 @@
 # Post-Week 3 Major Features
 
-All features listed below have been implemented, tested, and deployed to production (v1.0.0 through v1.2.0).
+All features listed below have been implemented, tested, and deployed to production (v1.0.0 through v1.3.0).
 
 ## Feature Inventory
 
@@ -139,18 +139,20 @@ retrieval eval after every api deploy with per-category scores on the Eval page.
 | UI redesign phases 1–3 | #195, #196, #202 | ✅ Complete | v1.2.0 |
 | Search integrity + filter semantics | #213–#215 | ✅ Complete | v1.2.0 |
 | Valid groundedness eval | #216, #217 | ✅ Complete | v1.2.0 |
-| Retrieval eval after every deploy | #219 | ✅ Complete | main (unreleased) |
+| Retrieval eval after every deploy | #219 | ✅ Complete | v1.2.0 |
 | ~~Admin rebuild-vectorize endpoint~~ | #222 | Removed - unauthenticated duplicate of the ingest worker's `POST /rebuild-vectors` | - |
-| Search budget guards: cache-first, 30/min per-client rate limit, `degraded` keyword fallback; admin route removed | #236 | ✅ Complete | main (unreleased) |
-| Error and not-found pages, 429 handling, per-title metadata (web) | #239 | ✅ Complete | main (unreleased) |
-| Ingest guards: ±2-year and title-resemblance checks on every TMDB match | #238, #243 | ✅ Complete | main (unreleased) |
-| Seed validation in CI: duplicates, missing pins, silently dropped entries | #238, #241 | ✅ Complete | main (unreleased) |
-| Wrong-film cleanup: 28 re-pins, 14 production deletions | #244, #245 | ✅ Complete | main (unreleased) |
-| Daily ingest queue (`GET /queue`, 15/day); nightly retry skips re-pinned jobs | #249, #256 | ✅ Complete | main (unreleased) |
-| Re-baselinable retrieval gate (`rebaseline` input, catalog size recorded) | #256 | ✅ Complete | main (unreleased) |
-| Title ids capped at Vectorize's 64-byte limit | #257 | ✅ Complete | main (unreleased) |
-| Exact-title rule: a query naming a title ranks it first | #258 | ✅ Complete | main (unreleased) |
-| Latin American cinema expansion: 219 → 331 seed titles | #226–#253 | ✅ Merged; ingesting via the queue | main |
+| Search budget guards: cache-first, 30/min per-client rate limit, `degraded` keyword fallback; admin route removed | #236 | ✅ Complete | v1.3.0 |
+| Error and not-found pages, 429 handling, per-title metadata (web) | #239 | ✅ Complete | v1.3.0 |
+| Ingest guards: ±2-year and title-resemblance checks on every TMDB match | #238, #243 | ✅ Complete | v1.3.0 |
+| Seed validation in CI: duplicates, missing pins, silently dropped entries | #238, #241 | ✅ Complete | v1.3.0 |
+| Wrong-film cleanup: 28 re-pins, 14 production deletions | #244, #245 | ✅ Complete | v1.3.0 |
+| Daily ingest queue (`GET /queue`, 15/day); nightly retry skips re-pinned jobs | #249, #256 | ✅ Complete | v1.3.0 |
+| Re-baselinable retrieval gate (`rebaseline` input, catalog size recorded) | #256 | ✅ Complete | v1.3.0 |
+| Title ids capped at Vectorize's 64-byte limit | #257 | ✅ Complete | v1.3.0 |
+| Exact-title rule: a query naming a title ranks it first | #258 | ✅ Complete | v1.3.0 |
+| Blurb gate: sourced-facts prompt, OMDb awards source, v3 judge auto-approval, citation-style checks | #261–#263 | ✅ Complete | v1.3.0 |
+| SDLC hardening: weekly dependency audit, migration-aware ingest deploys, lint warning caps | #264 | ✅ Complete | v1.3.0 |
+| Latin American cinema expansion: 219 → 331 seed titles | #226–#253 | ✅ Merged; ingesting via the queue (279 live at release) | v1.3.0 |
 
 **All features including the two v1.0.0 nice-to-haves (OpenAPI + ESLint) are production-ready and live.**
 
@@ -158,7 +160,7 @@ retrieval eval after every api deploy with per-category scores on the Eval page.
 
 Each feature has been:
 - ✅ Implemented end-to-end
-- ✅ Tested against production data (219 titles at v1.2.0; 264+ since)
+- ✅ Tested against production data (219 titles at v1.2.0; 279 at v1.3.0)
 - ✅ Reviewed in PR
 - ✅ Deployed to production
 - ✅ Verified live at [latino-canon-web.ai-builders-studio-latinx.workers.dev](https://latino-canon-web.ai-builders-studio-latinx.workers.dev)
