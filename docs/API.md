@@ -261,6 +261,14 @@ See [INGEST_API.md](INGEST_API.md) for the full list.
 
 ---
 
+## MCP access
+
+The same catalog is available to AI assistants (Claude, ChatGPT, Cursor) as a remote MCP
+server at `https://latino-canon-mcp.ai-builders-studio-latinx.workers.dev/mcp`, with four
+read-only tools over these endpoints. See [MCP.md](MCP.md).
+
+---
+
 ## Useful Links
 
 - **GitHub:** https://github.com/ramirez-ai-labs/latino-canon

@@ -172,6 +172,7 @@ against the synopsis. An eval's inputs need checking as much as its outputs.
 | `web` Worker | `latino-canon-web` |
 | `api` Worker | `latino-canon-api` |
 | `ingest` Worker | `latino-canon-ingest` |
+| `mcp` Worker | `latino-canon-mcp` (remote MCP server, see [MCP.md](../MCP.md)) |
 | D1 database | `latino-canon` |
 | Vectorize index | `latino-canon-titles` |
 | R2 bucket | `latino-canon-posters` |
@@ -180,16 +181,22 @@ against the synopsis. An eval's inputs need checking as much as its outputs.
 | Live API | `https://latino-canon-api.ai-builders-studio-latinx.workers.dev` |
 | Live web | `https://latino-canon-web.ai-builders-studio-latinx.workers.dev` |
 | Live ingest admin | `https://latino-canon-ingest.ai-builders-studio-latinx.workers.dev` (Bearer `INGEST_ADMIN_TOKEN`) |
+| Live MCP server | `https://latino-canon-mcp.ai-builders-studio-latinx.workers.dev/mcp` |
 
-Models in use (via `packages/core/src/llm.ts`'s `MODELS`):
+Models in use (`MODELS` in `packages/core/src/llm.ts`, plus `GROUNDEDNESS_JUDGE_MODEL` in
+`packages/core/src/prompts.ts`):
 
 | Task | Model |
 |---|---|
 | Query rewrite | `@cf/meta/llama-3.1-8b-instruct-fast` |
 | Classify (inclusion types + themes) | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` |
+| Content advisory | `@cf/meta/llama-3.1-8b-instruct-fast` |
 | Blurb generation | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` |
-| Groundedness judge | `@cf/meta/llama-3.1-8b-instruct-fast` |
+| Groundedness judge (eval runs and the ingest blurb gate) | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` |
+| Curation agent tone scoring | `@cf/meta/llama-3.1-8b-instruct-fast` |
 | Embeddings | `@cf/baai/bge-m3` (1024-dim, multilingual) |
+
+The MCP server calls no model: the connected client (Claude, ChatGPT…) brings its own.
 
 `classify`/`blurb` run on the most expensive model here, twice per title — that's
 why ingestion, not live search, is what actually burns through the neuron budget.

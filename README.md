@@ -194,6 +194,7 @@ Deploy:
 pnpm --filter api deploy
 pnpm --filter ingest deploy
 pnpm --filter web deploy
+pnpm --filter mcp deploy
 ```
 
 All changes should go through a branch and pull request targeting `main`.
@@ -207,10 +208,13 @@ no Cloudflare account or deployed data needed. Protect `main` in GitHub and requ
 workflow to pass before merging.
 
 After a pull request is merged, `.github/workflows/deploy-web.yml`,
-`deploy-api.yml`, and `deploy-ingest.yml` each deploy their Worker from Ubuntu —
-each is scoped by `paths:` to its own `apps/<name>/**`, so only the Worker(s) whose
-code actually changed redeploy; a change under `packages/core/**` (shared by all
-three) redeploys all of them. `deploy-api.yml` also applies any pending D1
+`deploy-api.yml`, `deploy-ingest.yml` and `deploy-mcp.yml` each deploy their Worker from
+Ubuntu — each is scoped by `paths:` to its own `apps/<name>/**`, so only the Worker(s)
+whose code actually changed redeploy; a change under `packages/core/**` (shared by all
+four) redeploys all of them. `deploy-ingest.yml` waits for the same commit's api deploy
+when the push adds a migration, and `deploy-mcp.yml` smoke-tests the live MCP server
+(initialize, tools/list, two zero-neuron tool calls). `security-audit.yml` audits
+production dependencies weekly and on lockfile PRs. `deploy-api.yml` also applies any pending D1
 migrations (`wrangler d1 migrations apply --remote`, idempotent — already-applied
 ones are skipped) before deploying, so a migration added under
 `apps/api/migrations/` takes effect automatically on merge rather than needing a
@@ -391,7 +395,9 @@ gated at ingest by the groundedness judge (see the
 what's built vs. what's next, and a prioritized backlog. See [docs/operations/monitoring.md](docs/operations/monitoring.md)
 for how to operate this in production — resource names, AI Gateway/neuron-budget checks, and an
 incident response runbook built around six real production incidents. See [docs/FEATURES_COMPLETED.md](docs/FEATURES_COMPLETED.md)
-for a summary of all shipped features.
+for a summary of all shipped features. Since v1.3.0, `main` adds `GET /titles/:id/similar`
+("More like this") and a remote MCP server ([docs/MCP.md](docs/MCP.md)) that lets Claude, ChatGPT
+or Cursor search the canon inside a conversation.
 
 The ingest resolve → fetch → normalize → persist → classify → embed → blurb path
 is implemented and has been run end-to-end against live TMDB/OMDb and a deployed
