@@ -50,6 +50,9 @@ jobs:
       - name: Lint ingest
         run: pnpm --filter @latino-canon/ingest run lint
 
+      - name: Lint MCP server
+        run: pnpm --filter @latino-canon/mcp run lint
+
       - name: Typecheck web app
         run: pnpm --filter @latino-canon/web run typecheck
 
@@ -64,6 +67,9 @@ jobs:
 
       - name: Typecheck ingest
         run: pnpm --filter @latino-canon/ingest run typecheck
+
+      - name: Typecheck MCP server
+        run: pnpm --filter @latino-canon/mcp run typecheck
 
       - name: Test core (RRF ranking)
         run: pnpm --filter @latino-canon/core run test
@@ -85,6 +91,9 @@ jobs:
 
       - name: Test API (includes fixture-backed lexical retrieval regression)
         run: pnpm --filter @latino-canon/api run test
+
+      - name: Test MCP server (tools over a fake api, via the SDK's own client)
+        run: pnpm --filter @latino-canon/mcp run test
 
       - name: Validate web OpenNext build
         run: pnpm --filter @latino-canon/web exec opennextjs-cloudflare build

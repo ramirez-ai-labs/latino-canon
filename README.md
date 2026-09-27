@@ -28,6 +28,7 @@ roles.
 | Cache | **KV** | Search and curation-agent result caches (checked before any AI call), plus the agent's per-client and daily call counters. |
 | Abuse / cost control | **Rate Limiting binding** | 30 requests/min per client on `/search`, in front of every AI call. No KV writes per request (the free tier allows 1,000/day). |
 | Agent | **Curation agent (`/agents/curate`)** | A fixed 4-step pipeline - extract intent, one hybrid search, score a small pool by tone (the one LLM step), re-rank - with a visible reasoning trail. |
+| Agent access | **Remote MCP server (`apps/mcp`)** | Four read-only tools (search, get title, similar, curate) any MCP client can call - claude.ai, Claude Code, ChatGPT, Cursor. Stateless and authless; the client brings the model, so no API key and no closed-model dependency. |
 | Eval | **`packages/eval`** | Recall@k / MRR / nDCG@10 for retrieval; LLM-as-judge groundedness for blurbs. Runs in CI; the retrieval eval gates every api deploy. |
 | Tooling | **pnpm 10 + Turborepo, TypeScript 5.9, Vitest** | Workers suites run on real local D1/KV/R2 via `@cloudflare/vitest-pool-workers`. Node ≥ 22. |
 
@@ -42,7 +43,7 @@ roles.
    Browser ──────────►  │  apps/web   Next.js 15 / OpenNext (Workers) │
                         │  - landing / browse / search / title pages  │
                         └───────────────┬─────────────────────────────┘
-                                        │ service binding (env.API)
+   MCP clients ──► apps/mcp (Workers) ──┤ service binding (env.API)
                         ┌───────────────▼─────────────────────────────┐
                         │  apps/api   Hono (Workers)                  │
                         │  GET /search   hybrid | lexical | semantic  │
@@ -75,6 +76,19 @@ roles.
    packages/eval   retrieval metrics · groundedness judge · golden query set
 ```
 
+### Use it from an AI assistant (MCP)
+
+The canon is also a remote MCP server, so Claude, ChatGPT or Cursor can search it and quote its sourced
+notes inside a conversation:
+
+```
+https://latino-canon-mcp.ai-builders-studio-latinx.workers.dev/mcp
+```
+
+In claude.ai: Settings → Connectors → **Add custom connector**, paste the URL, no authentication. In Claude
+Code: `claude mcp add --transport http latino-canon <url>`. Tools, design and costs are in
+[docs/MCP.md](docs/MCP.md).
+
 ---
 
 ## The core modeling problem
@@ -106,6 +120,7 @@ apps/
   web/        Next.js 15 + OpenNext  → Workers
   api/        Hono API + search + AI services  → Workers
   ingest/     Workflow + Cron ingestion pipeline  → Workers
+  mcp/        Remote MCP server: search, titles, similar, curate  → Workers
 packages/
   core/       shared types, zod schemas, taxonomy, RRF, prompts, LLM provider abstraction
   eval/       retrieval + groundedness evaluation harness

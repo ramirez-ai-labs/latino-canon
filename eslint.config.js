@@ -161,6 +161,64 @@ export default [
       ],
     },
   },
+  // MCP server (Cloudflare Workers)
+  {
+    files: ["apps/mcp/src/**/*.ts"],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: "module",
+        project: ["./tsconfig.json"],
+      },
+      globals: {
+        // Cloudflare Worker globals
+        Ai: "readonly",
+        Vectorize: "readonly",
+        D1Database: "readonly",
+        R2Bucket: "readonly",
+        Workflow: "readonly",
+        ScheduledController: "readonly",
+        ExecutionContext: "readonly",
+        Request: "readonly",
+        Response: "readonly",
+        fetch: "readonly",
+        process: "readonly",
+        console: "readonly",
+        URL: "readonly",
+        URLSearchParams: "readonly",
+        Headers: "readonly",
+      },
+    },
+    plugins: {
+      "@typescript-eslint": tsPlugin,
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+      ...tsPlugin.configs.recommended.rules,
+      ...tsPlugin.configs["recommended-requiring-type-checking"].rules,
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unsafe-return": "warn",
+      "@typescript-eslint/no-unsafe-assignment": "warn",
+      "@typescript-eslint/no-unnecessary-type-assertion": "warn",
+      "@typescript-eslint/require-await": "warn",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+        },
+      ],
+      "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/await-thenable": "error",
+      "@typescript-eslint/no-misused-promises": "error",
+      "no-console": [
+        "warn",
+        {
+          allow: ["warn", "error"],
+        },
+      ],
+    },
+  },
   // Core packages - stricter rules
   {
     files: ["packages/*/src/**/*.ts"],
