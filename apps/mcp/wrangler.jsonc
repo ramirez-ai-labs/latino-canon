@@ -1,0 +1,20 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "latino-canon-mcp",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  // Every tool is a call to the public api over the service binding - no bindings of
+  // its own to D1, Vectorize or Workers AI. The api's cache, rate limits and canon
+  // visibility gate apply to MCP callers exactly as they do to the website.
+  "services": [
+    { "binding": "API", "service": "latino-canon-api" }
+  ],
+
+  "vars": {
+    // Title links in tool results point at the public site.
+    "WEB_URL": "https://latino-canon-web.ai-builders-studio-latinx.workers.dev"
+  }
+}
