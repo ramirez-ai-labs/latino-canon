@@ -1,5 +1,13 @@
+import { readFileSync } from "node:fs";
+
+// The release version (root package.json, bumped by each release PR), inlined at build so
+// the About page's colophon always names the release that's deployed. deploy-web.yml
+// triggers on package.json, so a version-only bump redeploys with the new number.
+const { version: releaseVersion } = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
+
 /** @type {import("next").NextConfig} */
 const nextConfig = {
+  env: { RELEASE_VERSION: releaseVersion },
   images: {
     // Posters are served from our R2 bucket via the api worker.
     remotePatterns: [{ protocol: "https", hostname: "*.workers.dev" }],
