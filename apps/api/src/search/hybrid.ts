@@ -25,6 +25,11 @@ export async function retrieve(
   env: Env,
   opts: {
     query: string;
+    /**
+     * Hybrid only: the query rewrite's cleaned text, searched by keyword alongside the
+     * user's own words (see the fusion below). Ignored when absent or the same words.
+     */
+    focusQuery?: string;
     mode: SearchMode;
     filters: SearchFilters;
     limit: number;
@@ -32,6 +37,8 @@ export async function retrieve(
   },
 ): Promise<RankedHit[]> {
   const { query, mode, filters, limit } = opts;
+  const focus = opts.focusQuery?.trim();
+  const hasFocus = !!focus && focus.toLowerCase() !== query.trim().toLowerCase();
   const semanticOrNull = (k: number): Promise<RankedHit[] | null> =>
     semanticSearch(env, query, filters, k).catch((err: unknown) => {
       opts.onDegraded?.(err);
@@ -41,15 +48,30 @@ export async function retrieve(
   if (mode === "lexical") return lexicalSearch(env, query, filters, limit);
   if (mode === "semantic") return (await semanticOrNull(limit)) ?? lexicalSearch(env, query, filters, limit);
 
-  const [lexical, semantic] = await Promise.all([
+  const [lexical, semantic, lexicalFocus] = await Promise.all([
     lexicalSearch(env, query, filters, CANDIDATE_POOL),
     semanticOrNull(CANDIDATE_POOL),
+    hasFocus ? lexicalSearch(env, focus, filters, CANDIDATE_POOL) : Promise.resolve(null),
   ]);
-  if (!semantic) return lexical.slice(0, limit);
+  if (!semantic) {
+    return lexicalFocus
+      ? reciprocalRankFusion([lexical, lexicalFocus], { k: 60, limit })
+      : lexical.slice(0, limit);
+  }
 
   // Empty query = browse: fall back to whichever retriever produced anything,
   // else let the route layer do a popularity sort.
-  if (lexical.length === 0 && semantic.length === 0) return [];
+  if (lexical.length === 0 && semantic.length === 0 && !lexicalFocus?.length) return [];
+
+  // Keyword search on both texts, splitting lexical's weight 2 between them so the tuned
+  // 2:1 keyword:semantic balance holds. Measured (2026-09-27, 97 queries): the user's own
+  // words alone lifted genre/era/kind queries 0.564 -> 0.764 - the rewrite had dropped
+  // "telenovela" from "telenovela parody series" - but cost native Spanish plot queries
+  // rank, where the rewrite's condensed keywords ("chamán amazónico científicos") beat
+  // the full sentence ("... último de su pueblo ..." matching El pueblo vencerá).
+  if (lexicalFocus) {
+    return reciprocalRankFusion([lexical, lexicalFocus, semantic], { k: 60, weights: [1, 1, 1], limit });
+  }
 
   return reciprocalRankFusion([lexical, semantic], {
     k: 60,

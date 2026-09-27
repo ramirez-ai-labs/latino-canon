@@ -71,7 +71,10 @@ Rules:
 
 D1 FTS5 (BM25) and Vectorize (`bge-m3`, 1024-dim, multilingual) run in parallel and are
 fused with RRF (`k=60`, weights `[2,1]` favoring lexical). The weights were tuned against
-the golden set, so don't retune them without an eval run. `MIN_SEMANTIC_SCORE = 0.35` is
+the golden set, so don't retune them without an eval run. Retrieval runs on the user's own
+words; when the LLM rewrite produced cleaned text, hybrid search also runs it by keyword,
+splitting lexical's weight into `[1,1,1]` (#284). Keyword search drops English and Spanish
+stopwords, which would otherwise match as FTS prefixes ("un"* → *Unscrupulous*). `MIN_SEMANTIC_SCORE = 0.35` is
 a deliberate recall@10 trade-off, documented in `semantic.ts`.
 
 A hybrid query that names a title (title, original title or alias after accent and case
@@ -272,7 +275,11 @@ pnpm --filter @latino-canon/mcp test          # tools via the SDK's own Client, 
 - New Workers ambient types (e.g. `RateLimit`) must be added to the `eslint.config.js`
   globals.
 - D1 caps a statement at 100 bound params. Reserve room when building `IN (...)` lists.
-- Ranking changes need a before/after eval number in the PR, not intuition.
+- Ranking changes need a before/after eval number in the PR, not intuition. Measure
+  before merging: `wrangler versions upload` from `apps/api` creates a **non-live** version
+  with its own preview URL (no user traffic, its own search cache), then
+  `API_URL=<preview url> MODES=hybrid pnpm --filter @latino-canon/eval exec tsx src/run-retrieval.ts`
+  (~0.2k neurons). Compare with the live run on the Eval page.
 
 ## Related Reading
 

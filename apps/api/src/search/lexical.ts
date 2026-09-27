@@ -42,15 +42,34 @@ export async function lexicalSearch(
 }
 
 /**
- * Turn a user string into a safe FTS5 MATCH expression: quote each token as a prefix
- * term and OR them. Drops FTS operator characters.
+ * English and Spanish function words. Every token becomes a *prefix* term, so a stopword
+ * doesn't just add noise - it matches unrelated titles: "un"* matches The Unscrupulous
+ * Ones, "de"* Death of a Bureaucrat, "la"* every "Last" and "Latino". Until 2026-09-27 the
+ * query rewrite happened to strip these ("dos estafadores venden ... a un coleccionista" ->
+ * "estafadores venden estampillas falsas coleccionista"); once retrieval moved to the
+ * user's own words, the eval showed Spanish recall@5 falling 0.835 -> 0.639 without this.
+ * Content words only - a word that can carry meaning in a title stays.
  */
-function toFtsMatch(query: string): string | null {
+const STOPWORDS = new Set([
+  // English
+  "the", "an", "and", "or", "of", "in", "on", "at", "to", "for", "from", "with", "by", "about",
+  "as", "is", "it", "its", "into", "that", "this", "who", "his", "her", "their", "they", "be",
+  // Spanish
+  "el", "la", "los", "las", "un", "una", "unos", "unas", "de", "del", "al", "y", "o", "en", "con",
+  "por", "para", "su", "sus", "que", "se", "es", "lo", "le", "les", "como", "sin", "sobre", "tras",
+  "entre", "desde", "mientras", "hace",
+]);
+
+/**
+ * Turn a user string into a safe FTS5 MATCH expression: quote each token as a prefix
+ * term and OR them. Drops FTS operator characters and stopwords (see STOPWORDS).
+ */
+export function toFtsMatch(query: string): string | null {
   const tokens = query
     .toLowerCase()
-    .replace(/["()*:^-]/g, " ")
+    .replace(/["()*:^,.;!?¿¡-]/g, " ")
     .split(/\s+/)
-    .filter((t) => t.length > 1);
+    .filter((t) => t.length > 1 && !STOPWORDS.has(t));
   if (tokens.length === 0) return null;
   return tokens.map((t) => `"${t}"*`).join(" OR ");
 }
