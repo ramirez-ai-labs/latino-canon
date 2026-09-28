@@ -420,6 +420,9 @@ about 200 neurons per title (dashboard headline, 3.38k → 4.6k for 6 titles).
   regeneration tooling** (#275), **Cartelera identity**: directions (#273) and step 1, tokens,
   type and a dark-mode toggle (#276).
 - [x] **Release v1.5.0**, and **v1.5.1** for the About colophon (#278), which merged just after the v1.5.0 tag.
+- [x] **Daily blurb-gate record** (#280), **web smoke test** (#281), **plain-language Evals** (#282, #283),
+  **search on the user's own words** (#284), **MCP 405 fix** (#285), **README skills section** (#286).
+- [x] **Release v1.6.0.**
 
 **Next:** check the blurb gate's pass rate under the citation checks, then regenerate old
 blurbs (~20/day under the 70B budget rule); grow the Spanish golden set, then 5b; a web
