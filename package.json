@@ -21,7 +21,7 @@
     "@types/node": "^22.10.2",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^8.70.1",
-    "eslint": "^9.0.0",
+    "eslint": "^10.11.0",
     "tsx": "^4.19.2",
     "turbo": "^2.11.4",
     "typescript": "^5.9.3",
