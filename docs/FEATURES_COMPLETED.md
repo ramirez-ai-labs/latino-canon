@@ -1,6 +1,6 @@
 # Post-Week 3 Major Features
 
-All features listed below have been implemented, tested, and deployed to production (v1.0.0 through v1.5.1).
+All features listed below have been implemented, tested, and deployed to production (v1.0.0 through v1.6.0).
 
 ## Feature Inventory
 
@@ -159,6 +159,12 @@ retrieval eval after every api deploy with per-category scores on the Eval page.
 | Blurb regeneration (`POST /regenerate-blurbs`): rewrites replace old blurbs only when they pass the gate | #275 | ✅ Complete | v1.5.0 |
 | Cartelera identity: festival-program design, paper and ink by default, Filmoteca dark mode on a toggle | #273, #276 | ✅ Complete (step 1 of 4) | v1.5.0 |
 | About page colophon: release edition, live catalog and eval numbers, MCP link; About copy corrected (6 inclusion types, judge approval) | #278 | ✅ Complete | v1.5.1 |
+| Daily blurb-gate record (`GET /eval-runs/blurb-gate`, chart), golden-set-aware search trend, duplicate-migration guard | #280 | ✅ Complete | v1.6.0 |
+| Web smoke test after every deploy: pages, 404, About edition, both themes | #281 | ✅ Complete | v1.6.0 |
+| Evals page in plain language: metric explanations, plain search-type names, glossary | #282, #283 | ✅ Complete | v1.6.0 |
+| Search on the user's own words, EN/ES stopwords, dual keyword lists (genre/era/kind 0.564 → 0.764) | #284 | ✅ Complete | v1.6.0 |
+| MCP server answers GET/DELETE with 405 (spec), so Claude Code and Desktop connect | #285 | ✅ Complete | v1.6.0 |
+| README: what this project demonstrates (AI, ML, data science, architecture, DevOps) | #286 | ✅ Complete | v1.6.0 |
 | Latin American cinema expansion: 219 → 331 seed titles | #226–#253 | ✅ Merged; ingesting via the queue (279 live at release) | v1.3.0 |
 
 **All features including the two v1.0.0 nice-to-haves (OpenAPI + ESLint) are production-ready and live.**

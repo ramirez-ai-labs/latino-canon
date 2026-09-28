@@ -21,7 +21,7 @@ or PR that shows it, with the number it moved.
 
 | Skill | Where it shows | Result |
 |---|---|---|
-| **Hybrid retrieval (RAG)** | BM25 over D1 FTS5 + `bge-m3` embeddings in Vectorize, fused with weighted reciprocal rank fusion ([hybrid.ts](apps/api/src/search/hybrid.ts)) | recall@5 **0.822**, recall@10 **0.905** on a 97-query golden set |
+| **Hybrid retrieval (RAG)** | BM25 over D1 FTS5 + `bge-m3` embeddings in Vectorize, fused with weighted reciprocal rank fusion ([hybrid.ts](apps/api/src/search/hybrid.ts)) | recall@5 **0.818**, recall@10 **0.905** on a 97-query golden set |
 | **LLM query understanding, with guardrails** | The LLM extracts filters only; inferred filters re-rank, explicit ones exclude ([run-search.ts](apps/api/src/search/run-search.ts)); retrieval runs on the user's own words [#215](https://github.com/ramirez-ai-labs/latino-canon/pull/215), [#284](https://github.com/ramirez-ai-labs/latino-canon/pull/284) | recall@5 0.680 → **0.806** after one wrong filter guess stopped excluding answers; genre/era/kind queries **0.564 → 0.764** |
 | **Grounded generation with citations** | "Why it matters" notes written only from supplied sources, citing them inline; OMDb awards as a source ([prompts.ts](packages/core/src/prompts.ts), [blurb-sources.ts](packages/core/src/blurb-sources.ts)) | Every note shows the sources behind its claims |
 | **LLM-as-judge, versioned** | A 70B groundedness judge frozen at v3; runs from before it saw source text are kept and labeled invalid ([run-groundedness.ts](packages/eval/src/run-groundedness.ts)) | Scores only compare within a judge version; the record is corrected, never deleted |
@@ -73,7 +73,7 @@ or PR that shows it, with the number it moved.
 | **CI** | Every PR: lint with warning caps, typecheck, tests, the web build, seed validation, and a dependency audit ([validate-pr.yml](.github/workflows/validate-pr.yml)) | A merge that silently dropped seven titles is now caught in CI |
 | **CD with verification** | Path-scoped deploys; migrations applied first, and the ingest deploy waits for them; every deploy checks itself live: a retrieval eval gate, an MCP client smoke test, a web smoke test [#264](https://github.com/ramirez-ai-labs/latino-canon/pull/264), [#281](https://github.com/ramirez-ai-labs/latino-canon/pull/281) | Each deploy proves it works, not just that it built |
 | **Evaluate before merge** | Ranking changes measured on a non-live Worker version (`wrangler versions upload`) against the live baseline [#284](https://github.com/ramirez-ai-labs/latino-canon/pull/284) | Regressions found before users see them |
-| **Release management** | Semver releases with written highlights; the version shown in the product and reported by the MCP server | v1.0.0 → v1.5.1 |
+| **Release management** | Semver releases with written highlights; the version shown in the product and reported by the MCP server | v1.0.0 → v1.6.0 |
 | **Observability and incident response** | Structured JSON logs, AI Gateway, a daily blurb-gate chart, and a runbook built from six real incidents ([monitoring.md](docs/operations/monitoring.md)) | Every incident has a cause, a fix and a guard |
 | **Cost management (FinOps)** | Measured cost per AI job, and a daily budget rule for the account-wide limit | $0/month runtime with 294 titles live |
 | **Supply chain** | A weekly `pnpm audit` in CI with targeted overrides ([security-audit.yml](.github/workflows/security-audit.yml)) | 4 advisories (2 high) cleared, now watched |
@@ -312,8 +312,8 @@ Worker** / **Deploy ingest Worker** manually.
 
 Pull requests are labeled automatically by changed area and conventional title
 prefix. Releases are created manually from **Actions -> Release** using the next
-semantic version (current: `1.5.1`); the workflow creates a tag like
-`latino-canon-v1.5.1`, generates release notes from merged PRs since the last tag,
+semantic version (current: `1.6.0`); the workflow creates a tag like
+`latino-canon-v1.6.0`, generates release notes from merged PRs since the last tag,
 and supports prereleases.
 
 Adding a title to the canon is a normal PR: edit
@@ -395,7 +395,7 @@ by accident.
 
 ## Evaluation results
 
-*(Last refreshed 2026-09-27, against the live catalog of 279 titles. Both evals now run
+*(Last refreshed 2026-09-27, against the live catalog of 294 titles. Both evals now run
 from CI and record to `eval_runs`; the live history is on the site's Eval page.)*
 
 ### Retrieval
@@ -408,19 +408,23 @@ passing run on the same golden set. Current baseline, hybrid, by query type:
 | query type | n | recall@5 | MRR |
 |---|---|---|---|
 | known-item (exact titles, typos, aliases) | 7 | 1.000 | 1.000 |
-| person (director/actor named) | 10 | 0.800 | 0.698 |
-| plot (half-remembered descriptions) | 44 | 0.822 | 0.760 |
-| facet (genre, kind, decade asks) | 8 | **0.627** | 0.650 |
-| spanish (original titles, native plots, people) | 28 | 0.835 | 0.727 |
-| **all** | 97 | **0.820** | 0.752 |
+| person (director/actor named) | 10 | 0.800 | 0.694 |
+| plot (half-remembered descriptions) | 44 | 0.799 | 0.752 |
+| facet (genre, kind, decade asks) | 8 | 0.764 | 0.781 |
+| spanish (original titles, native plots, people) | 28 | 0.825 | 0.687 |
+| **all** | 97 | **0.818** | 0.748 |
 
 The Spanish set grew from 8 queries, mostly translations of English plot queries (0.453),
 to 28 that include original Spanish titles, native Spanish plot descriptions and people
 ([#274](https://github.com/ramirez-ai-labs/latino-canon/pull/274)). Every original-title and
-person query now passes. The remaining Spanish misses are translations whose English
-originals also miss, and Spanish words that keyword-match the wrong title ("casa mágica"
-ranks *Casa Grande* first), which makes facet queries ("Mexican family stories from the 90s")
-the weakest type now - next on the [roadmap](docs/ROADMAP.md). Exact titles now always rank first: a query that names a
+person query passes. Search now runs on the user's own words as well as the LLM rewrite's
+condensed keywords, and keyword search drops English and Spanish stopwords
+([#284](https://github.com/ramirez-ai-labs/latino-canon/pull/284)): the rewrite had been
+dropping the words that found the answer ("telenovela parody series" lost *Jane the Virgin*),
+and genre, era and kind queries rose from 0.564 to 0.764. The change was measured on a non-live
+version before merge; the one trade-off is Spanish rank quality (MRR 0.732 -> 0.687). Plot
+descriptions (0.799) are now the weakest type, and the inferred-genre boost is the next fix on
+the [roadmap](docs/ROADMAP.md). Exact titles now always rank first: a query that names a
 title pins it to the top ([#258](https://github.com/ramirez-ai-labs/latino-canon/pull/258)),
 which took known-item MRR from 0.833 to 1.000.
 
@@ -460,14 +464,15 @@ or sources actually change.
 
 ## Status
 
-**v1.5.0.** v1.4.0 opened the canon to AI assistants: a remote MCP server
-([docs/MCP.md](docs/MCP.md)) that lets Claude, ChatGPT or Cursor search it and quote its
-sourced notes, plus `GET /titles/:id/similar` and "More like this". v1.5.0 gives the project
-its own look and a sharper view of its quality: the Cartelera identity (a festival-program
-design, paper and ink by default with a dark mode on a toggle), an Eval page that leads with
-what the evals found, a Spanish golden set grown from 8 to 28 queries, and tooling to rewrite
-old blurbs that replaces one only when the rewrite passes the gate (see the
-[release notes](https://github.com/ramirez-ai-labs/latino-canon/releases/tag/latino-canon-v1.5.0)). See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind
+**v1.6.0.** v1.5.0 gave the project its own look (the Cartelera identity, paper and ink by
+default with a dark mode on a toggle) and a sharper view of its quality. v1.6.0 makes search
+and its checks stronger: retrieval on the user's own words with English/Spanish stopwords
+(genre, era and kind searches 0.564 → 0.764 recall@5, measured on a non-live version before
+merge), a daily record of the blurb gate (auto-approval 33% → 87% after the prompt and
+citation fixes), a live smoke test after every web deploy, an Evals page that explains its
+metrics in plain language, and an MCP server that connects cleanly from Claude Code and
+Claude Desktop (see the
+[release notes](https://github.com/ramirez-ai-labs/latino-canon/releases/tag/latino-canon-v1.6.0)). See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind
 what's built vs. what's next, and a prioritized backlog. See [docs/operations/monitoring.md](docs/operations/monitoring.md)
 for how to operate this in production — resource names, AI Gateway/neuron-budget checks, and an
 incident response runbook built around six real production incidents. See [docs/FEATURES_COMPLETED.md](docs/FEATURES_COMPLETED.md)
