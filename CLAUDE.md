@@ -261,7 +261,7 @@ pnpm --filter @latino-canon/mcp test          # tools via the SDK's own Client, 
   (`initialize` + `tools/list`) after deploying.
 - The api deploy applies D1 migrations first, then triggers the retrieval eval.
 - Groundedness runs are manual (`eval-groundedness.yml`).
-- Releases are cut from **Actions → Release** (semver; current `1.5.1`).
+- Releases are cut from **Actions → Release** (semver; current `1.6.0`).
 - CI secrets are `CLOUDFLARE_API_TOKEN` (needs D1:Edit) and `CLOUDFLARE_ACCOUNT_ID`.
   Worker secrets are `TMDB_API_KEY`, `OMDB_API_KEY` and `INGEST_ADMIN_TOKEN`, all on
   ingest. See `infra/README.md`.
