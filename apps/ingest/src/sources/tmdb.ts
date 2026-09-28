@@ -232,5 +232,5 @@ function dedupeById<T extends { id: number }>(items: T[]): T[] {
 async function fetchJson<T>(url: string): Promise<T> {
   const r = await fetch(url, { headers: { accept: "application/json" } });
   if (!r.ok) throw new Error(`TMDB ${r.status}: ${await r.text()}`);
-  return (await r.json()) as T;
+  return r.json<T>();
 }

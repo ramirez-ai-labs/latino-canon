@@ -1,9 +1,53 @@
-# Dependabot disabled 2026-09-21
-# Reason: Auto-PRs were creating lockfile sync cycles and breaking builds
-# Re-enable with stricter rules when ready (security updates only, no major versions)
-# See: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuring-dependabot-version-updates#enabling-dependabot-version-updates
+# Dependabot version updates, re-enabled 2026-09-28 with the rules the 2026-09-21 shutdown asked for.
+#
+# Why these rules:
+# - Major versions are ignored. #287 (@types/node 22 -> 26) typed APIs the Node 22 runtime
+#   doesn't have and broke apps/api's typecheck; #289 (eslint 9 -> 10) crashed apps/web's lint
+#   because its plugins don't support v10. Majors are upgraded by hand, in their own PR, when
+#   the runtime or the plugin ecosystem is ready.
+# - Minor and patch updates arrive as one grouped PR per ecosystem per week, so a week's bumps
+#   cost one CI run and one review instead of the lockfile churn that got Dependabot disabled.
+# - Monday 06:00 UTC: before the 08:00 ingest queue and the Monday 15:00 security audit.
+# Security updates are separate: they come from the repo's "Dependabot security updates"
+# setting and aren't limited by the ignore rules below.
 
 version: 2
-updates: []
-  # npm updates disabled - manual review only
-  # github-actions updates disabled - manual review only
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 3
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    labels: [dependencies]
+    commit-message:
+      prefix: devdeps
+      prefix-development: devdeps
+      include: scope
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 2
+    groups:
+      actions-minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    labels: [dependencies, github_actions]
+    commit-message:
+      prefix: ci
+      include: scope

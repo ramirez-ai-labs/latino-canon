@@ -54,6 +54,6 @@ export class ApiClient {
       }),
     );
     if (!res.ok) throw new ApiError(res.status, path);
-    return (await res.json()) as T;
+    return res.json<T>();
   }
 }

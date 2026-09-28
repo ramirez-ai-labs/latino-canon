@@ -145,7 +145,7 @@ describe("refreshPopularity", () => {
       ),
     );
 
-    await refreshPopularity({ ...testEnv, TMDB_API_KEY: "test-key" } as unknown as Env);
+    await refreshPopularity({ ...testEnv, TMDB_API_KEY: "test-key" });
 
     const row = await testEnv.DB.prepare("SELECT popularity FROM titles WHERE id = ?")
       .bind("stale-title-2000")
@@ -160,7 +160,7 @@ describe("refreshPopularity", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
-    await refreshPopularity({ ...testEnv, TMDB_API_KEY: "test-key" } as unknown as Env);
+    await refreshPopularity({ ...testEnv, TMDB_API_KEY: "test-key" });
 
     expect(fetchMock).not.toHaveBeenCalled();
     const row = await testEnv.DB.prepare("SELECT popularity FROM titles WHERE id = ?")
@@ -190,7 +190,7 @@ describe("refreshPopularity", () => {
       }),
     );
 
-    await refreshPopularity({ ...testEnv, TMDB_API_KEY: "test-key" } as unknown as Env);
+    await refreshPopularity({ ...testEnv, TMDB_API_KEY: "test-key" });
 
     const good = await testEnv.DB.prepare("SELECT popularity FROM titles WHERE id = ?")
       .bind("good-title-2000")
