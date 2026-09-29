@@ -132,6 +132,8 @@ curl "https://latino-canon-api.ai-builders-studio-latinx.workers.dev/titles/coco
 ### `GET /titles/facets`
 
 Every production country and decade that at least one canon title has, with how many titles list each.
+This returns every country TMDB lists, co-producers included; the site's country filter offers only the
+canon's scope, the US, Spain and Latin America (`CANON_COUNTRIES` in `packages/core/src/facets.ts`).
 The site builds its country filter (English names, A-Z) and decade filter (oldest first) from this, so
 new titles from the ingest queue appear in the filters without a code change. It uses the same visibility
 gate as search, so every option returns results. No Workers AI call; each isolate reuses the result for
