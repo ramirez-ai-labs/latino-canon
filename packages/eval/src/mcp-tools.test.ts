@@ -42,7 +42,7 @@ const NAMES = TOOLS.map((t) => t.name);
 describe("toWorkersAiTools", () => {
   it("maps MCP tools to Workers AI's function format, dropping $schema", () => {
     const withSchemaKey = { ...TOOLS[1]!, inputSchema: { $schema: "http://json-schema.org/draft-07/schema#", ...TOOLS[1]!.inputSchema } };
-    const [t] = toWorkersAiTools([withSchemaKey as McpTool]);
+    const [t] = toWorkersAiTools([withSchemaKey]);
     expect(t).toEqual({
       name: "get_title",
       description: "",
