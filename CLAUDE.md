@@ -4,7 +4,7 @@
 
 A search and curation product for Latino-led films and series: "type anything and find it"
 retrieval (including Spanish and half-remembered plots) over a small, editorially curated
-catalog with context on why each title matters. Live, with ~280 titles in production.
+catalog with context on why each title matters. Live, with ~320 titles in production.
 
 Four Cloudflare Workers plus shared packages, all on the **free tier**:
 
