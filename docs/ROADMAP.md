@@ -569,6 +569,34 @@ deferred rather than bundled in:
     American filmmakers working in Hollywood vs. Latino actors in non-Latino-centered
     stories) — that would need a real editorial judgment call per title on top of
     what `inclusion_type` already carries, and is still not built.
+13b. **Co-production as a signal.** The country filter now offers only the canon's scope
+    (#301), but the co-producer record it leaves out is information. Measured 2026-09-29
+    over all 337 live titles (TMDB `production_countries`, no Workers AI):
+    - **Half of the 245 Latin American titles (50%) list a co-producer from outside Latin
+      America.** 38% have a European co-producer, 29% one other than Spain. **France is the
+      most frequent (20%)**, ahead of Spain and the US (16% each).
+    - **A modern pattern:** 0-18% of Latin American titles per decade before 1990, then
+      **52% in the 2000s**, 44% in the 2010s and 38% so far in the 2020s.
+    - **By country (titles listing it, n >= 5):** Paraguay 86%, Uruguay 79%, Chile 78%,
+      Argentina 68%, Peru 55%, Colombia 53%, Brazil 40%, Mexico 28%, Cuba 22%,
+      Costa Rica 14%, El Salvador 8%, Panama 0%.
+    - **Caveats:** this is the curated canon, weighted toward festival and auteur
+      cinema, not a sample of all Latin American film; and TMDB's country data is
+      crowd-sourced. The co-producer countries are consistent with the international
+      funds known to back Latin American cinema (the CNC's world-cinema aid, the
+      Berlinale's World Cinema Fund, Rotterdam's Hubert Bals Fund, the Doha Film
+      Institute, Ibermedia), but tying a *specific* title to a fund needs a source per
+      title, the same bar as a director credit.
+    - **Edge case:** *On Top of the Whale* (1982, Raúl Ruiz) lists only the Netherlands,
+      so it matches no country option. It stays searchable; a title whose countries are
+      all out of scope could fall back to its director's country, if it comes up again.
+
+    Ideas, none built:
+    - a "Co-produced with …" line on title pages (the data is already on `/titles/:id`);
+    - an optional "International co-production" facet;
+    - sourced context notes on co-financing where critics have documented its influence,
+      under "Representation honesty" above - never a judgment the site or a model makes;
+    - the analysis above as a data story (the Latino AI Summit talk, the podcast).
 
 ## Standing backlog (SDLC / completeness, unchanged priority)
 

@@ -151,3 +151,17 @@ question (not hypothetical) once verification turned up genuine Latin American
 festival cinema with confirmed Latino creative leadership and a community-centered
 story — formalizing the reading the rule already implied rather than leaving it to
 guess case-by-case.
+
+## Data notes
+
+**Production countries record financing, not heritage.** TMDB's `production_countries`
+lists every country that co-produced a title, which usually means who put money in:
+half of the canon's Latin American titles list a co-producer from outside Latin America,
+France most often (measured 2026-09-29, ROADMAP item 13b). A French or German co-producer
+doesn't make a film less Latin American, and a Spanish one doesn't make it Latino.
+Production country never earns or counts toward an `inclusion_type`: `led_by`/`created_by`
+come from verified credits, and `produced_by` means a Latino producer with real creative
+or executive control, not a foreign fund or co-financier. The site's country filter
+offers only the canon's scope (the US, Spain and Latin America, `CANON_COUNTRIES` in
+`packages/core/src/facets.ts`); the api keeps every country, since the co-production
+record is information in its own right.
