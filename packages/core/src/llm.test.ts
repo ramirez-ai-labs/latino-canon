@@ -1,5 +1,51 @@
 import { describe, expect, it } from "vitest";
-import { coerceLlmText, normalizeBlurbJson, normalizeClassificationJson, normalizeContentAdvisoryJson } from "./llm.js";
+import {
+  coerceLlmText,
+  escapeInnerQuotes,
+  extractJson,
+  normalizeBlurbJson,
+  normalizeClassificationJson,
+  normalizeContentAdvisoryJson,
+} from "./llm.js";
+
+describe("extractJson", () => {
+  // The actual bug this guards: the Crónicas (2004) blurb reply quoted the synopsis's
+  // "Monster of Babahoyo." without escaping, JSON.parse threw at the inner quote, and the
+  // title went live without a blurb.
+  const cronicas =
+    '{"text": "Crónicas (2004) follows a Miami reporter who travels to Ecuador after a serial killer known as the "Monster of Babahoyo." [s1] It is directed by Sebastián Cordero [d0].", "claims": [{"claim": "known as the "Monster of Babahoyo."", "supportedBy": "s1"}, {"claim": "directed by Sebastián Cordero", "supportedBy": "d0"}]}';
+
+  it("repairs unescaped quotes inside a string value", () => {
+    const out = extractJson(cronicas) as { text: string; claims: { claim: string; supportedBy: string }[] };
+    expect(out.text).toContain('known as the "Monster of Babahoyo." [s1]');
+    expect(out.claims).toEqual([
+      { claim: 'known as the "Monster of Babahoyo."', supportedBy: "s1" },
+      { claim: "directed by Sebastián Cordero", supportedBy: "d0" },
+    ]);
+  });
+
+  it("keeps a quote followed by a comma in prose inside the string", () => {
+    const out = extractJson('{"text": "the "Tigre", a boxer, returns [s1].", "claims": []}') as { text: string };
+    expect(out.text).toBe('the "Tigre", a boxer, returns [s1].');
+  });
+
+  it("still parses well-formed and fenced replies unchanged", () => {
+    expect(extractJson('```json\n{"text": "a \\"quoted\\" word", "n": 1}\n```')).toEqual({ text: 'a "quoted" word', n: 1 });
+  });
+
+  it("throws the original parse error when the repair can't help", () => {
+    expect(() => extractJson('{"text": "cut off')).toThrow();
+    // A trailing comma isn't a quoting problem, so the repair changes nothing.
+    expect(() => extractJson('{"text": "a", }')).toThrow(/JSON|Expected|Unexpected/);
+  });
+});
+
+describe("escapeInnerQuotes", () => {
+  it("leaves valid JSON untouched", () => {
+    const valid = '{"a": "x", "b": ["y", "z"], "c": {"d": "\\"e\\""}}';
+    expect(escapeInnerQuotes(valid)).toBe(valid);
+  });
+});
 
 describe("coerceLlmText", () => {
   it("passes a string through unchanged", () => {
