@@ -264,6 +264,10 @@ budget on a given day.
 - **Measured costs (2026-09-24, ingest re-measured 2026-09-25):** live search
   ~0.5–0.7k/day; the daily ingest queue ~3.2k (15 titles × ~200, 70B, + ~13 each for the blurb judge); groundedness eval ~2.8k per run (70B); retrieval eval ~0.15k hybrid /
   ~0.4k all modes.
+- **Enforced in code** (`apps/ingest/src/budget.ts`): check today's ledger with
+  `curl -H "authorization: Bearer $INGEST_ADMIN_TOKEN" "$INGEST_URL/budget"`. Refusals and
+  overrides log `{"event":"budget.claim","outcome":"refused"|"granted"|"override"}` in Workers
+  Logs (latino-canon-ingest). An override row in `ai_budget_claims` carries its reason.
 - **Rules:** besides the daily ingest queue, at most one 70B job (blurb regeneration, a
   sampled judge run) per day, capped at ~2k, so the planned day stays near 6k; a full
   groundedness run (~2.8k) waits for a day with no queue run; sample before full runs;

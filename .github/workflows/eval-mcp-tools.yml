@@ -17,6 +17,10 @@ on:
         description: "Comma-separated case ids to run (blank = all). A subset isn't recorded."
         required: false
         default: ""
+      override_reason:
+        description: "Run even if today already had a 70B job or an ingest (recorded with this reason). Blank = follow the budget rule."
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -33,6 +37,25 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      # The budget rule, enforced (apps/ingest/src/budget.ts): this is the day's one extra
+      # 70B job (~1k neurons, under the ~2k cap, so a queue day is fine). A subset run
+      # spends too, so it claims as well.
+      - name: Claim today's 70B budget slot
+        env:
+          INGEST_URL: ${{ vars.INGEST_URL }}
+          INGEST_ADMIN_TOKEN: ${{ secrets.INGEST_ADMIN_TOKEN }}
+          OVERRIDE_REASON: ${{ inputs.override_reason }}
+        run: |
+          body=$(jq -n --arg kind eval-mcp-tools --arg reason "$OVERRIDE_REASON" \
+            '{kind: $kind} + (if $reason == "" then {} else {overrideReason: $reason} end)')
+          status=$(curl -sS -o claim.json -w '%{http_code}' -X POST "$INGEST_URL/budget/claim" \
+            -H "authorization: Bearer $INGEST_ADMIN_TOKEN" -H "content-type: application/json" -d "$body")
+          cat claim.json; echo
+          if [ "$status" != "200" ]; then
+            echo "::error::Workers AI budget: $(jq -r '.reason // .error' claim.json). Re-run with override_reason to run anyway."
+            exit 1
+          fi
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v6

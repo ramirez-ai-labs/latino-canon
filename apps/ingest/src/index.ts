@@ -8,6 +8,7 @@ import { classifyContentAdvisory } from "./ai.js";
 import { ingestOpenApiSpec } from "./openapi.js";
 import { loadQueuePlan, runIngestQueue } from "./ingest-queue.js";
 import { regenerateBlurbs } from "./blurb-regen.js";
+import { OPTIONAL_KINDS, budgetDay, claimBudget, claimsToday, isOptionalKind, recordIngestRun } from "./budget.js";
 
 export { IngestWorkflow } from "./workflow.js";
 
@@ -20,8 +21,13 @@ export default {
    *   POST /backfill-gender           { limit?: number }      → TMDB-only, no Workers AI neurons
    *   POST /backfill-genres           { limit?: number }      → TMDB-only, no Workers AI neurons
    *   POST /backfill-content-advisory { limit?: number }      → LLM classification (small model)
-   *   POST /regenerate-blurbs  { limit?, dryRun? }             → rewrite old blurbs; replace only
-   *                                                               those that pass the gate (70B)
+   *   POST /regenerate-blurbs  { limit?, dryRun?, overrideReason? } → rewrite old blurbs; replace
+   *                                                               only those that pass the gate (70B;
+   *                                                               claims the day's budget slot)
+   *   GET  /budget                                            → today's 70B jobs, and whether the
+   *                                                               queue still has work
+   *   POST /budget/claim    { kind, overrideReason? }         → claim today's 70B slot for an
+   *                                                               eval run outside this worker
    *   POST /aliases         { titleId, aliases: {alias, kind}[] } → backfill aliases for a
    *                                                               title already ingested
    *   POST /rebuild-vectors  { offset?, limit? }              → re-embed a page of titles into
@@ -199,6 +205,10 @@ export default {
       const created = await Promise.all(
         titles.map((t) => env.INGEST_WORKFLOW.create({ params: t })),
       );
+      // A manual ingest spends 70B neurons like the queue; record it so a full groundedness
+      // run is refused today (see budget.ts). Titles already live are skipped before any AI
+      // call, so this can over-record - the safe direction for a budget.
+      if (titles.length > 0) await recordIngestRun(env, "ingest-manual");
       return Response.json({ started: created.map((i) => i.id) });
     }
 
@@ -345,9 +355,39 @@ export default {
     // call so one request stays well inside a Worker's time limits - scripts/
     // regenerate-blurbs.ts batches a day's run. dryRun sizes the backlog without AI calls.
     if (req.method === "POST" && url.pathname === "/regenerate-blurbs") {
-      const { limit, dryRun } = (await req.json().catch(() => ({}))) as { limit?: number; dryRun?: boolean };
+      const { limit, dryRun, overrideReason } = (await req.json().catch(() => ({}))) as {
+        limit?: number;
+        dryRun?: boolean;
+        overrideReason?: string;
+      };
+      if (dryRun !== true) {
+        const plan = await loadQueuePlan(env);
+        const decision = await claimBudget(env, "blurb-regen", plan.eligible > 0, overrideReason);
+        if (!decision.allow) return Response.json({ error: "budget", reason: decision.reason }, { status: 409 });
+      }
       const result = await regenerateBlurbs(env, { limit: Math.min(Math.max(limit ?? 10, 1), 10), dryRun: dryRun === true });
       return Response.json(result);
+    }
+
+    // Today's 70B budget: which jobs ran or claimed the day, and whether the queue still has
+    // work (which makes today an ingest day). Read-only.
+    if (req.method === "GET" && url.pathname === "/budget") {
+      const [claims, plan] = await Promise.all([claimsToday(env), loadQueuePlan(env)]);
+      return Response.json({ day: budgetDay(), claims, queueHasWork: plan.eligible > 0 });
+    }
+
+    // For 70B jobs that run outside this worker (the groundedness and MCP tool-selection
+    // evals call Workers AI from GitHub Actions): claim the day's slot before spending.
+    if (req.method === "POST" && url.pathname === "/budget/claim") {
+      const { kind, overrideReason } = (await req.json().catch(() => ({}))) as { kind?: string; overrideReason?: string };
+      if (!kind || !isOptionalKind(kind)) {
+        return Response.json({ error: `kind must be one of: ${OPTIONAL_KINDS.join(", ")}` }, { status: 400 });
+      }
+      const plan = await loadQueuePlan(env);
+      const decision = await claimBudget(env, kind, plan.eligible > 0, overrideReason);
+      return decision.allow
+        ? Response.json({ granted: true, override: decision.override, day: budgetDay() })
+        : Response.json({ granted: false, reason: decision.reason, day: budgetDay() }, { status: 409 });
     }
 
     // Re-embeds one page of titles from D1 and upserts them to Vectorize with the same

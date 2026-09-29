@@ -277,7 +277,32 @@ pnpm --filter @latino-canon/ingest regenerate:blurbs 20          # a day's batch
 `{ "considered", "byReason": {unapproved, significance, citations}, "replaced": [], "held": [{titleId, score, problems, unsupported}], "errors": [], "next"? }`
 
 **Cost:** ~100 neurons per title (one 70B blurb call + ~13 for the judge). Budget rule: one 70B job a
-day besides the ingest queue, capped at ~2k, so about 20 titles a day.
+day besides the ingest queue, capped at ~2k, so about 20 titles a day. **Enforced:** a non-dry run claims
+the day's `blurb-regen` slot first and returns **409** `{ "error": "budget", "reason" }` if another 70B
+job (an eval) already has it. Pass `"overrideReason": "<why>"` to run anyway; it's recorded.
+
+---
+
+### `GET /budget` (Admin)
+
+Today's Workers AI 70B ledger (UTC day, `ai_budget_claims`): which heavy jobs ran or claimed the day,
+and whether the ingest queue still has work (which makes today an ingest day). Read-only.
+
+```json
+{ "day": "2026-09-30", "claims": [{ "kind": "ingest-queue", "claimedAt": "2026-09-30 08:00:03", "reason": null, "override": 0 }], "queueHasWork": false }
+```
+
+### `POST /budget/claim` (Admin)
+
+Claims today's 70B slot for a job that runs outside this worker. The groundedness and MCP tool-selection
+eval workflows call it before spending. `kind` is one of `blurb-regen`, `eval-groundedness`,
+`eval-mcp-tools`, `eval-classifier`.
+
+- **Granted** (200 `{ "granted": true, "override": false }`): nothing else ran today, or only the queue
+  ran and the job fits under the ~2k cap.
+- **Refused** (409 `{ "granted": false, "reason" }`): a different 70B job already claimed today, or
+  it's a full `eval-groundedness` run (~2.8k) on an ingest day or a day the queue still has work.
+- **Override:** `{ "kind", "overrideReason": "<why>" }` turns a refusal into a grant, recorded with the reason.
 
 ---
 
