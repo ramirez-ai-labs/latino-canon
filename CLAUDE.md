@@ -51,6 +51,7 @@ at 00:00 UTC. Running out breaks live search, not just ingest. Measured costs:
 | Ingest queue, classify+blurb+judge (70B), 15 titles/day | ~3.2k (~200/title + ~13 judge) |
 | Groundedness judge run | ~2.8k |
 | Retrieval eval | ~0.15k hybrid, ~0.4k all modes |
+| MCP tool-selection eval (30 cases, 70B) | ~1k (estimated; the run prints its own) |
 
 Rules:
 
@@ -110,6 +111,10 @@ metadata and broke every filtered semantic query (incident 4).
   on the same golden set.
 - The groundedness judge is **frozen at v3** (`GROUNDEDNESS_JUDGE_VERSION` in
   `packages/core/src/prompts.ts`). Scores only compare within a judge version.
+- The MCP tool-selection eval (`eval-mcp-tools.yml`, manual) gives Llama 3.3 70B the live
+  server's instructions and `tools/list` and scores the tool and arguments it picks for 30
+  requests. Run it after changing a tool's name, description or schema; it counts as the
+  day's one extra 70B job.
 - Earlier invalid runs stay on the Eval page, labeled invalid. Correct the record; don't
   delete it.
 
@@ -228,7 +233,8 @@ See `docs/ROADMAP.md` for the authoritative list. Current order:
    weakest query type.
 3. Cartelera steps 2-4: layouts for home, cards and title pages
    (`docs/design/IDENTITY_DIRECTIONS.md`).
-4. Classifier eval (item 8), then an agentic curation v2 and an MCP tool-selection eval.
+4. Classifier eval (item 8), then an agentic curation v2, gated by the MCP tool-selection
+   eval (first run pending).
 
 ## Testing
 

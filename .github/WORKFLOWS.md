@@ -128,6 +128,19 @@ Merged seed titles are **not** ingested by a workflow. The ingest worker's daily
   2. Select "Run groundedness eval"
   3. Click "Run workflow"
 
+### eval-mcp-tools.yml
+- **Trigger**: Manual (`workflow_dispatch`), with an optional `cases` input (comma-separated ids)
+- **Purpose**: Check that a model picks the right MCP tool, with the right arguments, from the live
+  server's own instructions and tool list (`packages/eval/src/run-mcp-tools.ts`, see `docs/MCP.md`)
+- **What it does**:
+  - Connects to the live MCP server (`initialize`, `tools/list`)
+  - Sends each of the 30 requests in `datasets/mcp-tools.jsonl` to Llama 3.3 70B with those tools
+  - Scores tool, schema-valid arguments, expected ids/filters, and no unrequested filters
+  - Records the run in D1 (skipped for a `cases` subset); shown on the `/eval` page
+- **Cost**: ~1k neurons per full run (estimated from tokens; the log prints the run's own). It's the
+  day's one extra 70B job
+- **When**: after changing a tool's name, description or schema, or the server's instructions
+
 ---
 
 ## Release (Manual trigger)
@@ -163,6 +176,7 @@ Merged seed titles are **not** ingested by a workflow. The ingest worker's daily
 | deploy-api succeeds | eval-retrieval (hybrid) | ✅ | — | Catch search regressions |
 | Sundays 09:30 UTC | eval-retrieval (all modes) | ✅ | ✅ | Weekly search baseline |
 | Manual trigger from Actions UI | eval-groundedness | — | ✅ | Evaluate blurbs |
+| Manual trigger from Actions UI | eval-mcp-tools | — | ✅ | Evaluate MCP tool selection |
 | Manual trigger from Actions UI | release | — | ✅ | Cut release |
 | Mondays 15:00 UTC, lockfile PRs | security-audit | ✅ | ✅ | Catch vulnerable dependencies |
 

@@ -11,6 +11,7 @@
   "scripts": {
     "retrieval": "tsx src/run-retrieval.ts",
     "groundedness": "tsx src/run-groundedness.ts",
+    "mcp-tools": "tsx src/run-mcp-tools.ts",
     "typecheck": "tsc -p tsconfig.json",
     "lint": "eslint src --ext .ts --max-warnings 22",
     "test": "vitest run"

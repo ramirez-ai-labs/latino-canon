@@ -254,7 +254,7 @@ export const OPENAPI_SPEC = {
         description: "Retrieval and groundedness eval runs, newest first. Written only by CI.",
         tags: ["Evaluation"],
         parameters: [
-          filterParam("type", "Eval type", { type: "string", enum: ["retrieval", "groundedness"] }),
+          filterParam("type", "Eval type", { type: "string", enum: ["retrieval", "groundedness", "mcp-tools"] }),
           filterParam("limit", "Maximum runs", { type: "integer", default: 20, maximum: 100 }),
         ],
         responses: { "200": { description: "Eval runs" } },

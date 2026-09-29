@@ -1,0 +1,30 @@
+{"id":"search-plot-coco","category":"search","request":"What's that movie where a boy who wants to play guitar ends up in the land of the dead?","tool":"search_titles","queryMentions":["dead"],"noFilters":true}
+{"id":"search-title-ytumama","category":"search","request":"Find Y tu mamá también","tool":"search_titles","queryMentions":["y tu mama tambien"],"noFilters":true}
+{"id":"search-spanish-frontera","category":"search","request":"películas sobre migrantes cruzando la frontera","tool":"search_titles","queryMentions":["frontera"],"noFilters":true}
+{"id":"search-person-gael","category":"search","request":"What has Gael García Bernal been in?","tool":"search_titles","queryMentions":["garcia bernal"],"noFilters":true}
+{"id":"search-plot-telenovela","category":"search","request":"the one that parodies telenovelas, where a young woman gets pregnant by accident at a checkup","tool":"search_titles","queryMentions":["telenovela"]}
+{"id":"search-title-roma","category":"search","request":"Is Roma by Alfonso Cuarón in the canon?","tool":"search_titles","queryMentions":["roma"],"noFilters":true}
+{"id":"search-theme-quinceanera","category":"search","request":"anything about a quinceañera?","tool":"search_titles","queryMentions":["quincea"],"noFilters":true}
+{"id":"filters-country-decade","category":"filters","request":"Mexican films from the 1990s","tool":"search_titles","args":{"country":"MX","decade":1990}}
+{"id":"filters-kind-series","category":"filters","request":"Show me TV series about Latino families","tool":"search_titles","args":{"kind":"series"}}
+{"id":"filters-kind-special","category":"filters","request":"stand-up comedy specials by Latino comedians","tool":"search_titles","args":{"kind":"special"}}
+{"id":"filters-genre-country","category":"filters","request":"horror movies from Argentina","tool":"search_titles","args":{"genre":"Horror","country":"AR"}}
+{"id":"filters-decade","category":"filters","request":"films from the 1970s","tool":"search_titles","args":{"decade":1970}}
+{"id":"filters-documentary-brazil","category":"filters","request":"Brazilian documentaries","tool":"search_titles","args":{"country":"BR","genre":"Documentary"}}
+{"id":"get-second-result","category":"get_title","context":[{"role":"user","content":"Latino animated films?"},{"role":"assistant","content":"From the canon:\n1. Coco (2017), id coco-2017\n2. The Book of Life (2014), id the-book-of-life-2014\n3. Encanto (2021), id encanto-2021"}],"request":"Tell me more about the second one.","tool":"get_title","args":{"id":"the-book-of-life-2014"}}
+{"id":"get-why-selena","category":"get_title","context":[{"role":"user","content":"Films about Tejano music?"},{"role":"assistant","content":"From the canon:\n1. Selena (1997), id selena-1997\n2. La Bamba (1987), id la-bamba-1987"}],"request":"Why is Selena in the canon?","tool":"get_title","args":{"id":"selena-1997"}}
+{"id":"get-director-elnorte","category":"get_title","context":[{"role":"user","content":"Classic films about crossing the border?"},{"role":"assistant","content":"From the canon:\n1. El Norte (1983), id el-norte-1983\n2. Real Women Have Curves (2002), id real-women-have-curves-2002"}],"request":"Who made El Norte, and who's in it?","tool":"get_title","args":{"id":"el-norte-1983"}}
+{"id":"get-third-credits","category":"get_title","context":[{"role":"user","content":"Latino animated films?"},{"role":"assistant","content":"From the canon:\n1. Coco (2017), id coco-2017\n2. The Book of Life (2014), id the-book-of-life-2014\n3. Encanto (2021), id encanto-2021"}],"request":"Give me the synopsis and credits for the third one.","tool":"get_title","args":{"id":"encanto-2021"}}
+{"id":"similar-coco","category":"similar","context":[{"role":"user","content":"Latino animated films?"},{"role":"assistant","content":"From the canon:\n1. Coco (2017), id coco-2017\n2. The Book of Life (2014), id the-book-of-life-2014"}],"request":"More like Coco, please.","tool":"similar_titles","args":{"id":"coco-2017"}}
+{"id":"similar-first","category":"similar","context":[{"role":"user","content":"Coming-of-age road movies?"},{"role":"assistant","content":"From the canon:\n1. Y tu mamá también (2001), id y-tu-mama-tambien-2001\n2. Roma (2018), id roma-2018"}],"request":"Anything similar to the first one?","tool":"similar_titles","args":{"id":"y-tu-mama-tambien-2001"}}
+{"id":"similar-limit-selena","category":"similar","context":[{"role":"user","content":"Films about Tejano music?"},{"role":"assistant","content":"From the canon:\n1. Selena (1997), id selena-1997\n2. La Bamba (1987), id la-bamba-1987"}],"request":"Find me 3 titles like Selena.","tool":"similar_titles","args":{"id":"selena-1997","limit":3}}
+{"id":"similar-labamba","category":"similar","context":[{"role":"user","content":"Films about Tejano music?"},{"role":"assistant","content":"From the canon:\n1. Selena (1997), id selena-1997\n2. La Bamba (1987), id la-bamba-1987"}],"request":"I loved La Bamba. What else is like it?","tool":"similar_titles","args":{"id":"la-bamba-1987"}}
+{"id":"curate-uplifting-latina","category":"curate","request":"Something uplifting by a Latina director for a movie night","tool":"curate"}
+{"id":"curate-family-immigration","category":"curate","request":"A family movie about immigration that my kids could watch","tool":"curate"}
+{"id":"curate-gritty-crime","category":"curate","request":"Recommend a few dark, gritty crime stories made by Latino filmmakers","tool":"curate"}
+{"id":"curate-cry-mothers","category":"curate","request":"I want something to cry to, about mothers and daughters","tool":"curate"}
+{"id":"curate-heritage-month","category":"curate","request":"Pick films for a Latino Heritage Month screening for high school students, and say why each fits","tool":"curate"}
+{"id":"none-capital","category":"none","request":"What's the capital of Peru?","tool":null}
+{"id":"none-translate","category":"none","request":"Translate 'good morning' into Spanish","tool":null}
+{"id":"none-haiku","category":"none","request":"Write me a haiku about the ocean","tool":null}
+{"id":"none-math","category":"none","request":"What is 17 times 23?","tool":null}
