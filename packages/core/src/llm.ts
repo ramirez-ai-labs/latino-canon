@@ -85,7 +85,66 @@ export function extractJson(text: string): unknown {
   const start = candidate.indexOf("{");
   const end = candidate.lastIndexOf("}");
   if (start === -1 || end === -1) throw new Error(`no JSON object in LLM output: ${text.slice(0, 200)}`);
-  return JSON.parse(candidate.slice(start, end + 1));
+  const json = candidate.slice(start, end + 1);
+  try {
+    return JSON.parse(json) as unknown;
+  } catch (err) {
+    const repaired = escapeInnerQuotes(json);
+    if (repaired === json) throw err;
+    try {
+      return JSON.parse(repaired) as unknown;
+    } catch {
+      throw err; // report the model's own output, not the repair attempt
+    }
+  }
+}
+
+/**
+ * Found live (2026-09-28, Crónicas (2004)): the synopsis quotes a nickname - a killer
+ * known as the "Monster of Babahoyo." - and the blurb model copied the quotes into its
+ * "text" value unescaped, so JSON.parse failed ("Expected ',' or '}' after property
+ * value"). At temperature 0 both step retries returned the same reply, and the title went
+ * live with no blurb. Any synopsis with a quoted phrase can do this.
+ *
+ * The repair: inside a string, a `"` only closes the string when what follows is JSON
+ * structure - `:`, `}`, `]`, end of input, or a `,` that is itself followed by the start of
+ * a value or key. Any other `"` is a quote in the prose and gets escaped. Used only after a
+ * plain parse fails, so well-formed replies never pass through it.
+ */
+export function escapeInnerQuotes(json: string): string {
+  let out = "";
+  let inString = false;
+  for (let i = 0; i < json.length; i++) {
+    const ch = json[i]!;
+    if (!inString) {
+      if (ch === '"') inString = true;
+      out += ch;
+      continue;
+    }
+    if (ch === "\\") {
+      out += ch + (json[i + 1] ?? "");
+      i++;
+      continue;
+    }
+    if (ch === '"') {
+      if (closesString(json, i + 1)) {
+        inString = false;
+        out += ch;
+      } else {
+        out += '\\"';
+      }
+      continue;
+    }
+    out += ch;
+  }
+  return out;
+}
+
+function closesString(json: string, from: number): boolean {
+  const rest = json.slice(from).trimStart();
+  if (rest === "" || /^[:}\]]/.test(rest)) return true;
+  // After a comma, the next thing must be a key or a value, not more prose.
+  return /^,\s*(["{[\]}\d-]|true\b|false\b|null\b)/.test(rest);
 }
 
 /**
