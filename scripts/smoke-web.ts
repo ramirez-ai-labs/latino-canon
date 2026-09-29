@@ -46,6 +46,9 @@ const CHECKS: Check[] = [
   { name: "home", run: expectPage("/", 200, ["Latino", "searchable", "lc-theme"]) },
   // Browsing, not a query: renders the search page and result cards with no AI call.
   { name: "search (browse series)", run: expectPage("/search?kind=series", 200, [/href="\/title\/[a-z0-9-]+"/]) },
+  // Filter options come from GET /titles/facets: a country and a decade the old hard-coded
+  // lists left out (added in the Latin American expansion) must be offered.
+  { name: "search filters from the catalog", run: expectPage("/search", 200, [/<option value="BO">Bolivia<\/option>/, /<option value="1930">1930s<\/option>/]) },
   { name: "title page", run: expectPage("/title/coco-2017", 200, ["Coco", "Why it matters", /More like this|Related titles/]) },
   { name: "evals", run: expectPage("/eval", 200, ["Evals", "Search quality over time"]) },
   // The colophon must name this release - the version the deploy was built from.

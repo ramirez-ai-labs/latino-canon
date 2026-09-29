@@ -129,6 +129,23 @@ curl "https://latino-canon-api.ai-builders-studio-latinx.workers.dev/titles/coco
 
 ---
 
+### `GET /titles/facets`
+
+Every production country and decade that at least one canon title has, with how many titles list each.
+The site builds its country filter (English names, A-Z) and decade filter (oldest first) from this, so
+new titles from the ingest queue appear in the filters without a code change. It uses the same visibility
+gate as search, so every option returns results. No Workers AI call; each isolate reuses the result for
+5 minutes.
+
+```json
+{
+  "countries": [{ "code": "BO", "count": 5 }, { "code": "MX", "count": 58 }],
+  "decades": [{ "decade": 1930, "count": 1 }, { "decade": 2010, "count": 96 }]
+}
+```
+
+---
+
 ### `GET /titles/{id}/similar`
 
 **Titles like this one, as search-result cards, most similar first.**

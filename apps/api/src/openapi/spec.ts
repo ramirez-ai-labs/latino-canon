@@ -132,6 +132,30 @@ export const OPENAPI_SPEC = {
         },
       },
     },
+    "/titles/facets": {
+      get: {
+        operationId: "getCatalogFacets",
+        summary: "Countries and decades in the canon",
+        description:
+          "Every production country (ISO 3166-1 alpha-2) and decade that at least one canon title has, with a title " +
+          "count - the options for the country and decade search filters. Behind the same visibility gate as search, " +
+          "so each option returns results. No Workers AI call.",
+        tags: ["Catalog"],
+        responses: {
+          "200": {
+            description: "Facet counts",
+            content: {
+              "application/json": {
+                example: {
+                  countries: [{ code: "BO", count: 5 }, { code: "MX", count: 58 }],
+                  decades: [{ decade: 1930, count: 1 }, { decade: 2010, count: 96 }],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
     "/titles/{id}": {
       get: {
         operationId: "getTitle",

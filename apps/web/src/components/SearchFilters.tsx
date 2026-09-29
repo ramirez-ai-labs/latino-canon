@@ -6,6 +6,7 @@ import {
   INCLUSION_TYPES,
   INCLUSION_TYPE_LABELS,
   THEMES,
+  type FacetOption,
   THEME_LABELS,
   type InclusionType,
   type SearchMode,
@@ -25,31 +26,14 @@ const KINDS: { value: TitleKind; label: string }[] = [
   { value: "special", label: "Special" },
 ];
 
-const DECADES = [1980, 1990, 2000, 2010, 2020];
-
-// Countries actually present in the catalog with meaningful volume (production
-// country, not a "region" grouping - the taxonomy's inclusion_type tags already
-// carry the creator-heritage judgment; this is plain, objective, already-in-the-
-// data filtering, not a new editorial category). Lets a "majority Latin America"
-// catalog distinguish e.g. Spain-only productions (Money Heist, The Ministry of
-// Time) from the rest without inventing a fuzzy diaspora/region bucket.
-const COUNTRIES: { value: string; label: string }[] = [
-  { value: "US", label: "United States" },
-  { value: "MX", label: "Mexico" },
-  { value: "ES", label: "Spain" },
-  { value: "AR", label: "Argentina" },
-  { value: "BR", label: "Brazil" },
-  { value: "CL", label: "Chile" },
-  { value: "CO", label: "Colombia" },
-  { value: "CU", label: "Cuba" },
-  { value: "PE", label: "Peru" },
-  { value: "UY", label: "Uruguay" },
-  { value: "VE", label: "Venezuela" },
-  { value: "GT", label: "Guatemala" },
-  { value: "SV", label: "El Salvador" },
-  { value: "DO", label: "Dominican Republic" },
-  { value: "PR", label: "Puerto Rico" },
-];
+/**
+ * A selected value the options don't include (an old link, or the facets call failed) is
+ * still shown, so the select never hides a filter that's narrowing the results.
+ */
+function withSelected(options: FacetOption[], selected: string | null, labelSuffix = ""): FacetOption[] {
+  if (!selected || options.some((o) => o.value === selected)) return options;
+  return [{ value: selected, label: `${selected}${labelSuffix}`, count: 0 }, ...options];
+}
 
 const selectClass =
   "glass-light rounded-full px-3.5 py-1.5 text-[0.85rem] text-text transition-all duration-200 hover:border-muted focus:outline-none focus:ring-2 focus:ring-accent/60 focus:shadow-[var(--shadow-glow)]";
@@ -57,10 +41,16 @@ const selectClass =
 /**
  * Exposes the same mode/kind/theme/decade/inclusionType filters the search API has
  * supported all along - previously only reachable by hand-editing the URL.
+ *
+ * Country and decade options come from the catalog itself (GET /titles/facets, built into
+ * options by packages/core facets.ts): production country, sorted A-Z by name, and every
+ * decade that has a canon title. They used to be hard-coded and fell behind the catalog.
  */
-export function SearchFilters() {
+export function SearchFilters({ countries, decades }: { countries: FacetOption[]; decades: FacetOption[] }) {
   const router = useRouter();
   const params = useSearchParams();
+  const countryList = withSelected(countries, params.get("country"));
+  const decadeList = withSelected(decades, params.get("decade"), "s");
 
   function setParam(key: string, value: string) {
     const next = new URLSearchParams(params.toString());
@@ -109,9 +99,9 @@ export function SearchFilters() {
         className={cn(selectClass, params.get("decade") && glowClass)}
       >
         <option value="">Any decade</option>
-        {DECADES.map((d) => (
-          <option key={d} value={d}>
-            {d}s
+        {decadeList.map((d) => (
+          <option key={d.value} value={d.value}>
+            {d.label}
           </option>
         ))}
       </select>
@@ -123,7 +113,7 @@ export function SearchFilters() {
         className={cn(selectClass, params.get("country") && glowClass)}
       >
         <option value="">Any country</option>
-        {COUNTRIES.map((c) => (
+        {countryList.map((c) => (
           <option key={c.value} value={c.value}>
             {c.label}
           </option>

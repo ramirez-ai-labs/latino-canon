@@ -3,6 +3,7 @@ import {
   MODEL_TAG_DISPLAY_THRESHOLD,
   resolveBlurbSources,
   type BlurbSource,
+  type CatalogFacets,
   type ContentAdvisory,
   type ContextNote,
   type ContextNoteCategory,
@@ -50,6 +51,51 @@ titlesRoute.get("/", async (c) => {
     count: results.length,
     limited: results.length === limit,
   });
+});
+
+/**
+ * Production countries and decades the canon holds, with title counts, for the site's
+ * filter dropdowns (see packages/core facets.ts for why they're derived, not hard-coded).
+ * Behind the same visibility gate as search, so every option leads to at least one result.
+ */
+export async function catalogFacets(env: Env): Promise<CatalogFacets> {
+  const gate = visibilityGateSql("t");
+  const [countries, decades] = await Promise.all([
+    env.DB.prepare(
+      `SELECT c.value AS code, COUNT(*) AS count
+       FROM titles t, json_each(t.countries) c
+       WHERE length(c.value) = 2 AND ${gate.clause}
+       GROUP BY c.value`,
+    )
+      .bind(...gate.params)
+      .all<{ code: string; count: number }>(),
+    env.DB.prepare(
+      `SELECT (t.year_start / 10) * 10 AS decade, COUNT(*) AS count
+       FROM titles t
+       WHERE t.year_start IS NOT NULL AND ${gate.clause}
+       GROUP BY 1`,
+    )
+      .bind(...gate.params)
+      .all<{ decade: number; count: number }>(),
+  ]);
+  return { countries: countries.results, decades: decades.results };
+}
+
+// One D1 read per isolate every few minutes, not per page view, and no KV write: the free
+// tier's 1,000 KV writes a day already go to the search cache. Keyed by deployed version
+// so a deploy never serves the previous build's facets.
+const FACETS_TTL_MS = 5 * 60 * 1000;
+let facetsMemo: { key: string; at: number; body: CatalogFacets } | null = null;
+
+// Registered before "/:id", which would otherwise read "facets" as a title id.
+titlesRoute.get("/facets", async (c) => {
+  const key = c.env.CF_VERSION_METADATA?.id ?? "local";
+  if (facetsMemo && facetsMemo.key === key && Date.now() - facetsMemo.at < FACETS_TTL_MS) {
+    return c.json(facetsMemo.body);
+  }
+  const body = await catalogFacets(c.env);
+  facetsMemo = { key, at: Date.now(), body };
+  return c.json(body);
 });
 
 interface TitleRow {
