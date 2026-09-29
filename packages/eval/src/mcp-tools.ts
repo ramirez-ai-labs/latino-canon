@@ -131,13 +131,18 @@ export function parseToolCall(
 /**
  * Checks arguments against the tool's input schema, as the MCP SDK does server-side
  * before running a tool: a call that fails here would come back to the client as an error.
+ *
+ * It mirrors what the server accepts, not just what it advertises: integer arguments take
+ * a digit string too ("6" for 6, apps/mcp `intArg`), because open models often send numbers
+ * as text. Scoring that as a failure would count calls the server runs fine.
  */
 export function schemaProblems(args: Record<string, unknown>, schema: JsonSchemaObject): string[] {
   const props = schema.properties ?? {};
   const problems: string[] = [];
   for (const r of schema.required ?? []) if (args[r] === undefined) problems.push(`missing required "${r}"`);
-  for (const [key, value] of Object.entries(args)) {
+  for (const [key, raw] of Object.entries(args)) {
     const p = props[key];
+    const value = p?.type === "integer" && typeof raw === "string" && /^\d+$/.test(raw.trim()) ? Number(raw) : raw;
     if (!p) {
       problems.push(`unknown argument "${key}"`);
       continue;

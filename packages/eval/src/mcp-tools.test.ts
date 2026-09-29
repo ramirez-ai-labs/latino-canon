@@ -20,7 +20,8 @@ const TOOLS: McpTool[] = [
         inclusionType: { type: "string", enum: ["led_by"] },
         limit: { type: "integer", minimum: 1, maximum: 10 },
       },
-      required: ["query"],
+      // query is optional since a filter alone can say it all ("films from the 1970s").
+      required: [],
     },
   },
   {
@@ -85,12 +86,20 @@ describe("schemaProblems", () => {
   });
   it("reports what the server would reject", () => {
     expect(schemaProblems({ kind: "movie", decade: 1990.5, country: "Mexico", mood: "sad" }, search)).toEqual([
-      'missing required "query"',
       '"kind" is not one of the allowed values',
       '"decade" should be an integer',
       '"country" is too long',
       'unknown argument "mood"',
     ]);
+    const similar = TOOLS[2]!.inputSchema;
+    expect(schemaProblems({ limit: 3 }, similar)).toEqual(['missing required "id"']);
+  });
+  it("accepts a whole number sent as digits, as the server does (apps/mcp intArg) - and nothing looser", () => {
+    // The 2026-09-29 run failed 5 of 30 cases on exactly this: the right tool, `"limit": "6"`.
+    expect(schemaProblems({ query: "x", decade: "1970", limit: "6" }, search)).toEqual([]);
+    expect(schemaProblems({ query: "x", limit: "six" }, search)).toEqual(['"limit" should be an integer']);
+    expect(schemaProblems({ query: "x", limit: "20" }, search)).toEqual(['"limit" is above 10']);
+    expect(schemaProblems({ query: "x", limit: "6.5" }, search)).toEqual(['"limit" should be an integer']);
   });
 });
 

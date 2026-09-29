@@ -39,13 +39,17 @@ every result against its schema. Every title carries a `url` to its page on the 
 
 | Tool | Arguments | What it does | Backed by |
 |---|---|---|---|
-| `search_titles` | `query`; optional `kind`, `decade`, `country`, `theme`, `genre`, `inclusionType`, `limit` (1–10) | Hybrid keyword + semantic search: titles, half-remembered plots, people, Spanish | `GET /search?mode=hybrid` |
+| `search_titles` | `query` (optional when a filter says it all, e.g. `decade: 1970`); optional `kind`, `decade`, `country`, `theme`, `genre`, `inclusionType`, `limit` (1–10) | Hybrid keyword + semantic search: titles, half-remembered plots, people, Spanish | `GET /search?mode=hybrid` |
 | `get_title` | `id` | Full record: synopsis, credits, why it's in the canon and on whose authority (seed, editor or classifier with its confidence), and the approved "why it matters" note with its sources | `GET /titles/:id` |
 | `similar_titles` | `id`, `limit` (1–12) | Nearest titles by story, setting and themes | `GET /titles/:id/similar` |
 | `curate` | `query`, `limit` (1–10) | The curation agent: picks with the reason each matched, plus its reasoning steps | `POST /agents/curate` |
 
 The server also sends **instructions** on connect: what the canon is, how "Latino-focused" is defined (the
-six inclusion types), when to use which tool, and to cite the `url` and state only what the results give.
+six inclusion types), when to use which tool, to cite the `url` and state only what the results give, and to
+answer anything outside the canon (general knowledge, math, translation) without calling a tool.
+
+Whole-number arguments (`decade`, `limit`) also accept their digits as text (`"6"`): open models often send
+numbers that way, and on the first tool-selection run it was the most common failure. Anything else still fails.
 
 ## Design
 

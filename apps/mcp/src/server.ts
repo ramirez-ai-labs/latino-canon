@@ -30,7 +30,22 @@ Use search_titles for anything a person might type (plots half-remembered, Spani
 get_title for the full record and its sourced "why it matters" note, similar_titles for "more like this",
 and curate when the ask is a recommendation with a mood or audience ("something uplifting by a Latina
 director"). Every result has a url to its page on the site - cite it. Only state facts the results give you:
-the canon's notes are grounded in their sources, and answers built on them should be too.`;
+the canon's notes are grounded in their sources, and answers built on them should be too.
+
+These tools only cover the canon's films and series. For anything else - general knowledge, math,
+translation, small talk - answer directly and don't call a tool.`;
+
+/**
+ * A whole number that also accepts its digits as a string. Open models often send numbers
+ * as text ("6" for 6): on the 2026-09-29 tool-selection eval, 5 of 8 failures were exactly
+ * that - the right tool and the right title, rejected over `"limit": "6"`. Only a digit
+ * string is converted, so "abc" and out-of-range values still fail, and the advertised
+ * schema stays `integer`.
+ */
+const intArg = (min: number, max: number) =>
+  z.preprocess((v) => (typeof v === "string" && /^\d+$/.test(v.trim()) ? Number(v) : v), z.number().int().min(min).max(max));
+
+const SEARCH_FILTERS = ["kind", "decade", "country", "theme", "genre", "inclusionType"] as const;
 
 // Every tool reads the public catalog and changes nothing.
 const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false } as const;
@@ -82,16 +97,22 @@ export function buildServer(api: ApiClient, webUrl: string): McpServer {
       description:
         "Hybrid keyword + semantic search over the canon. Accepts anything a person might type: a title " +
         "(exact titles rank first), a half-remembered plot, a person, a theme, English or Spanish. Filters " +
-        "narrow strictly; leave them out unless the person asked for one.",
+        "narrow strictly; leave them out unless the person asked for one. When a filter says it all " +
+        "('films from the 1970s', 'series from Colombia'), the query can be left out.",
       inputSchema: {
-        query: z.string().min(1).max(200).describe("What to look for, in the person's own words"),
+        query: z
+          .string()
+          .min(1)
+          .max(200)
+          .optional()
+          .describe("What to look for, in the person's own words. Optional only when a filter is given."),
         kind: z.enum(["film", "series", "special"]).optional().describe("special = a stand-up comedy special"),
-        decade: z.number().int().min(1900).max(2030).optional().describe("Start year of a decade, e.g. 1990"),
+        decade: intArg(1900, 2030).optional().describe("Start year of a decade, e.g. 1990"),
         country: z.string().length(2).optional().describe("ISO 3166-1 alpha-2 production country, e.g. MX"),
         theme: z.enum(THEMES).optional(),
         genre: z.enum(GENRES).optional(),
         inclusionType: z.enum(INCLUSION_TYPES).optional().describe("Why a title is in the canon"),
-        limit: z.number().int().min(1).max(10).default(5),
+        limit: intArg(1, 10).default(5),
       },
       outputSchema: {
         query: z.string(),
@@ -101,25 +122,32 @@ export function buildServer(api: ApiClient, webUrl: string): McpServer {
       },
       annotations: READ_ONLY,
     },
-    (args) =>
-      run(
+    (args) => {
+      // A filter-only request ("films from the 1970s") browses by filter, as the site does; a
+      // request with neither is a mistake worth telling the model about, not a full dump.
+      if (!args.query && !SEARCH_FILTERS.some((k) => args[k] !== undefined)) {
+        return Promise.resolve(failure("Give a query, or at least one filter (kind, decade, country, theme, genre, inclusionType)."));
+      }
+      return run(
         "search_titles",
         async () => {
-          const qs = new URLSearchParams({ q: args.query, mode: "hybrid", limit: String(args.limit) });
-          for (const k of ["kind", "decade", "country", "theme", "genre", "inclusionType"] as const) {
+          const qs = new URLSearchParams({ mode: "hybrid", limit: String(args.limit) });
+          if (args.query) qs.set("q", args.query);
+          for (const k of SEARCH_FILTERS) {
             const v = args[k];
             if (v !== undefined) qs.set(k, String(v));
           }
           const res = await api.get<SearchResponse>(`/search?${qs.toString()}`);
           return json({
-            query: args.query,
+            query: args.query ?? "",
             ...(res.interpretation ? { interpretedAs: res.interpretation.rationale } : {}),
             ...(res.degraded ? { note: "Keyword-only results: semantic search is unavailable right now." } : {}),
             results: res.results.map((c) => cardSummary(c, webUrl)),
           });
         },
         "No results.",
-      ),
+      );
+    },
   );
 
   server.registerTool(
@@ -152,7 +180,7 @@ export function buildServer(api: ApiClient, webUrl: string): McpServer {
         "this'. Can return fewer than asked for, or none for a title still being added.",
       inputSchema: {
         id: z.string().min(1).max(64).describe('Title id, e.g. "coco-2017"'),
-        limit: z.number().int().min(1).max(12).default(6),
+        limit: intArg(1, 12).default(6),
       },
       outputSchema: { like: z.string(), results: z.array(cardSchema) },
       annotations: READ_ONLY,
@@ -181,7 +209,7 @@ export function buildServer(api: ApiClient, webUrl: string): McpServer {
         "limited than search_titles; use search_titles for plain lookups.",
       inputSchema: {
         query: z.string().min(1).max(200).describe("The recommendation request, in the person's words"),
-        limit: z.number().int().min(1).max(10).default(5),
+        limit: intArg(1, 10).default(5),
       },
       outputSchema: {
         query: z.string(),
