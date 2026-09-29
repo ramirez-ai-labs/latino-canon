@@ -15,17 +15,22 @@ import {
 } from "@/lib/eval-insights";
 import { BlurbGateDaily } from "@/components/eval/BlurbGateDaily";
 import { RetrievalTrend } from "@/components/eval/RetrievalTrend";
-import { ToolSelection } from "@/components/eval/ToolSelection";
+import { ToolSelection, weakToolCategories } from "@/components/eval/ToolSelection";
 import { Badge } from "@/components/ui/Badge";
 
 export const metadata = { title: "Eval" };
 export const dynamic = "force-dynamic";
 
 /**
- * Leads with what the evals found, not with the run log: four headline numbers, the
- * retrieval trend with its deploy gate, where search is weakest, why blurbs fail and what
- * changed because of it, and the titles to fix first. The run log and methodology fold away
- * below - kept for the record, never deleted, including runs later found invalid.
+ * Four stories - search quality, blurb quality, the daily blurb check, AI assistants - each
+ * on its own tab (`/eval?tab=…`, server-rendered, so every view is linkable and needs no
+ * client JS). A summary strip on top gives one number per story and links to its tab; each
+ * tab leads with one plain sentence saying what its numbers mean, then its main chart, with
+ * details folded away. It used to be one long scroll that ran the four together, with the
+ * definitions at the top, far from the numbers they explain.
+ *
+ * Methodology, glossary and the run log stay at the bottom of every tab - kept for the
+ * record, never deleted, including runs later found invalid.
  */
 
 /**
@@ -38,9 +43,19 @@ export const dynamic = "force-dynamic";
 const RETRIEVAL_RUNS_SHOWN = 15;
 const GROUNDEDNESS_RUNS_SHOWN = 20;
 const TITLES_TO_FIX = 6;
+const TITLES_SHOWN_FIRST = 3;
 
 const STATUS_GOOD = "#0ca30c";
 const STATUS_CRITICAL = "#d03b3b";
+
+const TABS = [
+  { key: "search", label: "Search" },
+  { key: "blurbs", label: "Blurbs" },
+  { key: "daily", label: "Daily check" },
+  { key: "assistants", label: "AI assistants" },
+] as const;
+type TabKey = (typeof TABS)[number]["key"];
+const isTab = (v: string | undefined): v is TabKey => TABS.some((t) => t.key === v);
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
@@ -73,6 +88,7 @@ const GLOSSARY: [string, string][] = [
 ];
 
 const signed = (n: number, digits = 3) => `${n >= 0 ? "+" : "−"}${Math.abs(n).toFixed(digits)}`;
+const pct = (x: number) => `${Math.round(x * 100)}%`;
 
 /**
  * Groundedness runs recorded before judge version 2 are kept but labeled invalid: that
@@ -100,23 +116,41 @@ function Delta({ value, suffix }: { value: number; suffix: string }) {
   );
 }
 
-/**
- * A headline number with its expert detail (children) and, for readers new to evals, one
- * plain-language sentence saying what the number means. The metric's real name stays in
- * the label, so the page teaches the vocabulary rather than hiding it.
- */
-function Tile({ label, value, plain, children }: { label: string; value: React.ReactNode; plain?: React.ReactNode; children?: React.ReactNode }) {
+/** One number per story, linking to its tab. The active tab's tile is outlined. */
+function SummaryTile({
+  tab,
+  active,
+  label,
+  value,
+  line,
+}: {
+  tab: TabKey;
+  active: boolean;
+  label: string;
+  value: React.ReactNode;
+  line: React.ReactNode;
+}) {
   return (
-    <div className="flex flex-col rounded-xl border border-border bg-surface px-4 py-3.5">
-      <div className="text-xs text-muted">{label}</div>
-      {/* Numbers read big; a word value like "Genre, era or kind" steps down so it fits one line. */}
-      <div
-        className={`mt-1 font-semibold tracking-tight text-text ${typeof value === "string" && value.length > 12 ? "text-2xl" : "text-3xl"}`}
-      >
-        {value}
-      </div>
-      <div className="mt-1.5 space-y-0.5 leading-snug">{children}</div>
-      {plain && <p className="mt-2.5 border-t border-border pt-2.5 text-[0.8rem] leading-snug text-text/80">{plain}</p>}
+    <Link
+      href={`/eval?tab=${tab}`}
+      aria-current={active ? "page" : undefined}
+      className={`flex flex-col rounded-xl border bg-surface px-4 py-3.5 transition-colors hover:border-accent-cyan/60 ${
+        active ? "border-accent-cyan" : "border-border"
+      }`}
+    >
+      <span className="text-xs text-muted">{label}</span>
+      <span className="mt-1 text-3xl font-semibold tracking-tight text-text">{value}</span>
+      <span className="mt-1.5 text-xs leading-snug text-muted">{line}</span>
+    </Link>
+  );
+}
+
+/** The tab's one-sentence takeaway, then an optional plain definition of its metric. */
+function Headline({ children, define }: { children: React.ReactNode; define?: React.ReactNode }) {
+  return (
+    <div className="mb-6 max-w-2xl">
+      <p className="text-lg leading-snug text-text">{children}</p>
+      {define && <p className="mt-2 text-sm text-muted">{define}</p>}
     </div>
   );
 }
@@ -132,6 +166,15 @@ const QUERY_TYPE_NAME: Record<string, string> = {
 };
 const queryTypeName = (category: string) => QUERY_TYPE_NAME[category] ?? sentenceCase(category);
 
+// The same types inside a sentence: "Searches by person are the weakest".
+const QUERY_TYPE_IN_SENTENCE: Record<string, string> = {
+  facet: "Genre, era or kind searches",
+  "known-item": "Exact-title searches",
+  person: "Searches by person",
+  plot: "Searches by plot",
+  spanish: "Searches in Spanish",
+};
+
 // One real golden-set query per type, so "the weakest type" reads as a search people make.
 const EXAMPLE_QUERY: Record<string, string> = {
   facet: "Mexican family stories from the 90s",
@@ -143,7 +186,7 @@ const EXAMPLE_QUERY: Record<string, string> = {
 
 function Section({ title, lead, children }: { title: string; lead?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section className="mt-12">
+    <section className="mt-10 first:mt-0">
       <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
       {lead && <p className="mt-1 max-w-2xl text-sm text-muted">{lead}</p>}
       <div className="mt-4">{children}</div>
@@ -151,7 +194,7 @@ function Section({ title, lead, children }: { title: string; lead?: React.ReactN
   );
 }
 
-/** Horizontal bar with its value at the tip; `emphasis` dims the rest so one row carries the story. */
+/** Horizontal bar with its value at the tip; `dim` fades the rest so one row carries the story. */
 function Bar({ fraction, dim }: { fraction: number; dim?: boolean }) {
   return (
     <div className="h-3 flex-1">
@@ -163,7 +206,33 @@ function Bar({ fraction, dim }: { fraction: number; dim?: boolean }) {
   );
 }
 
-export default async function EvalPage() {
+function TitleToFix({ w, t }: { w: { titleId: string; score: number; unsupported: string[] }; t: Title | null }) {
+  return (
+    <li>
+      <Link
+        href={`/title/${w.titleId}`}
+        className="flex gap-3 rounded-xl border border-border bg-surface p-3 transition-colors hover:border-accent-cyan/60"
+      >
+        <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded-md bg-surface-raised">
+          {t?.posterKey && <Image src={posterUrl(t.posterKey)} alt="" fill sizes="64px" className="object-cover" />}
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-2">
+            <strong className="truncate text-text">{t ? t.title : w.titleId}</strong>
+            {t && <span className="shrink-0 text-xs text-muted">{t.yearStart}</span>}
+          </div>
+          <div className="mt-0.5 text-xs text-muted">score {w.score.toFixed(2)}</div>
+          <p className="mt-1.5 line-clamp-2 text-sm text-muted">“{w.unsupported[0]}”</p>
+        </div>
+      </Link>
+    </li>
+  );
+}
+
+export default async function EvalPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const sp = await searchParams;
+  const tab: TabKey = isTab(sp.tab) ? sp.tab : "search";
+
   const [retrievalRuns, groundednessRuns, gateDaily, toolRuns] = await Promise.all([
     listEvalRuns(RETRIEVAL_RUNS_SHOWN, "retrieval"),
     listEvalRuns(GROUNDEDNESS_RUNS_SHOWN, "groundedness"),
@@ -190,9 +259,17 @@ export default async function EvalPage() {
   const patterns = details?.worst ? failurePatterns(details.worst) : [];
   const failing = patterns.reduce((sum, p) => sum + p.count, 0);
   const hasInvalid = runs.some(isInvalid);
+  const r5 = retrieval ? recall5(retrieval) : null;
 
-  // Titles to fix: the lowest scorers as real films - title, poster, page - not slugs.
-  const worst = (details?.worst ?? []).slice(0, TITLES_TO_FIX);
+  const judgedDays = gateDaily.days.filter((d) => d.judged > 0);
+  const gateTotals = judgedDays.reduce((t, d) => ({ judged: t.judged + d.judged, approved: t.approved + d.approved }), { judged: 0, approved: 0 });
+
+  const toolRun = toolRuns.runs[0];
+  const weakTools = weakToolCategories(toolRun);
+
+  // Titles to fix: the lowest scorers as real films - title, poster, page - not slugs. Only
+  // the Blurbs tab shows them, so only it pays for the title lookups.
+  const worst = tab === "blurbs" ? (details?.worst ?? []).slice(0, TITLES_TO_FIX) : [];
   const worstTitles = await Promise.all(worst.map((w) => getTitle(w.titleId).catch((): Title | null => null)));
 
   if (runs.length === 0) {
@@ -208,337 +285,386 @@ export default async function EvalPage() {
     <article className="max-w-4xl">
       <h1 className="text-3xl font-bold tracking-tight">Evals</h1>
       <p className="mt-2 max-w-2xl text-muted">
-        Every api deploy is checked against {retrieval?.n ?? "a set of"} real search queries, and blurbs are checked claim by claim against
-        the sources they were written from. This page shows what those checks find.
+        How well search finds the right title, whether each &ldquo;why it matters&rdquo; note is backed by its sources, and
+        whether AI assistants use the canon correctly - measured after every change, and recorded here.
       </p>
 
-      {/* For readers new to evals: what the three numbers mean, on one real test search. */}
-      <section aria-labelledby="how-to-read" className="mt-6 max-w-3xl rounded-xl border border-border bg-surface px-5 py-4">
-        <h2 id="how-to-read" className="text-base font-semibold">
-          How to read this page
-        </h2>
-        <p className="mt-1.5 text-sm text-text/85">
-          We keep {retrieval?.n ?? "a set of"} test searches with known right answers, like{" "}
-          <em>&ldquo;dos estafadores venden estampillas falsas a un coleccionista&rdquo;</em> →{" "}
-          <Link href="/title/nine-queens-2000" className="text-accent hover:underline">
-            <em>Nine Queens</em>
-          </Link>
-          . After every code change we run all of them and look at where the right answer lands.
-        </p>
-        <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
-          <div>
-            <dt className="font-semibold text-text">Recall@5</dt>
-            <dd className="mt-0.5 text-text/80">Did the right answer make the top 5 results? The share of searches where it did.</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-text">MRR</dt>
-            <dd className="mt-0.5 text-text/80">
-              How high it ranked: first place scores 1, second ½, third ⅓, and so on, averaged over every search.
-            </dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-text">Groundedness</dt>
-            <dd className="mt-0.5 text-text/80">
-              An AI judge checks each &ldquo;why it matters&rdquo; note against the sources it was written from. 1.0 means every
-              claim is backed up.
-            </dd>
-          </div>
-        </dl>
-      </section>
-
-      <div className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {retrieval && recall5(retrieval) != null && (
-          <Tile
-            label="Search recall@5"
-            value={recall5(retrieval)!.toFixed(3)}
-            plain={<>About {Math.round(recall5(retrieval)! * 100)} of every 100 test searches find the right title in the top 5 results.</>}
-          >
-            {previousRetrieval && recall5(previousRetrieval) != null ? (
-              <Delta value={recall5(retrieval)! - recall5(previousRetrieval)!} suffix="vs previous run" />
-            ) : (
-              <div className="text-xs text-muted">First run on a new query set</div>
-            )}
-            <div className="text-xs text-muted">{retrieval.n} golden queries, hybrid</div>
-          </Tile>
-        )}
-        {gate && gate.status === "none" && (
-          <Tile
-            label="Deploy gate"
-            value="Baseline"
-            plain="The test set just changed, so this run sets the bar the next code change must meet."
-          >
-            <div className="text-xs text-muted">First run on a new query set; the next deploy is gated against it</div>
-          </Tile>
-        )}
-        {gate && gate.status !== "none" && (
-          <Tile
-            label="Deploy gate"
-            plain={`Every code change re-runs the tests. If search gets worse by more than ${GATE_MAX_DROP}, the change is flagged.`}
-            value={
-              <span className="flex items-center gap-2">
+      {/* One number per story; each tile opens its tab. */}
+      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <SummaryTile
+          tab="search"
+          active={tab === "search"}
+          label="Search recall@5"
+          value={r5 != null ? r5.toFixed(3) : "—"}
+          line={
+            gate && gate.status !== "none" ? (
+              <>
                 <span aria-hidden style={{ color: gate.status === "pass" ? STATUS_GOOD : STATUS_CRITICAL }}>
                   {gate.status === "pass" ? "✓" : "✕"}
-                </span>
-                {gate.status === "pass" ? "Passed" : "Failed"}
-              </span>
-            }
+                </span>{" "}
+                Deploy gate {gate.status === "pass" ? "passed" : "failed"}
+              </>
+            ) : (
+              "New baseline"
+            )
+          }
+        />
+        <SummaryTile
+          tab="blurbs"
+          active={tab === "blurbs"}
+          label="Blurb groundedness"
+          value={latest?.meanScore != null ? latest.meanScore.toFixed(3) : "—"}
+          line={latest ? `${latest.n} blurbs, judge v${judgeVersion(latest)}` : "No valid run yet"}
+        />
+        <SummaryTile
+          tab="daily"
+          active={tab === "daily"}
+          label="New blurbs approved"
+          value={gateTotals.judged > 0 ? pct(gateTotals.approved / gateTotals.judged) : "—"}
+          line={
+            gateTotals.judged > 0
+              ? `${gateTotals.approved} of ${gateTotals.judged} over ${judgedDays.length} ${judgedDays.length === 1 ? "day" : "days"}`
+              : "No blurbs judged yet"
+          }
+        />
+        <SummaryTile
+          tab="assistants"
+          active={tab === "assistants"}
+          label="AI assistant pass rate"
+          value={toolRun?.metrics.passRate != null ? pct(toolRun.metrics.passRate) : "—"}
+          line={toolRun ? `${toolRun.n} test requests` : "No run yet"}
+        />
+      </div>
+
+      <nav aria-label="Eval sections" className="mt-8 flex gap-1 overflow-x-auto border-b border-border">
+        {TABS.map((t) => (
+          <Link
+            key={t.key}
+            href={`/eval?tab=${t.key}`}
+            aria-current={tab === t.key ? "page" : undefined}
+            className={`-mb-px whitespace-nowrap border-b-2 px-3.5 py-2 text-sm transition-colors ${
+              tab === t.key ? "border-accent-cyan font-semibold text-text" : "border-transparent text-muted hover:text-text"
+            }`}
           >
-            {gate.delta != null && (
-              <div className="text-xs text-muted">
-                {signed(gate.delta)} vs last passing run (limit −{GATE_MAX_DROP.toFixed(2)})
-              </div>
+            {t.label}
+          </Link>
+        ))}
+      </nav>
+
+      <div className="mt-8">
+        {tab === "search" && (
+          <>
+            {weakest && strongest && weakest !== strongest && (
+              <Headline
+                define={
+                  <>
+                    <strong className="text-text">Recall@5</strong> is the share of our {retrieval?.n ?? ""} test searches whose
+                    right answer lands in the top 5 results - for example{" "}
+                    <em>&ldquo;dos estafadores venden estampillas falsas a un coleccionista&rdquo;</em> →{" "}
+                    <Link href="/title/nine-queens-2000" className="text-accent hover:underline">
+                      <em>Nine Queens</em>
+                    </Link>
+                    . <strong className="text-text">MRR</strong> is how high it ranks: 1 for first place, ½ for second.
+                  </>
+                }
+              >
+                {r5 != null && <>About {Math.round(r5 * 100)} of every 100 test searches find the right title in the top 5. </>}
+                <strong>{QUERY_TYPE_IN_SENTENCE[weakest.category] ?? queryTypeName(weakest.category)}</strong> are the weakest
+                ({pct(weakest.recall5)} in the top 5), like &ldquo;{EXAMPLE_QUERY[weakest.category] ?? weakest.category}&rdquo;.
+              </Headline>
             )}
-          </Tile>
-        )}
-        {latest?.meanScore != null && (
-          <Tile
-            label="Blurb groundedness"
-            value={latest.meanScore.toFixed(3)}
-            plain={<>On average, {Math.round(latest.meanScore * 100)}% of the claims in a &ldquo;why it matters&rdquo; note are backed by its sources.</>}
-          >
-            {previousSameJudge?.meanScore != null && (
-              <Delta value={latest.meanScore - previousSameJudge.meanScore} suffix="vs previous run" />
+
+            {points.length >= 2 && (
+              <Section
+                title="Search quality over time"
+                lead={
+                  <>
+                    Hybrid recall@5 across the last {points.length} retrieval runs, one after every api deploy. A run fails
+                    the deploy gate when it drops more than {GATE_MAX_DROP} below the last passing run.
+                  </>
+                }
+              >
+                <div className="rounded-xl border border-border bg-surface p-4">
+                  <RetrievalTrend points={points} />
+                </div>
+                <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                  {previousRetrieval && r5 != null && recall5(previousRetrieval) != null && (
+                    <Delta value={r5 - recall5(previousRetrieval)!} suffix="vs previous run" />
+                  )}
+                  {gate && gate.status !== "none" && gate.delta != null && (
+                    <span className="text-xs text-muted">
+                      {signed(gate.delta)} vs last passing run (gate limit −{GATE_MAX_DROP.toFixed(2)})
+                    </span>
+                  )}
+                </p>
+              </Section>
             )}
-            <div className="text-xs text-muted">
-              {latest.n} blurbs, judge v{judgeVersion(latest)}
-            </div>
-          </Tile>
+
+            {categories.length > 0 && (
+              <Section title="Where search is weakest" lead="Recall@5 by search type in the latest run. Weakest first.">
+                <ul className="space-y-3">
+                  {categories.map((c) => (
+                    <li key={c.category} className="flex items-center gap-3 text-sm">
+                      <span className="w-36 shrink-0 text-text">{queryTypeName(c.category)}</span>
+                      <Bar fraction={c.recall5} dim={c !== weakest} />
+                      <span className="shrink-0 whitespace-nowrap text-right tabular-nums">
+                        <span className="font-semibold text-text">{c.recall5.toFixed(3)}</span>
+                        <span className="text-muted"> · MRR {c.mrr?.toFixed(2) ?? "—"}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </Section>
+            )}
+          </>
         )}
-        {weakest && strongest && weakest !== strongest && (
-          <Tile
-            label="Weakest search type"
-            value={queryTypeName(weakest.category)}
-            plain={EXAMPLE_QUERY[weakest.category] ? <>Searches like &ldquo;{EXAMPLE_QUERY[weakest.category]}&rdquo; are the hardest for us right now.</> : undefined}
-          >
-            <div className="text-xs text-muted">
-              recall@5 {weakest.recall5.toFixed(3)}, against {strongest.recall5.toFixed(3)} for {queryTypeName(strongest.category).toLowerCase()}
-            </div>
-          </Tile>
+
+        {tab === "blurbs" && (
+          <>
+            {latest?.meanScore != null ? (
+              <Headline
+                define={
+                  <>
+                    <strong className="text-text">Groundedness</strong>: an AI judge checks each note, claim by claim, against
+                    the sources it was written from (synopsis, credits, awards). 1.0 means every claim is backed.
+                  </>
+                }
+              >
+                On average, {pct(latest.meanScore)} of a note&apos;s claims are backed by its sources.
+                {patterns[0] && (
+                  <>
+                    {" "}
+                    The most common problem: <strong>{patterns[0].label.toLowerCase()}</strong> ({patterns[0].count} of{" "}
+                    {latest.n} notes).
+                  </>
+                )}
+                {previousSameJudge?.meanScore != null && (
+                  <span className="ml-2 align-middle">
+                    <Delta value={latest.meanScore - previousSameJudge.meanScore} suffix="vs previous run" />
+                  </span>
+                )}
+              </Headline>
+            ) : (
+              <Headline>No valid groundedness run recorded yet.</Headline>
+            )}
+
+            {latest && patterns.length > 0 && (
+              <Section
+                title="Why blurbs fail"
+                lead={
+                  <>
+                    In the latest run, {failing} of {latest.n} notes had a claim the judge couldn&apos;t match to a source,
+                    grouped by what went wrong.
+                  </>
+                }
+              >
+                <ul className="space-y-5">
+                  {patterns.map((p) => (
+                    <li key={p.key}>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm sm:flex-nowrap">
+                        <span className="w-full text-text sm:w-64 sm:shrink-0">{p.label}</span>
+                        <Bar fraction={p.count / failing} dim={p !== patterns[0]} />
+                        <span className="w-10 shrink-0 text-right font-semibold tabular-nums text-text">{p.count}</span>
+                      </div>
+                      <div className="mt-1.5 text-sm text-muted sm:pl-[16.75rem]">
+                        {p.example && <span className="italic">“{p.example}”</span>} {p.response}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </Section>
+            )}
+
+            {worst.length > 0 && (
+              <Section
+                title="Titles to fix first"
+                lead="The lowest-scoring notes and the claim the judge flagged. A flag means no source states the claim, not that it's false."
+              >
+                <ul className="grid gap-3 sm:grid-cols-2">
+                  {worst.slice(0, TITLES_SHOWN_FIRST).map((w, i) => (
+                    <TitleToFix key={w.titleId} w={w} t={worstTitles[i] ?? null} />
+                  ))}
+                </ul>
+                {worst.length > TITLES_SHOWN_FIRST && (
+                  <details className="mt-3">
+                    <summary className="cursor-pointer select-none text-sm text-accent">
+                      Show {worst.length - TITLES_SHOWN_FIRST} more
+                    </summary>
+                    <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+                      {worst.slice(TITLES_SHOWN_FIRST).map((w, i) => (
+                        <TitleToFix key={w.titleId} w={w} t={worstTitles[i + TITLES_SHOWN_FIRST] ?? null} />
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </Section>
+            )}
+          </>
+        )}
+
+        {tab === "daily" && (
+          <>
+            <Headline
+              define={
+                <>
+                  Every new note is judged at ingest by the same groundedness judge and shown only when every claim is
+                  supported and properly cited; the rest are <strong className="text-text">held for an editor</strong>. This
+                  record costs nothing extra - a full groundedness run spends about a quarter of the day&apos;s AI budget.
+                </>
+              }
+            >
+              {gateTotals.judged > 0 ? (
+                <>
+                  The judge approved {gateTotals.approved} of {gateTotals.judged} new notes ({pct(gateTotals.approved / gateTotals.judged)})
+                  over the last {judgedDays.length} {judgedDays.length === 1 ? "day" : "days"}; the rest wait for an editor.
+                </>
+              ) : (
+                <>No new notes judged yet.</>
+              )}
+            </Headline>
+            {gateDaily.days.length > 0 && (
+              <Section title="New blurbs, checked daily">
+                <div className="rounded-xl border border-border bg-surface p-4">
+                  <BlurbGateDaily days={gateDaily.days} />
+                </div>
+              </Section>
+            )}
+          </>
+        )}
+
+        {tab === "assistants" && (
+          <>
+            <Headline
+              define={
+                <>
+                  The canon is also an MCP server that Claude, ChatGPT or Cursor can connect to. The server calls no model -
+                  the assistant brings its own - so its tool names and descriptions are all an assistant has to go on. This
+                  test gives a model only those, plus a request, and checks what it calls.
+                </>
+              }
+            >
+              {toolRun?.metrics.passRate != null ? (
+                <>
+                  A model handled {pct(toolRun.metrics.passRate)} of {toolRun.n} test requests exactly right.
+                  {weakTools.length > 0 && (
+                    <>
+                      {" "}
+                      Weakest:{" "}
+                      {weakTools.map((c, i) => (
+                        <span key={c.name}>
+                          {i > 0 && (i === weakTools.length - 1 ? " and " : ", ")}
+                          &ldquo;<strong>{c.name}</strong>&rdquo; ({pct(c.passRate)} of {c.n})
+                        </span>
+                      ))}
+                      .
+                    </>
+                  )}
+                </>
+              ) : (
+                <>No tool-selection run recorded yet.</>
+              )}
+            </Headline>
+            <Section title="AI assistants using the canon">
+              <ToolSelection run={toolRun} />
+            </Section>
+          </>
         )}
       </div>
 
-      {points.length >= 2 && (
-        <Section
-          title="Search quality over time"
-          lead={
-            <>
-              Hybrid recall@5 across the last {points.length} retrieval runs, one after every api deploy. A run fails
-              the deploy gate when it drops more than {GATE_MAX_DROP} below the last passing run.
-            </>
-          }
-        >
-          <div className="rounded-xl border border-border bg-surface p-4">
-            <RetrievalTrend points={points} />
-          </div>
-        </Section>
-      )}
-
-      {gateDaily.days.length > 0 && (
-        <Section
-          title="New blurbs, checked daily"
-          lead="Every new blurb is judged at ingest by the same groundedness judge, and approved only when every claim is supported and properly cited; the rest wait for an editor. This is the gate's daily record, at no extra cost - a full groundedness run spends about a quarter of the day's AI budget."
-        >
-          <div className="rounded-xl border border-border bg-surface p-4">
-            <BlurbGateDaily days={gateDaily.days} />
-          </div>
-        </Section>
-      )}
-
-      {categories.length > 0 && (
-        <Section
-          title="Where search is weakest"
-          lead="Recall@5 by search type in the latest run: the share of each test search whose right answer is in the top 5. Weakest first."
-        >
-          <ul className="space-y-3">
-            {categories.map((c) => (
-              <li key={c.category} className="flex items-center gap-3 text-sm">
-                <span className="w-36 shrink-0 text-text">{queryTypeName(c.category)}</span>
-                <Bar fraction={c.recall5} dim={c !== weakest} />
-                <span className="shrink-0 whitespace-nowrap text-right tabular-nums">
-                  <span className="font-semibold text-text">{c.recall5.toFixed(3)}</span>
-                  <span className="text-muted"> · MRR {c.mrr?.toFixed(2) ?? "—"}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-          {weakest?.category === "spanish" && (
-            <p className="mt-4 max-w-2xl text-sm text-muted">
-              Spanish queries are mostly translations of English plot queries that pass. The bilingual search plan
-              is next on the{" "}
-              <a href="https://github.com/ramirez-ai-labs/latino-canon/blob/main/docs/ROADMAP.md" className="text-accent hover:underline">
-                roadmap
-              </a>
-              .
-            </p>
-          )}
-        </Section>
-      )}
-
-      {latest && patterns.length > 0 && (
-        <Section
-          title="Why blurbs fail"
-          lead={
-            <>
-              In the latest groundedness run, {failing} of {latest.n} blurbs had a claim the judge couldn&apos;t match
-              to a source. Grouped by what went wrong:
-            </>
-          }
-        >
-          <ul className="space-y-5">
-            {patterns.map((p) => (
-              <li key={p.key}>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm sm:flex-nowrap">
-                  <span className="w-full text-text sm:w-64 sm:shrink-0">{p.label}</span>
-                  <Bar fraction={p.count / failing} dim={p !== patterns[0]} />
-                  <span className="w-10 shrink-0 text-right font-semibold tabular-nums text-text">{p.count}</span>
-                </div>
-                <div className="mt-1.5 text-sm text-muted sm:pl-[16.75rem]">
-                  {p.example && <span className="italic">“{p.example}”</span>} {p.response}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
-
-      {worst.length > 0 && (
-        <Section
-          title="Titles to fix first"
-          lead="The lowest-scoring blurbs and the claim the judge flagged. A flag means no source states the claim, not that it's false."
-        >
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {worst.map((w, i) => {
-              const t = worstTitles[i];
-              return (
-                <li key={w.titleId}>
-                  <Link
-                    href={`/title/${w.titleId}`}
-                    className="flex gap-3 rounded-xl border border-border bg-surface p-3 transition-colors hover:border-accent-cyan/60"
-                  >
-                    <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded-md bg-surface-raised">
-                      {t?.posterKey && <Image src={posterUrl(t.posterKey)} alt="" fill sizes="64px" className="object-cover" />}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-baseline gap-2">
-                        <strong className="truncate text-text">{t ? t.title : w.titleId}</strong>
-                        {t && <span className="shrink-0 text-xs text-muted">{t.yearStart}</span>}
-                      </div>
-                      <div className="mt-0.5 text-xs text-muted">score {w.score.toFixed(2)}</div>
-                      <p className="mt-1.5 line-clamp-2 text-sm text-muted">“{w.unsupported[0]}”</p>
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </Section>
-      )}
-
-      <Section
-        title="AI assistants using the canon"
-        lead={
-          <>
-            The canon is also an MCP server that Claude, ChatGPT or Cursor can connect to. The server calls no model -
-            the assistant brings its own - so its tool names and descriptions are all an assistant has to go on. This
-            test gives a model only those, plus a request, and checks what it calls.
-          </>
-        }
-      >
-        <ToolSelection run={toolRuns.runs[0]} />
-      </Section>
-
-      <details className="group mt-12 rounded-xl border border-border bg-surface">
-        <summary className="cursor-pointer select-none px-4 py-3 font-semibold">How these evals work</summary>
-        <div className="space-y-3 px-4 pb-4 text-sm text-muted">
-          <p>
-            <strong className="text-text">Retrieval</strong> runs the {retrieval?.n ?? ""}-query golden set (known titles, people,
-            half-remembered plots, facets, Spanish) against the live api after every deploy and weekly. Recall@5 is the
-            share of each query&apos;s correct titles in the top 5; MRR is how high the first one ranks.
-          </p>
-          <p>
-            <strong className="text-text">Groundedness</strong> gives a 70B LLM judge each blurb and the sources it was
-            written from, and scores the share of its claims a source supports. Runs are started by hand from{" "}
-            <code className="rounded bg-surface-raised px-1.5 py-0.5">eval-groundedness.yml</code>. The same judge
-            gates new blurbs at ingest: only a fully supported, properly cited blurb is approved without an editor.
-          </p>
-          <p>
-            <strong className="text-text">Tool selection</strong> connects to the live MCP server like any client,
-            reads its instructions and tool list, and gives them to Llama 3.3 70B with each test request (some carry an
-            earlier turn, as in &quot;tell me more about the second one&quot;). A request passes when the model calls the
-            right tool, or none for an off-topic question, with valid arguments, the expected title id or filter, and
-            no search filter the person didn&apos;t ask for - filters exclude, so a guessed one can hide the answer.
-            Runs are started by hand from{" "}
-            <code className="rounded bg-surface-raised px-1.5 py-0.5">eval-mcp-tools.yml</code>, after a change to a
-            tool&apos;s wording.
-          </p>
-          {hasInvalid && (
+      <div className="mt-14 space-y-3">
+        <details className="rounded-xl border border-border bg-surface">
+          <summary className="cursor-pointer select-none px-4 py-3 font-semibold">How these evals work</summary>
+          <div className="space-y-3 px-4 pb-4 text-sm text-muted">
             <p>
-              <strong className="text-text">Runs marked invalid stay on the record.</strong> Their judge was given each
-              source&apos;s reference (a title slug and a director&apos;s name) instead of its text, so it never saw the
-              synopsis, and it ran at a non-zero temperature. Scores only compare within one judge version.
+              <strong className="text-text">Retrieval</strong> runs the {retrieval?.n ?? ""}-query golden set (known titles, people,
+              half-remembered plots, facets, Spanish) against the live api after every deploy and weekly. Recall@5 is the
+              share of each query&apos;s correct titles in the top 5; MRR is how high the first one ranks.
             </p>
-          )}
-          {details?.failures && details.failures.length > 0 && (
             <p>
-              <strong className="text-text">Unscored in the latest run:</strong>{" "}
-              {details.failures.map((f) => `${f.titleId} (${describeJudgeFailure(f.error)})`).join("; ")}
+              <strong className="text-text">Groundedness</strong> gives a 70B LLM judge each blurb and the sources it was
+              written from, and scores the share of its claims a source supports. Runs are started by hand from{" "}
+              <code className="rounded bg-surface-raised px-1.5 py-0.5">eval-groundedness.yml</code>. The same judge
+              gates new blurbs at ingest: only a fully supported, properly cited blurb is approved without an editor.
             </p>
-          )}
-        </div>
-      </details>
+            <p>
+              <strong className="text-text">Tool selection</strong> connects to the live MCP server like any client,
+              reads its instructions and tool list, and gives them to Llama 3.3 70B with each test request (some carry an
+              earlier turn, as in &quot;tell me more about the second one&quot;). A request passes when the model calls the
+              right tool, or none for an off-topic question, with valid arguments, the expected title id or filter, and
+              no search filter the person didn&apos;t ask for - filters exclude, so a guessed one can hide the answer.
+              Runs are started by hand from{" "}
+              <code className="rounded bg-surface-raised px-1.5 py-0.5">eval-mcp-tools.yml</code>, after a change to a
+              tool&apos;s wording.
+            </p>
+            {hasInvalid && (
+              <p>
+                <strong className="text-text">Runs marked invalid stay on the record.</strong> Their judge was given each
+                source&apos;s reference (a title slug and a director&apos;s name) instead of its text, so it never saw the
+                synopsis, and it ran at a non-zero temperature. Scores only compare within one judge version.
+              </p>
+            )}
+            {details?.failures && details.failures.length > 0 && (
+              <p>
+                <strong className="text-text">Unscored in the latest run:</strong>{" "}
+                {details.failures.map((f) => `${f.titleId} (${describeJudgeFailure(f.error)})`).join("; ")}
+              </p>
+            )}
+          </div>
+        </details>
 
-      <details className="mt-3 rounded-xl border border-border bg-surface">
-        <summary className="cursor-pointer select-none px-4 py-3 font-semibold">Glossary</summary>
-        <dl className="grid gap-x-6 gap-y-3 px-4 pb-4 text-sm sm:grid-cols-[11rem_1fr]">
-          {GLOSSARY.map(([term, meaning]) => (
-            <div key={term} className="contents">
-              <dt className="font-semibold text-text">{term}</dt>
-              <dd className="text-text/80">{meaning}</dd>
-            </div>
-          ))}
-        </dl>
-      </details>
+        <details className="rounded-xl border border-border bg-surface">
+          <summary className="cursor-pointer select-none px-4 py-3 font-semibold">Glossary</summary>
+          <dl className="grid gap-x-6 gap-y-3 px-4 pb-4 text-sm sm:grid-cols-[11rem_1fr]">
+            {GLOSSARY.map(([term, meaning]) => (
+              <div key={term} className="contents">
+                <dt className="font-semibold text-text">{term}</dt>
+                <dd className="text-text/80">{meaning}</dd>
+              </div>
+            ))}
+          </dl>
+        </details>
 
-      <details className="mt-3 rounded-xl border border-border bg-surface">
-        <summary className="cursor-pointer select-none px-4 py-3 font-semibold">Run log ({runs.length} runs)</summary>
-        <div className="overflow-x-auto px-4 pb-4">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-border text-left text-muted">
-                <th className="py-2 pr-4 font-medium">Run</th>
-                <th className="py-2 pr-4 font-medium">Type</th>
-                <th className="py-2 pr-4 font-medium">Judge</th>
-                <th className="py-2 pr-4 text-right font-medium">n</th>
-                <th className="py-2 pr-4 text-right font-medium">Failed</th>
-                <th className="py-2 text-right font-medium" title="Retrieval: hybrid recall@5. Groundedness: mean share of supported claims.">
-                  Score
-                </th>
-              </tr>
-            </thead>
-            <tbody className="tabular-nums">
-              {runs.map((r) => (
-                <tr key={r.id} className="border-b border-border last:border-0">
-                  <td className="py-2 pr-4">{formatDate(r.runAt)}</td>
-                  <td className="py-2 pr-4">{r.evalType}</td>
-                  <td className="py-2 pr-4 text-muted">{r.evalType === "groundedness" ? `v${judgeVersion(r)}` : "—"}</td>
-                  <td className="py-2 pr-4 text-right">{r.n}</td>
-                  <td className="py-2 pr-4 text-right">{r.failed}</td>
-                  <td className="py-2 text-right font-medium">
-                    {isInvalid(r) ? (
-                      <span className="inline-flex items-center gap-2">
-                        <span className="text-muted line-through">{r.meanScore?.toFixed(3) ?? "—"}</span>
-                        <Badge title="Judge never saw the source text - see How these evals work">invalid</Badge>
-                      </span>
-                    ) : (
-                      (r.meanScore?.toFixed(3) ?? "—")
-                    )}
-                  </td>
+        <details className="rounded-xl border border-border bg-surface">
+          <summary className="cursor-pointer select-none px-4 py-3 font-semibold">Run log ({runs.length} runs)</summary>
+          <div className="overflow-x-auto px-4 pb-4">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-muted">
+                  <th className="py-2 pr-4 font-medium">Run</th>
+                  <th className="py-2 pr-4 font-medium">Type</th>
+                  <th className="py-2 pr-4 font-medium">Judge</th>
+                  <th className="py-2 pr-4 text-right font-medium">n</th>
+                  <th className="py-2 pr-4 text-right font-medium">Failed</th>
+                  <th className="py-2 text-right font-medium" title="Retrieval: hybrid recall@5. Groundedness: mean share of supported claims.">
+                    Score
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </details>
+              </thead>
+              <tbody className="tabular-nums">
+                {runs.map((r) => (
+                  <tr key={r.id} className="border-b border-border last:border-0">
+                    <td className="py-2 pr-4">{formatDate(r.runAt)}</td>
+                    <td className="py-2 pr-4">{r.evalType}</td>
+                    <td className="py-2 pr-4 text-muted">{r.evalType === "groundedness" ? `v${judgeVersion(r)}` : "—"}</td>
+                    <td className="py-2 pr-4 text-right">{r.n}</td>
+                    <td className="py-2 pr-4 text-right">{r.failed}</td>
+                    <td className="py-2 text-right font-medium">
+                      {isInvalid(r) ? (
+                        <span className="inline-flex items-center gap-2">
+                          <span className="text-muted line-through">{r.meanScore?.toFixed(3) ?? "—"}</span>
+                          <Badge title="Judge never saw the source text - see How these evals work">invalid</Badge>
+                        </span>
+                      ) : (
+                        (r.meanScore?.toFixed(3) ?? "—")
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </div>
     </article>
   );
 }

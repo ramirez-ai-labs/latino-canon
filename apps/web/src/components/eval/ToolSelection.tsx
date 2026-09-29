@@ -22,7 +22,7 @@ interface ToolRunDetails {
 }
 
 /** What each group of test requests asks the assistant to do, in a reader's words. */
-const CATEGORY_NAME: Record<string, string> = {
+export const CATEGORY_NAME: Record<string, string> = {
   search: "Look something up",
   filters: "Search with a filter",
   get_title: "Open a result",
@@ -40,6 +40,15 @@ const CATEGORY_EXAMPLE: Record<string, string> = {
 };
 
 const pct = (x: number | undefined) => (x === undefined ? "—" : `${Math.round(x * 100)}%`);
+
+/** Request types the model got right less than half the time, weakest first - the tab's headline. */
+export function weakToolCategories(run: EvalRun | undefined): { name: string; passRate: number; n: number }[] {
+  const byCategory = ((run?.details ?? {}) as ToolRunDetails).byCategory ?? {};
+  return Object.entries(byCategory)
+    .filter(([, v]) => v.passRate < 0.5)
+    .sort((a, b) => a[1].passRate - b[1].passRate)
+    .map(([cat, v]) => ({ name: CATEGORY_NAME[cat] ?? cat, passRate: v.passRate, n: v.n }));
+}
 const modelName = (m?: string) => (m?.includes("llama-3.3-70b") ? "Llama 3.3 70B" : (m?.split("/").pop() ?? "a Workers AI model"));
 
 function Stat({ label, value, plain }: { label: string; value: string; plain: string }) {
