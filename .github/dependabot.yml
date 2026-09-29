@@ -5,6 +5,10 @@
 #   doesn't have and broke apps/api's typecheck; #289 (eslint 9 -> 10) crashed apps/web's lint
 #   because its plugins don't support v10. Majors are upgraded by hand, in their own PR, when
 #   the runtime or the plugin ecosystem is ready.
+# - @cloudflare/vitest-pool-workers minors are ignored too. It is still 0.x, where a minor is a
+#   breaking release: #294 grouped 0.5.41 -> 0.22.0 as "minor", the new version targets a newer
+#   vitest major than our vitest 2, `cloudflare:test` types stopped resolving and apps/api's
+#   lint failed with 275 errors. It moves by hand, together with vitest, in its own PR.
 # - Minor and patch updates arrive as one grouped PR per ecosystem per week, so a week's bumps
 #   cost one CI run and one review instead of the lockfile churn that got Dependabot disabled.
 # - Monday 06:00 UTC: before the 08:00 ingest queue and the Monday 15:00 security audit.
@@ -27,6 +31,8 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "@cloudflare/vitest-pool-workers"
+        update-types: ["version-update:semver-minor"]
     labels: [dependencies]
     commit-message:
       prefix: devdeps
