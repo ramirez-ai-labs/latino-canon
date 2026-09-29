@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countryOptions, decadeOptions } from "./facets.js";
+import { CANON_COUNTRIES, countryOptions, decadeOptions } from "./facets.js";
 
 describe("countryOptions", () => {
   it("names countries in English and sorts them A-Z by name, not by code or count", () => {
@@ -28,8 +28,29 @@ describe("countryOptions", () => {
     expect(labels).toContain("El Salvador");
   });
 
+  it("offers only the canon's countries - the US, Spain and Latin America - not co-producers", () => {
+    // The live dropdown after #300 listed every TMDB co-producing country.
+    const opts = countryOptions([
+      { code: "MX", count: 58 },
+      { code: "FR", count: 12 },
+      { code: "QA", count: 1 },
+      { code: "HK", count: 1 },
+      { code: "ZA", count: 1 },
+      { code: "HT", count: 1 }, // Haiti: out of scope per CRITERIA.md
+      { code: "PR", count: 4 },
+      { code: "BR", count: 20 },
+    ]);
+    expect(opts.map((o) => o.value)).toEqual(["BR", "MX", "PR"]);
+  });
+
+  it("keeps every in-scope country the catalog has", () => {
+    const all = CANON_COUNTRIES.map((code) => ({ code, count: 1 }));
+    expect(countryOptions(all)).toHaveLength(CANON_COUNTRIES.length);
+    expect(CANON_COUNTRIES).toHaveLength(22);
+  });
+
   it("keeps a code Intl can't name as its own label instead of dropping it", () => {
-    expect(countryOptions([{ code: "ZZ", count: 1 }])[0]!.value).toBe("ZZ");
+    expect(countryOptions([{ code: "ZZ", count: 1 }], "en", ["ZZ"])[0]!.value).toBe("ZZ");
   });
 });
 

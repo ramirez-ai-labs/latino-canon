@@ -434,6 +434,10 @@ about 200 neurons per title (dashboard headline, 3.38k → 4.6k for 6 titles).
   countries weren't in A-Z order. `GET /titles/facets` returns the countries and decades
   the canon holds; the site names countries with `Intl.DisplayNames`, sorts them A-Z, and
   lists decades oldest first. The web smoke test checks that Bolivia and the 1930s appear.
+  Follow-up: the country filter offers only the canon's scope (`CANON_COUNTRIES`: the US,
+  Spain and Latin America). TMDB lists every co-producer, so the first version showed 42
+  countries, France, Qatar and Hong Kong among them; titles aren't hidden by this, only the
+  dropdown's options, and the api still returns every country.
 
 **Next:** check the blurb gate's pass rate under the citation checks, then regenerate old
 blurbs (~20/day under the 70B budget rule); grow the Spanish golden set, then 5b; a decision

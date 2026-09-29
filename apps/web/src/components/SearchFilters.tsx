@@ -43,8 +43,9 @@ const selectClass =
  * supported all along - previously only reachable by hand-editing the URL.
  *
  * Country and decade options come from the catalog itself (GET /titles/facets, built into
- * options by packages/core facets.ts): production country, sorted A-Z by name, and every
- * decade that has a canon title. They used to be hard-coded and fell behind the catalog.
+ * options by packages/core facets.ts): the in-scope production countries (the US, Spain and
+ * Latin America, not every co-producer TMDB lists), sorted A-Z by name, and every decade
+ * that has a canon title. They used to be hard-coded and fell behind the catalog.
  */
 export function SearchFilters({ countries, decades }: { countries: FacetOption[]; decades: FacetOption[] }) {
   const router = useRouter();

@@ -49,6 +49,16 @@ const CHECKS: Check[] = [
   // Filter options come from GET /titles/facets: a country and a decade the old hard-coded
   // lists left out (added in the Latin American expansion) must be offered.
   { name: "search filters from the catalog", run: expectPage("/search", 200, [/<option value="BO">Bolivia<\/option>/, /<option value="1930">1930s<\/option>/]) },
+  // Only the canon's countries (US, Spain, Latin America): co-producers TMDB lists, like
+  // France, must not be offered (CANON_COUNTRIES in packages/core facets.ts).
+  {
+    name: "country filter is the canon's scope",
+    run: async () => {
+      const page = await get("/search");
+      if (page.status !== 200) return `HTTP ${page.status}, expected 200`;
+      return /<option value="FR">/.test(page.html) ? "offers France, a co-producer outside the canon's scope" : null;
+    },
+  },
   { name: "title page", run: expectPage("/title/coco-2017", 200, ["Coco", "Why it matters", /More like this|Related titles/]) },
   { name: "evals", run: expectPage("/eval", 200, ["Evals", "Search quality over time"]) },
   // The colophon must name this release - the version the deploy was built from.
