@@ -47,6 +47,34 @@ const TITLES_SHOWN_FIRST = 3;
 
 const STATUS_GOOD = "#0ca30c";
 const STATUS_CRITICAL = "#d03b3b";
+const STATUS_WARNING = "#b7791f";
+
+/**
+ * Our own targets for each headline number, shown on its tile so a reader new to evals can
+ * tell whether a number is good. They're deliberately labeled as ours: there's no industry
+ * standard for these metrics, because a score depends on how hard the test set is - recall@5
+ * of 0.83 would be poor on exact-title searches and strong on half-remembered plots in two
+ * languages. Set 2026-09-30; change them in a PR, like any other public claim.
+ */
+const TARGETS = {
+  search: { min: 0.8, stretch: 0.9, format: (v: number) => v.toFixed(2) },
+  notes: { min: 0.9, format: (v: number) => v.toFixed(2) },
+  daily: { min: 0.8, format: (v: number) => `${Math.round(v * 100)}%` },
+  assistants: { min: 0.9, format: (v: number) => `${Math.round(v * 100)}%` },
+} as const;
+
+interface TargetStatus {
+  met: boolean;
+  label: string;
+  context: React.ReactNode;
+}
+
+type Target = (typeof TARGETS)[keyof typeof TARGETS];
+
+function targetStatus(value: number | null | undefined, target: Target, context: React.ReactNode): TargetStatus | undefined {
+  if (value == null) return undefined;
+  return { met: value >= target.min, label: `our target (${target.format(target.min)}+)`, context };
+}
 
 const TABS = [
   { key: "search", label: "Search" },
@@ -130,6 +158,7 @@ function SummaryTile({
   value,
   measures,
   line,
+  target,
 }: {
   tab: TabKey;
   active: boolean;
@@ -138,6 +167,7 @@ function SummaryTile({
   value: React.ReactNode;
   measures: string;
   line: React.ReactNode;
+  target?: TargetStatus;
 }) {
   return (
     <Link
@@ -150,7 +180,14 @@ function SummaryTile({
       <span className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</span>
       <span className="mt-1 text-sm font-medium leading-snug text-text">{question}</span>
       <span className="mt-2 text-3xl font-semibold tracking-tight text-text">{value}</span>
+      {/* Is this good? A word and a symbol carry the status, so it never rides on color alone. */}
+      {target && (
+        <span className="mt-1.5 text-xs font-medium leading-snug" style={{ color: target.met ? STATUS_GOOD : STATUS_WARNING }}>
+          <span aria-hidden>{target.met ? "✓" : "!"}</span> {target.met ? "Meets" : "Below"} {target.label}
+        </span>
+      )}
       <span className="mt-1 text-xs leading-snug text-muted">{measures}</span>
+      {target && <span className="mt-1.5 text-xs leading-snug text-text/75">{target.context}</span>}
       <span className="mt-auto pt-2 text-xs leading-snug text-muted">{line}</span>
     </Link>
   );
@@ -286,6 +323,50 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
   const toolRun = toolRuns.runs[0];
   const weakTools = weakToolCategories(toolRun);
 
+  // "Is this good?" for each tile: our target, and one line of context from the data itself.
+  const latestJudgedDay = judgedDays[judgedDays.length - 1];
+  const targets = {
+    search: targetStatus(
+      r5,
+      TARGETS.search,
+      weakest && strongest && weakest !== strongest ? (
+        <>
+          {queryTypeName(strongest.category)} searches already score {pct(strongest.recall5)};{" "}
+          {(QUERY_TYPE_IN_SENTENCE[weakest.category] ?? queryTypeName(weakest.category)).toLowerCase()} are the weakest (
+          {pct(weakest.recall5)}). Stretch goal: {TARGETS.search.stretch.toFixed(2)}.
+        </>
+      ) : (
+        <>Stretch goal: {TARGETS.search.stretch.toFixed(2)}.</>
+      ),
+    ),
+    notes: targetStatus(
+      latest?.meanScore,
+      TARGETS.notes,
+      "Mostly older notes, written before this check existed. New notes are only published when every claim is backed.",
+    ),
+    daily: targetStatus(
+      gateTotals.judged > 0 ? gateTotals.approved / gateTotals.judged : null,
+      TARGETS.daily,
+      latestJudgedDay ? (
+        <>
+          The latest day ran {pct(latestJudgedDay.approved / latestJudgedDay.judged)}. Every held note still gets a person&apos;s
+          review.
+        </>
+      ) : (
+        "Every held note still gets a person's review."
+      ),
+    ),
+    assistants: targetStatus(
+      toolRun?.metrics.passRate,
+      TARGETS.assistants,
+      weakTools.length > 0 ? (
+        <>Tested with an open 70B model. Weakest: {weakTools.map((c) => `“${c.name}”`).join(" and ")}.</>
+      ) : (
+        "Tested with an open 70B model; assistants like Claude bring their own, often stronger, models."
+      ),
+    ),
+  };
+
   // Titles to fix: the lowest scorers as real films - title, poster, page - not slugs. Only
   // the Blurbs tab shows them, so only it pays for the title lookups.
   const worst = tab === "blurbs" ? (details?.worst ?? []).slice(0, TITLES_TO_FIX) : [];
@@ -330,6 +411,12 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
 
       {/* The page's four sections: the question each answers, its number, and what that number measures. */}
       <h2 className="mt-9 text-sm font-semibold uppercase tracking-wide text-muted">What we measure</h2>
+      <p className="mt-1.5 max-w-3xl text-sm text-muted">
+        Each number has a target, so you can tell at a glance whether it&apos;s good. They&apos;re{" "}
+        <strong className="text-text">our own targets</strong>: there&apos;s no industry standard for these, because a score
+        depends on how hard the test is - finding a film by its exact title is far easier than from a half-remembered plot in
+        Spanish.
+      </p>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryTile
           tab="search"
@@ -337,6 +424,7 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
           label="Search"
           question="Does search find the film you mean?"
           measures={`Recall@5: the share of our ${retrieval?.n ?? ""} test searches whose right answer is in the top 5.`}
+          target={targets.search}
           value={r5 != null ? r5.toFixed(3) : "—"}
           line={
             gate && gate.status !== "none" ? (
@@ -357,6 +445,7 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
           label="Notes"
           question="Is each note backed by its sources?"
           measures="Groundedness: the share of a note's claims its sources support. 1.0 means all of them."
+          target={targets.notes}
           value={latest?.meanScore != null ? latest.meanScore.toFixed(3) : "—"}
           line={latest ? `${latest.n} notes, judge v${judgeVersion(latest)}` : "No valid run yet"}
         />
@@ -366,6 +455,7 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
           label="Daily check"
           question="Are new notes checked before you see them?"
           measures="New notes the AI judge approved. The rest wait for a person to review them."
+          target={targets.daily}
           value={gateTotals.judged > 0 ? pct(gateTotals.approved / gateTotals.judged) : "—"}
           line={
             gateTotals.judged > 0
@@ -379,6 +469,7 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
           label="AI assistants"
           question="Do AI assistants use the canon correctly?"
           measures="Test requests a model handled exactly right, using only our tool descriptions."
+          target={targets.assistants}
           value={toolRun?.metrics.passRate != null ? pct(toolRun.metrics.passRate) : "—"}
           line={toolRun ? `${toolRun.n} test requests` : "No run yet"}
         />
