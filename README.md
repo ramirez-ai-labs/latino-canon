@@ -74,7 +74,7 @@ or PR that shows it, with the number it moved.
 | **CD with verification** | Path-scoped deploys; migrations applied first, and the ingest deploy waits for them; every deploy checks itself live: a retrieval eval gate, an MCP client smoke test, a web smoke test [#264](https://github.com/ramirez-ai-labs/latino-canon/pull/264), [#281](https://github.com/ramirez-ai-labs/latino-canon/pull/281) | Each deploy proves it works, not just that it built |
 | **Evaluate before merge** | Ranking changes measured on a non-live Worker version (`wrangler versions upload`) against the live baseline [#284](https://github.com/ramirez-ai-labs/latino-canon/pull/284) | Regressions found before users see them |
 | **Release management** | Semver releases with written highlights; the version shown in the product and reported by the MCP server | v1.0.0 → v1.6.0 |
-| **Observability and incident response** | Structured JSON logs, AI Gateway, a daily blurb-gate chart, and a runbook built from six real incidents ([monitoring.md](docs/operations/monitoring.md)) | Every incident has a cause, a fix and a guard |
+| **Observability and incident response** | Structured JSON logs, AI Gateway, a daily blurb-gate chart, and a runbook built from eight real incidents ([monitoring.md](docs/operations/monitoring.md)) | Every incident has a cause, a fix and a guard |
 | **Cost management (FinOps)** | Measured cost per AI job, and a daily budget rule for the account-wide limit | $0/month runtime with 294 titles live |
 | **Supply chain** | A weekly `pnpm audit` in CI with targeted overrides ([security-audit.yml](.github/workflows/security-audit.yml)) | 4 advisories (2 high) cleared, now watched |
 

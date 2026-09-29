@@ -2,7 +2,7 @@
 
 This project has no dashboard, no alerting, and no Analytics Engine wired up — that's
 an honest gap, not an oversight to paper over (see [What's not here](#whats-not-here)).
-What it does have is six real incidents that already happened in production, each
+What it does have is eight real incidents that already happened in production, each
 of which would have been caught in minutes by someone actually watching the right
 signal instead of stumbling into it days later. This doc exists so the next person
 (including future-you) doesn't have to rediscover the same failure modes by hand. The
@@ -161,6 +161,40 @@ kept, labeled invalid, on the Eval page.
 
 **What should have caught this sooner:** reading a handful of the judge's 0.00 verdicts
 against the synopsis. An eval's inputs need checking as much as its outputs.
+
+### 7. The MCP server passed its deploy check but Claude Code couldn't connect
+
+**What happened:** after `initialize`, MCP clients (Claude Code, VS Code, the Inspector) send
+`GET /mcp` to open the optional server-to-client stream. The stateless server answered
+`200 text/event-stream` and then sent nothing, so the stream sat open and silent. Claude Code
+reported `✘ Failed to connect — InvalidHTTPResponse`. `POST` worked, and the deploy smoke test
+only sent `POST`, so CI was green the whole time. Found by connecting a real client from a laptop.
+
+**Fix:** #285. Any method other than `POST`/`OPTIONS` gets `405` with `Allow: POST, OPTIONS`, which
+the spec lists as the alternative to a stream. The deploy smoke test now also checks that
+`GET /mcp` returns 405 within 10s.
+
+**What should have caught this sooner:** smoke-testing the way real clients behave, not only
+the calls we expected them to make. A protocol check is only as good as the client it
+imitates.
+
+### 8. A quoted nickname in a synopsis left a title without a blurb
+
+**What happened:** *Crónicas* (2004) went live on Sep 28 with no "why it matters" note. Its
+synopsis mentions a killer known as the "Monster of Babahoyo." The 70B blurb model copied the
+quotes into its JSON reply unescaped, and `JSON.parse` in `extractJson` threw. The call runs at
+temperature 0, so both step retries got the same reply. The job stopped at `stage: blurb`
+with `Expected ',' or '}' after property value`. It showed up in `GET /jobs`, the one
+signal that lists every errored ingest.
+
+**Fix:** #296. When a plain parse fails, `extractJson` escapes any quote inside a string that
+isn't followed by JSON structure, then parses again. If that fails too, the original error is
+reported. The nightly cron retries errored jobs from their stored params, so the next run
+writes the blurb with no manual step.
+
+**What should have caught this sooner:** a test fixture with quotes in it. Retries don't help
+against a deterministic failure; at temperature 0, the same prompt gets the same broken
+reply, so the fix has to be in the parser.
 
 ---
 
