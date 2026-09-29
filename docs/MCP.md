@@ -82,6 +82,39 @@ apps/api  (/search, /titles, /similar, /agents/curate)
 - **Workers-safe validation.** The SDK's default JSON Schema validator (Ajv) compiles schemas with
   `new Function`, which Workers forbid. The server uses the SDK's `CfWorkerJsonSchemaValidator`.
 
+## Evaluation: does a model pick the right tool?
+
+The server calls no model, so its tool names, descriptions, schemas and connect-time instructions are all an
+assistant has to go on. That wording is tested like code: `packages/eval/src/run-mcp-tools.ts` connects to the
+live server as a client, reads `initialize` and `tools/list`, and gives exactly those to Llama 3.3 70B
+(Workers AI function calling, temperature 0) with each of 30 requests in `datasets/mcp-tools.jsonl`.
+
+| Group | Example | Expected |
+|---|---|---|
+| Look something up | "What has Gael García Bernal been in?" | `search_titles`, the person's own words, **no filters** |
+| Search with a filter | "horror movies from Argentina" | `search_titles` with `genre: Horror`, `country: AR` |
+| Open a result | "Tell me more about the second one" (after a listed search) | `get_title` with that id |
+| More like this | "More like Coco, please" | `similar_titles` with `coco-2017` |
+| Recommend | "Something uplifting by a Latina director" | `curate` |
+| Off-topic | "What's the capital of Peru?" | no tool |
+
+A case passes when the tool is right (or rightly none), the arguments pass the tool's input schema (what the
+server itself would reject), expected ids and filters match, and a plain lookup adds no search filter.
+Filters exclude, so a guessed filter can hide the right answer - the same failure as incident 5 in
+`docs/operations/monitoring.md`, one layer out. Scores: pass rate (the headline), tool accuracy, argument
+accuracy, and pass rate per group. A call the model writes into its text reply instead of `tool_calls` still
+counts, since a client would run it.
+
+```bash
+# Manual: Actions -> "Run MCP tool-selection eval" (records to D1; results on the Eval page)
+CF_ACCOUNT_ID=... CLOUDFLARE_API_TOKEN=... pnpm --filter @latino-canon/eval mcp-tools
+CASES=similar-coco,curate-cry-mothers ...   # a subset, to check a fix (not recorded from CI)
+MCP_URL=<preview>/mcp ...                    # a non-live server
+```
+
+About 1k neurons a run (the tool list rides in every prompt), so it's the day's one extra 70B job. Run it
+after changing a tool's wording, and compare with the last run.
+
 ## Cost
 
 | Tool | Workers AI neurons |

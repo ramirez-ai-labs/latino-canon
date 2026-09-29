@@ -201,7 +201,7 @@ export interface RankedHit {
   score: number;
 }
 
-export type EvalType = "groundedness" | "retrieval";
+export type EvalType = "groundedness" | "retrieval" | "mcp-tools";
 
 /**
  * One UTC day of the ingest blurb gate (GET /eval-runs/blurb-gate): every verdict the v3

@@ -423,6 +423,9 @@ about 200 neurons per title (dashboard headline, 3.38k → 4.6k for 6 titles).
 - [x] **Daily blurb-gate record** (#280), **web smoke test** (#281), **plain-language Evals** (#282, #283),
   **search on the user's own words** (#284), **MCP 405 fix** (#285), **README skills section** (#286).
 - [x] **Release v1.6.0.**
+- [x] **MCP tool-selection eval**: 30 requests scored on the tool and arguments a model picks
+  from the live server's own instructions and tool list; manual workflow, results on the Eval
+  page. First run pending.
 
 **Next:** check the blurb gate's pass rate under the citation checks, then regenerate old
 blurbs (~20/day under the 70B budget rule); grow the Spanish golden set, then 5b; a web

@@ -28,6 +28,7 @@ or PR that shows it, with the number it moved.
 | **Eval-gated generation** | The same judge gates every new note at ingest, plus a deterministic citation check for what the judge misses ([groundedness.ts](packages/core/src/groundedness.ts)) [#261](https://github.com/ramirez-ai-labs/latino-canon/pull/261)–[#263](https://github.com/ramirez-ai-labs/latino-canon/pull/263) | Daily auto-approval **33% → 87%** after the prompt and citation fixes |
 | **Safe regeneration** | Old notes are rewritten, and a rewrite replaces one only if it passes the gate ([blurb-regen.ts](apps/ingest/src/blurb-regen.ts)) [#275](https://github.com/ramirez-ai-labs/latino-canon/pull/275) | A visible note is never swapped for a worse one |
 | **MCP server** | A remote, stateless Streamable HTTP server with four read-only tools, typed structured output, and DNS-rebinding protection ([apps/mcp](apps/mcp)) [#267](https://github.com/ramirez-ai-labs/latino-canon/pull/267), [#285](https://github.com/ramirez-ai-labs/latino-canon/pull/285) | Works in Claude Desktop, Claude Code and the MCP Inspector; no model or API key on the server |
+| **Tool-use eval for the MCP server** | A model gets only what the live server tells every assistant (instructions + `tools/list`) and must call the right tool with the right arguments, or none; 30 cases, scored on tool, schema-valid arguments, and no filter nobody asked for ([mcp-tools.ts](packages/eval/src/mcp-tools.ts)) | Tool wording is tested like code: a description change is measured before it ships |
 | **Agent with a visible reasoning trail** | The curation agent: intent → hybrid search → LLM tone scoring → re-rank ([curation-agent.ts](apps/api/src/agents/curation-agent.ts)) | Every step logged and shown to the user |
 | **Bilingual search** | Multilingual embeddings, English/Spanish stopwords in keyword search, a Spanish golden set tagged by failure mode [#274](https://github.com/ramirez-ai-labs/latino-canon/pull/274), [#284](https://github.com/ramirez-ai-labs/latino-canon/pull/284) | Spanish recall@5 measured on 28 queries, not 8 |
 | **AI cost engineering** | Cache-first search, per-client rate limits, a keyword fallback when the AI budget runs out, and zero-neuron features by design (`/similar`, MCP reads) [#236](https://github.com/ramirez-ai-labs/latino-canon/pull/236), [#266](https://github.com/ramirez-ai-labs/latino-canon/pull/266) | **$0/month**; every AI call has a measured cost |
@@ -377,6 +378,7 @@ Measured costs (2026-09-24, Workers AI analytics, `aiInferenceAdaptiveGroups`):
 | Ingest classify + blurb + judge (daily queue, 15 titles) | 70B | ~3.2k/day (~200 per title + ~13 for the judge) |
 | Groundedness eval, 212 blurbs | 70B | ~2.8k per run |
 | Retrieval eval, 97 queries | 8B + bge-m3 | ~0.15k hybrid / ~0.4k all modes |
+| MCP tool-selection eval, 30 cases | 70B | ~1k per run (estimated from tokens; each run prints its own) |
 
 Rules this project follows: besides the daily ingest queue, at most one 70B job
 (blurb regeneration, a sampled judge run) per day, capped at ~2k, so the planned day stays

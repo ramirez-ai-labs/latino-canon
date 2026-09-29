@@ -15,6 +15,7 @@ import {
 } from "@/lib/eval-insights";
 import { BlurbGateDaily } from "@/components/eval/BlurbGateDaily";
 import { RetrievalTrend } from "@/components/eval/RetrievalTrend";
+import { ToolSelection } from "@/components/eval/ToolSelection";
 import { Badge } from "@/components/ui/Badge";
 
 export const metadata = { title: "Eval" };
@@ -64,6 +65,10 @@ const GLOSSARY: [string, string][] = [
   ["LLM judge", "An AI model (Llama 3.3 70B) that reads a note and its sources and lists any claim no source backs. Its version is frozen, so scores stay comparable."],
   ["Approved by the judge", "A new note the judge found fully supported and properly cited, so it's shown without waiting for a person."],
   ["Held for an editor", "A note with at least one unsupported claim. It isn't shown until an editor approves it, or a rewrite passes."],
+  [
+    "Tool selection (MCP)",
+    "Whether an AI assistant connected to our MCP server picks the right tool for a request - search, open a title, more like this, recommend - with the right details, or rightly uses none.",
+  ],
   ["Invalid run", "A past run we found was measuring the wrong thing. It stays on the record, labeled, rather than being deleted."],
 ];
 
@@ -159,10 +164,11 @@ function Bar({ fraction, dim }: { fraction: number; dim?: boolean }) {
 }
 
 export default async function EvalPage() {
-  const [retrievalRuns, groundednessRuns, gateDaily] = await Promise.all([
+  const [retrievalRuns, groundednessRuns, gateDaily, toolRuns] = await Promise.all([
     listEvalRuns(RETRIEVAL_RUNS_SHOWN, "retrieval"),
     listEvalRuns(GROUNDEDNESS_RUNS_SHOWN, "groundedness"),
     getBlurbGateDaily(14).catch(() => ({ days: [] })),
+    listEvalRuns(1, "mcp-tools").catch(() => ({ runs: [] })),
   ]);
   const runs = [...retrievalRuns.runs, ...groundednessRuns.runs].sort((a, b) => b.runAt.localeCompare(a.runAt));
   const validGroundedness = groundednessRuns.runs.filter((r) => !isInvalid(r));
@@ -428,6 +434,19 @@ export default async function EvalPage() {
         </Section>
       )}
 
+      <Section
+        title="AI assistants using the canon"
+        lead={
+          <>
+            The canon is also an MCP server that Claude, ChatGPT or Cursor can connect to. The server calls no model -
+            the assistant brings its own - so its tool names and descriptions are all an assistant has to go on. This
+            test gives a model only those, plus a request, and checks what it calls.
+          </>
+        }
+      >
+        <ToolSelection run={toolRuns.runs[0]} />
+      </Section>
+
       <details className="group mt-12 rounded-xl border border-border bg-surface">
         <summary className="cursor-pointer select-none px-4 py-3 font-semibold">How these evals work</summary>
         <div className="space-y-3 px-4 pb-4 text-sm text-muted">
@@ -441,6 +460,16 @@ export default async function EvalPage() {
             written from, and scores the share of its claims a source supports. Runs are started by hand from{" "}
             <code className="rounded bg-surface-raised px-1.5 py-0.5">eval-groundedness.yml</code>. The same judge
             gates new blurbs at ingest: only a fully supported, properly cited blurb is approved without an editor.
+          </p>
+          <p>
+            <strong className="text-text">Tool selection</strong> connects to the live MCP server like any client,
+            reads its instructions and tool list, and gives them to Llama 3.3 70B with each test request (some carry an
+            earlier turn, as in &quot;tell me more about the second one&quot;). A request passes when the model calls the
+            right tool, or none for an off-topic question, with valid arguments, the expected title id or filter, and
+            no search filter the person didn&apos;t ask for - filters exclude, so a guessed one can hide the answer.
+            Runs are started by hand from{" "}
+            <code className="rounded bg-surface-raised px-1.5 py-0.5">eval-mcp-tools.yml</code>, after a change to a
+            tool&apos;s wording.
           </p>
           {hasInvalid && (
             <p>
