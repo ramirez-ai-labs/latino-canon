@@ -160,6 +160,46 @@ describe("search_titles", () => {
     expect(res.isError).toBe(true);
     expect(requests).toEqual([]);
   });
+
+  it("accepts whole numbers sent as text - the 2026-09-29 eval's most common failure - and still rejects garbage", async () => {
+    const { api, requests } = fakeApi({
+      "/search": () => Response.json({ query: "", mode: "hybrid", interpretation: null, results: [], tookMs: 1 }),
+    });
+    const client = await connect(api);
+    const ok = await client.callTool({ name: "search_titles", arguments: { query: "x", decade: "1970", limit: "3" } });
+    expect(ok.isError).toBeFalsy();
+    expect(Object.fromEntries(new URL(requests[0]!.url).searchParams)).toMatchObject({ decade: "1970", limit: "3" });
+
+    const bad = await client.callTool({ name: "search_titles", arguments: { query: "x", limit: "three" } });
+    expect(bad.isError).toBe(true);
+    expect(requests).toHaveLength(1);
+  });
+
+  it("browses by filter when a filter says it all and there's no query ('films from the 1970s')", async () => {
+    const { api, requests } = fakeApi({
+      "/search": () => Response.json({ query: "", mode: "hybrid", interpretation: null, results: [card("canoa-1976", "Canoa")], tookMs: 1 }),
+    });
+    const body = parsed(await (await connect(api)).callTool({ name: "search_titles", arguments: { decade: 1970, kind: "film" } }));
+    const params = Object.fromEntries(new URL(requests[0]!.url).searchParams);
+    expect(params).toEqual({ mode: "hybrid", limit: "5", decade: "1970", kind: "film" });
+    expect(body).toMatchObject({ query: "", results: [{ id: "canoa-1976" }] });
+  });
+
+  it("asks for a query or a filter instead of searching for nothing", async () => {
+    const { api, requests } = fakeApi({});
+    const res = await (await connect(api)).callTool({ name: "search_titles", arguments: {} });
+    expect(res.isError).toBe(true);
+    expect(text(res)).toMatch(/query, or at least one filter/);
+    expect(requests).toEqual([]);
+  });
+});
+
+describe("server instructions", () => {
+  it("tell the model to answer off-topic questions itself - 3 of 8 eval failures called a tool for them", async () => {
+    const client = await connect(fakeApi({}).api);
+    expect(client.getInstructions()).toMatch(/only cover the canon's films and series/);
+    expect(client.getInstructions()).toMatch(/answer directly and don't call a tool/);
+  });
 });
 
 describe("get_title", () => {
@@ -205,6 +245,15 @@ describe("similar_titles and curate", () => {
     const body = parsed(await (await connect(api)).callTool({ name: "similar_titles", arguments: { id: "coco-2017", limit: 3 } }));
     expect(new URL(requests[0]!.url).search).toBe("?limit=3");
     expect(body).toMatchObject({ like: "coco-2017", results: [{ id: "encanto-2021" }] });
+  });
+
+  it('similar_titles runs with limit "6" as text - "More like this" scored 0% on that alone', async () => {
+    const { api, requests } = fakeApi({
+      "/titles/coco-2017/similar": () => Response.json({ titleId: "coco-2017", results: [] }),
+    });
+    const res = await (await connect(api)).callTool({ name: "similar_titles", arguments: { id: "coco-2017", limit: "6" } });
+    expect(res.isError).toBeFalsy();
+    expect(new URL(requests[0]!.url).search).toBe("?limit=6");
   });
 
   it("curate posts the ask and returns picks with their reasons", async () => {
