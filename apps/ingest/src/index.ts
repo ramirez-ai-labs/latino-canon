@@ -195,7 +195,7 @@ export default {
     }
 
     if (req.method === "POST" && url.pathname === "/ingest") {
-      const { titles } = (await req.json()) as { titles: IngestParams[] };
+      const { titles } = await req.json<{ titles: IngestParams[] }>();
       const created = await Promise.all(
         titles.map((t) => env.INGEST_WORKFLOW.create({ params: t })),
       );
@@ -210,7 +210,7 @@ export default {
         kind: "film" | "series";
         seedInclusionTypes?: string[];
       }
-      const { titles } = (await req.json()) as { titles: SeedTitle[] };
+      const { titles } = await req.json<{ titles: SeedTitle[] }>();
       const inserted: string[] = [];
       const skipped: string[] = [];
 
@@ -360,10 +360,10 @@ export default {
     }
 
     if (req.method === "POST" && url.pathname === "/aliases") {
-      const { titleId, aliases } = (await req.json()) as {
+      const { titleId, aliases } = await req.json<{
         titleId: string;
         aliases: { alias: string; kind: AliasKind }[];
-      };
+      }>();
       const exists = await env.DB.prepare("SELECT id FROM titles WHERE id = ?").bind(titleId).first();
       if (!exists) return Response.json({ error: `no such title: ${titleId}` }, { status: 404 });
       await writeAliases(env, titleId, aliases);

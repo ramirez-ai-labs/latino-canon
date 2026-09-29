@@ -20,7 +20,7 @@ export async function fetchOmdbRatings(env: Env, imdbId: string | null): Promise
   if (!imdbId) return null;
   const r = await fetch(`https://www.omdbapi.com/?i=${imdbId}&apikey=${env.OMDB_API_KEY}`);
   if (!r.ok) throw new Error(`OMDb ${r.status}`);
-  const d = (await r.json()) as OmdbRaw;
+  const d = await r.json<OmdbRaw>();
   if (d.Response === "False") return null;
 
   return {
