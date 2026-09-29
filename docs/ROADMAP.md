@@ -427,9 +427,18 @@ about 200 neurons per title (dashboard headline, 3.38k → 4.6k for 6 titles).
   from the live server's own instructions and tool list; manual workflow, results on the Eval
   page. First run pending.
 
+- [x] **Search filters built from the catalog** (2026-09-29). The country and decade
+  dropdowns were hard-coded before the Latin American expansion: 35 canon titles from
+  Bolivia, Costa Rica, Ecuador, Honduras, Nicaragua, Panama and Paraguay couldn't be
+  filtered, nothing before 1980 could (*Limite*, *Los olvidados*, *Araya*, *Lucía*), and
+  countries weren't in A-Z order. `GET /titles/facets` returns the countries and decades
+  the canon holds; the site names countries with `Intl.DisplayNames`, sorts them A-Z, and
+  lists decades oldest first. The web smoke test checks that Bolivia and the 1930s appear.
+
 **Next:** check the blurb gate's pass rate under the citation checks, then regenerate old
-blurbs (~20/day under the 70B budget rule); grow the Spanish golden set, then 5b; a web
-smoke test and a decision on `/feedback`; classifier eval after the queue drains (~Oct 1).
+blurbs (~20/day under the 70B budget rule); grow the Spanish golden set, then 5b; a decision
+on `/feedback`; classifier eval and the first MCP tool-selection run after the queue drains
+(~Oct 1).
 
 ## Immediate (do first — small, high-visibility)
 

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { TitleCard } from "@/components/TitleCard";
 import { SearchFilters } from "@/components/SearchFilters";
 import { buttonVariants } from "@/components/ui/button";
-import { search } from "@/lib/api";
+import { getFilterOptions, search } from "@/lib/api";
 import Link from "next/link";
 
 export const metadata = { title: "Catalog" };
@@ -19,16 +19,19 @@ export default async function CatalogPage({
   const page = Math.max(1, Number(sp.page ?? 1));
   const offset = (page - 1) * PER_PAGE;
 
-  const res = await search({
-    limit: PER_PAGE + 1, // fetch one extra to detect if there's a next page
-    offset,
-    mode: "hybrid",
-    theme: sp.theme,
-    kind: sp.kind,
-    country: sp.country,
-    decade: sp.decade ? Number(sp.decade) : undefined,
-    inclusionType: sp.inclusionType,
-  });
+  const [res, filterOptions] = await Promise.all([
+    search({
+      limit: PER_PAGE + 1, // fetch one extra to detect if there's a next page
+      offset,
+      mode: "hybrid",
+      theme: sp.theme,
+      kind: sp.kind,
+      country: sp.country,
+      decade: sp.decade ? Number(sp.decade) : undefined,
+      inclusionType: sp.inclusionType,
+    }),
+    getFilterOptions(),
+  ]);
 
   const hasNext = res.results.length > PER_PAGE;
   const results = res.results.slice(0, PER_PAGE);
@@ -40,7 +43,7 @@ export default async function CatalogPage({
       <p className="mb-6 text-sm text-muted">All titles in the canon · Page {page}</p>
 
       <Suspense>
-        <SearchFilters />
+        <SearchFilters countries={filterOptions.countries} decades={filterOptions.decades} />
       </Suspense>
 
       <div className="columns-2 gap-5 sm:columns-3 md:columns-4 lg:columns-5">

@@ -7,7 +7,7 @@ import { SearchFilters } from "@/components/SearchFilters";
 import { TitleCard } from "@/components/TitleCard";
 import { AgentSearchReasoning } from "@/components/AgentSearchReasoning";
 import { buttonVariants } from "@/components/ui/button";
-import { ApiError, search, curateSearch } from "@/lib/api";
+import { ApiError, curateSearch, getFilterOptions, search } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Explore" };
@@ -25,6 +25,8 @@ export default async function SearchPage({
   const offset = (page - 1) * PER_PAGE;
   const isBrowse = !sp.q;
   const isAgentSearch = sp.q && isComplexQuery(sp.q);
+  // Started now so it runs alongside the search; never rejects (see getFilterOptions).
+  const filterOptionsPromise = getFilterOptions();
 
   let res: SearchResponse | CurationResponse;
   let isAgent = false;
@@ -78,6 +80,7 @@ export default async function SearchPage({
   const hasNext = resultsArray.length >= PER_PAGE;
   const results = resultsArray.slice(0, PER_PAGE);
   const hasPrev = page > 1;
+  const filterOptions = await filterOptionsPromise;
 
   const pageHref = (p: number) =>
     `/search?page=${p}${Object.entries(sp)
@@ -90,7 +93,7 @@ export default async function SearchPage({
       <Suspense>
         <SearchBar autoFocus />
         <div className="mt-6">
-          <SearchFilters />
+          <SearchFilters countries={filterOptions.countries} decades={filterOptions.decades} />
         </div>
       </Suspense>
 

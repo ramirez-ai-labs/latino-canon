@@ -1,5 +1,17 @@
 import "server-only";
-import type { BlurbGateDay, Collection, CurationResponse, EvalRun, SearchResponse, Title, TitleCard } from "@latino-canon/core";
+import {
+  countryOptions,
+  decadeOptions,
+  type BlurbGateDay,
+  type CatalogFacets,
+  type Collection,
+  type CurationResponse,
+  type EvalRun,
+  type FacetOption,
+  type SearchResponse,
+  type Title,
+  type TitleCard,
+} from "@latino-canon/core";
 import { localCollection, localCollections, localSearch, localTitle } from "./local-data";
 
 /**
@@ -60,6 +72,7 @@ function localFetch<T>(path: string): T {
   if (url.pathname.startsWith("/collections/")) return localCollection(url.pathname.slice("/collections/".length)) as T;
   // Mock data has no vectors - the title page falls back to its theme-based list.
   if (url.pathname.endsWith("/similar")) return { titleId: "", results: [] } as T;
+  if (url.pathname === "/titles/facets") return { countries: [], decades: [] } as T;
   if (url.pathname.startsWith("/titles/")) return localTitle(url.pathname.slice("/titles/".length)) as T;
   // eval_runs is CI-written only (see apps/api/src/routes/eval-runs.ts) - nothing
   // to show against local mock data, so LOCAL_DEV just renders an empty history.
@@ -100,6 +113,21 @@ export function curateSearch(params: { q: string; limit?: number }): Promise<Cur
 }
 
 export const getTitle = (id: string) => apiFetch<Title>(`/titles/${id}`);
+
+/**
+ * Country and decade options for the search filters, from what the catalog holds. A
+ * failed call degrades to empty lists - the filters still work from the URL, and a page
+ * never fails because its dropdowns couldn't load.
+ */
+export async function getFilterOptions(): Promise<{ countries: FacetOption[]; decades: FacetOption[] }> {
+  try {
+    const facets = await apiFetch<CatalogFacets>(`/titles/facets`);
+    return { countries: countryOptions(facets.countries), decades: decadeOptions(facets.decades) };
+  } catch (err) {
+    console.warn(JSON.stringify({ event: "web.facets_failed", error: err instanceof Error ? err.message : String(err) }));
+    return { countries: [], decades: [] };
+  }
+}
 export const getSimilarTitles = (id: string, limit = 8) =>
   apiFetch<{ titleId: string; results: TitleCard[] }>(`/titles/${id}/similar?limit=${limit}`);
 export const listCollections = () => apiFetch<{ collections: Collection[] }>(`/collections`);
