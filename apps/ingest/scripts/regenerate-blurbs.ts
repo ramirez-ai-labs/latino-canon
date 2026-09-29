@@ -6,13 +6,20 @@
  *   pnpm --filter @latino-canon/ingest regenerate:blurbs 20          # a day's batch (~2k neurons)
  *
  * Budget rule (CLAUDE.md): one 70B job a day besides the ingest queue, capped at ~2k -
- * about 20 titles. Requires INGEST_URL and INGEST_ADMIN_TOKEN in the environment.
+ * about 20 titles. The worker enforces it (src/budget.ts): on a day that already had a
+ * different 70B job (an eval), the call is refused (409). To run anyway, give a reason:
+ *
+ *   pnpm --filter @latino-canon/ingest regenerate:blurbs 20 --override "why today"
+ *
+ * Requires INGEST_URL and INGEST_ADMIN_TOKEN in the environment.
  */
 export {}; // module scope - keeps this script's top-level consts from colliding with sibling scripts'
 
 const token = process.env.INGEST_ADMIN_TOKEN ?? "dev-only-change-me";
 const url = process.env.INGEST_URL ?? "http://localhost:8788";
 const dryRun = process.argv.includes("--dry-run");
+const overrideAt = process.argv.indexOf("--override");
+const overrideReason = overrideAt >= 0 ? process.argv[overrideAt + 1] : undefined;
 const total = Number(process.argv.find((a) => /^\d+$/.test(a)) ?? 20);
 
 interface RegenResult {
@@ -28,8 +35,12 @@ async function call(limit: number): Promise<RegenResult> {
   const res = await fetch(`${url}/regenerate-blurbs`, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
-    body: JSON.stringify({ limit, dryRun }),
+    body: JSON.stringify({ limit, dryRun, ...(overrideReason ? { overrideReason } : {}) }),
   });
+  if (res.status === 409) {
+    const { reason } = (await res.json()) as { reason: string };
+    throw new Error(`Workers AI budget: ${reason}. Run another day, or pass --override "<reason>".`);
+  }
   if (!res.ok) throw new Error(`regenerate-blurbs failed: ${res.status} ${await res.text()}`);
   return (await res.json()) as RegenResult;
 }

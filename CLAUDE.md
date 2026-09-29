@@ -63,6 +63,12 @@ Rules:
   waits for a day with no queue run. Validate on a ~30-title sample first, then roll out
   in daily batches. (The old rule, "never on an ingest day", blocked everything once the
   queue made every day an ingest day.)
+- **This is enforced, not just written down** (`apps/ingest/src/budget.ts`, D1
+  `ai_budget_claims`). The queue and manual ingests record the day; blurb regeneration
+  and the groundedness and MCP evals claim it first (the evals via `POST /budget/claim`
+  from their workflows) and are refused (409) when the rule says no. Overriding takes a
+  written reason (`override_reason` input, `--override "<why>"`), recorded with the claim.
+  `GET /budget` shows today's claims. A new 70B job must claim a kind too.
 - Add a handful of titles per day, not dozens.
 - Anything public that calls Workers AI needs a cache and a per-client limit in front of
   it (the Rate Limiting binding). Don't add per-request KV writes: the free tier allows

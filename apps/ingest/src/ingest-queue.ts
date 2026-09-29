@@ -2,6 +2,7 @@ import seedFile from "./seed/canon.seed.json" with { type: "json" };
 import type { Env, IngestParams } from "./bindings.js";
 import type { SeedTitle } from "./seed-diff.js";
 import { jobIdFor } from "./workflow-rules.js";
+import { recordIngestRun } from "./budget.js";
 
 /**
  * The daily ingest queue. Merging a seed PR used to ingest its new titles immediately
@@ -118,6 +119,8 @@ export async function runIngestQueue(env: Env): Promise<void> {
     const params: IngestParams = { ref, title, year, kind, tmdbId, seedInclusionTypes, aliases };
     await env.INGEST_WORKFLOW.create({ params });
   }
+  // Makes today an ingest day for the budget rule (budget.ts): a full groundedness run waits.
+  if (plan.picked.length > 0) await recordIngestRun(env, "ingest-queue");
   console.warn(
     JSON.stringify({
       event: "ingest.queue",
