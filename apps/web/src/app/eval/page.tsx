@@ -50,7 +50,8 @@ const STATUS_CRITICAL = "#d03b3b";
 
 const TABS = [
   { key: "search", label: "Search" },
-  { key: "blurbs", label: "Blurbs" },
+  // "Notes" is what readers call them; the key stays "blurbs" so existing links keep working.
+  { key: "blurbs", label: "Notes" },
   { key: "daily", label: "Daily check" },
   { key: "assistants", label: "AI assistants" },
 ] as const;
@@ -116,18 +117,26 @@ function Delta({ value, suffix }: { value: number; suffix: string }) {
   );
 }
 
-/** One number per story, linking to its tab. The active tab's tile is outlined. */
+/**
+ * One tile per section, doubling as the page's guide: the section's name, the plain
+ * question it answers, its headline number, what that number measures, and its status.
+ * Each opens its tab; the active one is outlined.
+ */
 function SummaryTile({
   tab,
   active,
   label,
+  question,
   value,
+  measures,
   line,
 }: {
   tab: TabKey;
   active: boolean;
   label: string;
+  question: string;
   value: React.ReactNode;
+  measures: string;
   line: React.ReactNode;
 }) {
   return (
@@ -138,12 +147,22 @@ function SummaryTile({
         active ? "border-accent-cyan" : "border-border"
       }`}
     >
-      <span className="text-xs text-muted">{label}</span>
-      <span className="mt-1 text-3xl font-semibold tracking-tight text-text">{value}</span>
-      <span className="mt-1.5 text-xs leading-snug text-muted">{line}</span>
+      <span className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</span>
+      <span className="mt-1 text-sm font-medium leading-snug text-text">{question}</span>
+      <span className="mt-2 text-3xl font-semibold tracking-tight text-text">{value}</span>
+      <span className="mt-1 text-xs leading-snug text-muted">{measures}</span>
+      <span className="mt-auto pt-2 text-xs leading-snug text-muted">{line}</span>
     </Link>
   );
 }
+
+/** How the page stays trustworthy - the reasons its numbers can be taken at face value. */
+const HONESTY: [string, string][] = [
+  ["Automatic", "The search tests run after every code change; a drop of more than 0.03 flags it."],
+  ["Nothing hidden", "Weak results stay on the page - they're the list of what to fix next."],
+  ["Comparable", "The AI judge's version is frozen, so a score today compares with one last month."],
+  ["On the record", "Runs later found to measure the wrong thing stay here, labeled invalid, not deleted."],
+];
 
 /** The tab's one-sentence takeaway, then an optional plain definition of its metric. */
 function Headline({ children, define }: { children: React.ReactNode; define?: React.ReactNode }) {
@@ -284,17 +303,40 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
   return (
     <article className="max-w-4xl">
       <h1 className="text-3xl font-bold tracking-tight">Evals</h1>
-      <p className="mt-2 max-w-2xl text-muted">
-        How well search finds the right title, whether each &ldquo;why it matters&rdquo; note is backed by its sources, and
-        whether AI assistants use the canon correctly - measured after every change, and recorded here.
-      </p>
+      <p className="mt-2 max-w-2xl text-lg leading-snug text-text">How we check the AI in Latino Canon, and what we find.</p>
 
-      {/* One number per story; each tile opens its tab. */}
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* What the page is and why it's public - before any number. */}
+      <div className="mt-4 max-w-3xl space-y-3 text-[0.95rem] leading-relaxed text-text/85">
+        <p>
+          Latino Canon uses AI in three places: <strong className="text-text">search</strong> that understands half-remembered
+          plots and Spanish, the short <strong className="text-text">&ldquo;why it matters&rdquo; note</strong> on each title, and
+          a server that lets <strong className="text-text">AI assistants</strong> like Claude and ChatGPT use the canon.
+        </p>
+        <p>
+          AI gets things wrong. It can miss the film you meant, or say something about a film that no source supports - and for
+          a canon about who gets represented and how, a confident mistake is worse than none. So instead of asking you to trust
+          it, we test it after every change and publish the results here: what works, what doesn&apos;t yet, and what we&apos;re
+          fixing next.
+        </p>
+      </div>
+
+      <ul className="mt-5 grid max-w-3xl gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+        {HONESTY.map(([term, text]) => (
+          <li key={term} className="text-text/80">
+            <strong className="text-text">{term}.</strong> {text}
+          </li>
+        ))}
+      </ul>
+
+      {/* The page's four sections: the question each answers, its number, and what that number measures. */}
+      <h2 className="mt-9 text-sm font-semibold uppercase tracking-wide text-muted">What we measure</h2>
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryTile
           tab="search"
           active={tab === "search"}
-          label="Search recall@5"
+          label="Search"
+          question="Does search find the film you mean?"
+          measures={`Recall@5: the share of our ${retrieval?.n ?? ""} test searches whose right answer is in the top 5.`}
           value={r5 != null ? r5.toFixed(3) : "—"}
           line={
             gate && gate.status !== "none" ? (
@@ -312,14 +354,18 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
         <SummaryTile
           tab="blurbs"
           active={tab === "blurbs"}
-          label="Blurb groundedness"
+          label="Notes"
+          question="Is each note backed by its sources?"
+          measures="Groundedness: the share of a note's claims its sources support. 1.0 means all of them."
           value={latest?.meanScore != null ? latest.meanScore.toFixed(3) : "—"}
-          line={latest ? `${latest.n} blurbs, judge v${judgeVersion(latest)}` : "No valid run yet"}
+          line={latest ? `${latest.n} notes, judge v${judgeVersion(latest)}` : "No valid run yet"}
         />
         <SummaryTile
           tab="daily"
           active={tab === "daily"}
-          label="New blurbs approved"
+          label="Daily check"
+          question="Are new notes checked before you see them?"
+          measures="New notes the AI judge approved. The rest wait for a person to review them."
           value={gateTotals.judged > 0 ? pct(gateTotals.approved / gateTotals.judged) : "—"}
           line={
             gateTotals.judged > 0
@@ -330,7 +376,9 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
         <SummaryTile
           tab="assistants"
           active={tab === "assistants"}
-          label="AI assistant pass rate"
+          label="AI assistants"
+          question="Do AI assistants use the canon correctly?"
+          measures="Test requests a model handled exactly right, using only our tool descriptions."
           value={toolRun?.metrics.passRate != null ? pct(toolRun.metrics.passRate) : "—"}
           line={toolRun ? `${toolRun.n} test requests` : "No run yet"}
         />
@@ -450,7 +498,7 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
 
             {latest && patterns.length > 0 && (
               <Section
-                title="Why blurbs fail"
+                title="Why notes fail"
                 lead={
                   <>
                     In the latest run, {failing} of {latest.n} notes had a claim the judge couldn&apos;t match to a source,
@@ -523,7 +571,7 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
               )}
             </Headline>
             {gateDaily.days.length > 0 && (
-              <Section title="New blurbs, checked daily">
+              <Section title="New notes, checked daily">
                 <div className="rounded-xl border border-border bg-surface p-4">
                   <BlurbGateDaily days={gateDaily.days} />
                 </div>
