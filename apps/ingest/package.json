@@ -23,12 +23,12 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.5.41",
+    "@cloudflare/vitest-pool-workers": "^0.22.0",
     "@cloudflare/workers-types": "^4.20260101.0",
-    "@types/node": "^22.10.2",
-    "tsx": "^4.19.2",
+    "@types/node": "^22.20.4",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3",
     "vitest": "^2.1.8",
-    "wrangler": "^4.140.0"
+    "wrangler": "^4.141.0"
   }
 }

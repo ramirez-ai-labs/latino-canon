@@ -15,15 +15,15 @@
   },
   "dependencies": {
     "@latino-canon/core": "workspace:*",
-    "hono": "^4.13.8",
+    "hono": "^4.13.9",
     "zod": "^4.6.5"
   },
   "devDependencies": {
     "@latino-canon/eval": "workspace:*",
-    "@cloudflare/vitest-pool-workers": "^0.5.40",
+    "@cloudflare/vitest-pool-workers": "^0.22.0",
     "@cloudflare/workers-types": "^4.20260101.0",
     "typescript": "^5.9.3",
     "vitest": "^2.1.8",
-    "wrangler": "^4.140.0"
+    "wrangler": "^4.141.0"
   }
 }
