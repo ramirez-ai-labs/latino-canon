@@ -133,6 +133,26 @@ describe("scoreCase", () => {
     expect(scoreCase(c, null, TOOLS).problems).toEqual(["answered without calling a tool"]);
   });
 
+  // The traps (2026-09-30): the first run scored 30/30, so the set had no case a model could fail.
+  it("fails a forbidden value - a story set in the 1940s is not a 1940s film - sent as a number or as digits", () => {
+    const c: ToolCase = { id: "t", category: "search", request: "…", tool: "search_titles", forbidArgs: { decade: 1940 }, hard: true };
+    expect(scoreCase(c, { name: "search_titles", arguments: { query: "zoot suit riots 1940s" } }, TOOLS).pass).toBe(true);
+    expect(scoreCase(c, { name: "search_titles", arguments: { query: "zoot suit", decade: 1940 } }, TOOLS).problems).toEqual([
+      `"decade" is 1940, which the request doesn't mean`,
+    ]);
+    expect(scoreCase(c, { name: "search_titles", arguments: { query: "zoot suit", decade: "1940" } }, TOOLS).pass).toBe(false);
+    // Another decade isn't what this case tests; only the forbidden value fails.
+    expect(scoreCase(c, { name: "search_titles", arguments: { query: "zoot suit", decade: 1980 } }, TOOLS).pass).toBe(true);
+  });
+
+  it("accepts any listed value for an argument", () => {
+    const c: ToolCase = { id: "e", category: "get_title", request: "…", tool: "get_title", args: { id: ["selena-1997", "la-bamba-1987"] } };
+    expect(scoreCase(c, { name: "get_title", arguments: { id: "la-bamba-1987" } }, TOOLS).pass).toBe(true);
+    expect(scoreCase(c, { name: "get_title", arguments: { id: "coco-2017" } }, TOOLS).problems).toEqual([
+      `"id" is "coco-2017", expected ["selena-1997","la-bamba-1987"]`,
+    ]);
+  });
+
   it("passes no call when no tool fits, and fails a call", () => {
     const c: ToolCase = { id: "n", category: "none", request: "capital of Peru?", tool: null };
     expect(scoreCase(c, null, TOOLS).pass).toBe(true);
@@ -161,6 +181,18 @@ describe("summarize", () => {
   });
 });
 
+describe("summarize, with hard cases", () => {
+  it("reports the hard cases' pass rate on its own", () => {
+    const c = (id: string, hard: boolean): ToolCase => ({ id, category: "search", request: "…", tool: "get_title", hard });
+    const results = [
+      scoreCase(c("a", true), { name: "get_title", arguments: { id: "x" } }, TOOLS),
+      scoreCase(c("b", true), null, TOOLS),
+      scoreCase(c("c", false), { name: "get_title", arguments: { id: "x" } }, TOOLS),
+    ];
+    expect(summarize(results)).toMatchObject({ passRate: 2 / 3, hard: { n: 2, passRate: 0.5 } });
+  });
+});
+
 describe("datasets/mcp-tools.jsonl", () => {
   const cases = readFileSync(fileURLToPath(new URL("./datasets/mcp-tools.jsonl", import.meta.url)), "utf8")
     .split("\n")
@@ -175,15 +207,31 @@ describe("datasets/mcp-tools.jsonl", () => {
   it("expects only arguments the tool's schema accepts", () => {
     for (const c of cases.filter((c) => c.tool && c.args)) {
       const schema = TOOLS.find((t) => t.name === c.tool)!.inputSchema;
-      const args = { ...c.args, ...(schema.required?.includes("query") ? { query: "x" } : {}) };
-      expect(schemaProblems(args, schema), c.id).toEqual([]);
+      // A list means any one value is right, so every one of them must be valid.
+      const width = Math.max(1, ...Object.values(c.args!).map((v) => (Array.isArray(v) ? v.length : 1)));
+      for (let i = 0; i < width; i++) {
+        const one = Object.fromEntries(Object.entries(c.args!).map(([k, v]) => [k, Array.isArray(v) ? v[Math.min(i, v.length - 1)] : v]));
+        const args = { ...one, ...(schema.required?.includes("query") ? { query: "x" } : {}) };
+        expect(schemaProblems(args, schema), c.id).toEqual([]);
+      }
     }
   });
 
+  it("forbids only arguments the tool has", () => {
+    for (const c of cases.filter((c) => c.forbidArgs)) {
+      const props = TOOLS.find((t) => t.name === c.tool)!.inputSchema.properties ?? {};
+      for (const key of Object.keys(c.forbidArgs!)) expect(Object.keys(props), c.id).toContain(key);
+    }
+  });
+
+  it("says why each hard case's answer is the right one", () => {
+    for (const c of cases.filter((c) => c.hard)) expect(c.note, c.id).toBeTruthy();
+  });
+
   it("names, in each follow-up request, a title id the conversation actually showed", () => {
-    for (const c of cases.filter((c) => typeof c.args?.id === "string")) {
+    for (const c of cases.filter((c) => c.args?.id !== undefined)) {
       const shown = (c.context ?? []).map((m) => m.content).join("\n");
-      expect(shown, c.id).toContain(`id ${c.args!.id}`);
+      for (const id of [c.args!.id].flat()) expect(shown, c.id).toContain(`id ${id}`);
     }
   });
 });

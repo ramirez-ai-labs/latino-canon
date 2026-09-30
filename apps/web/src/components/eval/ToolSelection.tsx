@@ -9,6 +9,7 @@ import type { EvalRun } from "@latino-canon/core";
 interface Miss {
   id: string;
   category: string;
+  hard?: boolean;
   expected: string | null;
   called: { name: string; arguments: Record<string, unknown> } | null;
   problems: string[];
@@ -16,6 +17,7 @@ interface Miss {
 
 interface ToolRunDetails {
   model?: string;
+  caseSetHash?: string;
   serverVersion?: string | null;
   byCategory?: Record<string, { n: number; passRate: number }>;
   misses?: Miss[];
@@ -49,7 +51,37 @@ export function weakToolCategories(run: EvalRun | undefined): { name: string; pa
     .sort((a, b) => a[1].passRate - b[1].passRate)
     .map(([cat, v]) => ({ name: CATEGORY_NAME[cat] ?? cat, passRate: v.passRate, n: v.n }));
 }
-const modelName = (m?: string) => (m?.includes("llama-3.3-70b") ? "Llama 3.3 70B" : (m?.split("/").pop() ?? "a Workers AI model"));
+const MODEL_NAMES: [string, string][] = [
+  ["llama-3.3-70b", "Llama 3.3 70B"],
+  ["llama-4-scout", "Llama 4 Scout"],
+  ["mistral-small-3.1", "Mistral Small 3.1"],
+];
+const modelName = (m?: string) => MODEL_NAMES.find(([key]) => m?.includes(key))?.[1] ?? m?.split("/").pop() ?? "a Workers AI model";
+
+/** The model the tool descriptions are gated on; other models are shown next to it. */
+export const REFERENCE_TOOL_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+
+/**
+ * Which recorded runs to show, from newest-first runs: only runs on the newest case set
+ * (a changed set makes older scores incomparable), the reference model's latest as the
+ * main result, and each other model's latest beside it. Without a reference run on the
+ * set yet, the newest run leads.
+ */
+export function pickToolRuns(runs: EvalRun[]): { main: EvalRun | undefined; others: EvalRun[] } {
+  const set = (r: EvalRun) => ((r.details ?? {}) as ToolRunDetails).caseSetHash;
+  const model = (r: EvalRun) => ((r.details ?? {}) as ToolRunDetails).model;
+  const current = runs.filter((r) => set(r) === set(runs[0]!));
+  if (current.length === 0) return { main: undefined, others: [] };
+  const main = current.find((r) => model(r) === REFERENCE_TOOL_MODEL) ?? current[0]!;
+  const seen = new Set([model(main)]);
+  const others: EvalRun[] = [];
+  for (const r of current) {
+    if (seen.has(model(r))) continue;
+    seen.add(model(r));
+    others.push(r);
+  }
+  return { main, others };
+}
 
 function Stat({ label, value, plain }: { label: string; value: string; plain: string }) {
   return (
@@ -61,7 +93,7 @@ function Stat({ label, value, plain }: { label: string; value: string; plain: st
   );
 }
 
-export function ToolSelection({ run }: { run: EvalRun | undefined }) {
+export function ToolSelection({ run, others = [] }: { run: EvalRun | undefined; others?: EvalRun[] }) {
   if (!run) {
     return (
       <p className="max-w-2xl text-sm text-muted">
@@ -73,10 +105,11 @@ export function ToolSelection({ run }: { run: EvalRun | undefined }) {
   const d = (run.details ?? {}) as ToolRunDetails;
   const categories = Object.entries(d.byCategory ?? {});
   const misses = d.misses ?? [];
+  const hardRate = run.metrics.hardPassRate;
 
   return (
     <div>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className={`grid gap-3 sm:grid-cols-2 ${hardRate === undefined ? "lg:grid-cols-3" : "lg:grid-cols-4"}`}>
         <Stat
           label="Pass rate"
           value={pct(run.metrics.passRate)}
@@ -84,7 +117,32 @@ export function ToolSelection({ run }: { run: EvalRun | undefined }) {
         />
         <Stat label="Right tool" value={pct(run.metrics.toolAccuracy)} plain="Picked the right tool - or rightly used none for an off-topic question." />
         <Stat label="Right arguments" value={pct(run.metrics.argAccuracy)} plain="When the tool was right: valid arguments, the right title id or filter, and no filter nobody asked for." />
+        {hardRate !== undefined && (
+          <Stat
+            label="Hard requests"
+            value={pct(hardRate)}
+            plain="Written to trip a model up: a film set in the 1940s (not made then), Spanish follow-ups, a title named in an off-topic question."
+          />
+        )}
       </div>
+
+      {others.length > 0 && (
+        <div className="mt-5 rounded-xl border border-border bg-surface px-4 py-3">
+          <div className="text-sm font-semibold text-text">Other models, same {run.n} requests</div>
+          <ul className="mt-2 space-y-1.5 text-sm">
+            {others.map((o) => (
+              <li key={o.id} className="flex flex-wrap items-baseline gap-x-3 tabular-nums">
+                <span className="w-40 shrink-0 text-text">{modelName(((o.details ?? {}) as ToolRunDetails).model)}</span>
+                <span className="text-muted">
+                  pass <span className="font-semibold text-text">{pct(o.metrics.passRate)}</span> · tool {pct(o.metrics.toolAccuracy)} · arguments{" "}
+                  {pct(o.metrics.argAccuracy)}
+                  {o.metrics.hardPassRate !== undefined ? ` · hard ${pct(o.metrics.hardPassRate)}` : ""} · {o.runAt.slice(0, 10)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {categories.length > 0 && (
         <ul className="mt-5 space-y-2.5">
@@ -110,6 +168,7 @@ export function ToolSelection({ run }: { run: EvalRun | undefined }) {
             {misses.map((m) => (
               <li key={m.id}>
                 <code className="text-xs text-text">{m.id}</code>
+                {m.hard && <span className="text-xs text-muted"> (hard)</span>}
                 <span className="text-muted">
                   {" "}
                   - expected {m.expected ?? "no tool"}, called{" "}

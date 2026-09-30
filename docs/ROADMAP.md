@@ -431,9 +431,14 @@ about 200 neurons per title (dashboard headline, 3.38k → 4.6k for 6 titles).
 - [x] **MCP tool-selection eval**: 30 requests scored on the tool and arguments a model picks
   from the live server's own instructions and tool list; manual workflow, results on the Eval
   page. *First run (2026-09-29, Llama 3.3 70B):* 30/30 on tool and arguments, 1,408 neurons.
-  A perfect score means the set can't tell a good tool description from a worse one yet. Before
-  it gates agentic curation v2, add cases that can fail (ambiguous asks, Spanish, negation,
-  multi-step requests) and score a second model (8B) against the same set.
+  A perfect score means the set can't tell a good tool description from a worse one yet.
+  *Harder (2026-09-30):* 11 hard cases (41 in all, ~1.9k neurons on the 70B): setting vs
+  release decade, "Mexican-American" vs `country: MX`, a multi-step ask whose id can't be
+  guessed, Spanish follow-ups for every tool, a genre lookup vs `curate`, off-topic questions
+  naming a canon title. A `model` input scores Llama 4 Scout or Mistral Small 3.1 on the same
+  set (the 8B Llama isn't marked for function calling in the Workers AI catalog). **Next:**
+  the first 70B run on the 41, then Scout on another day - that pair is the baseline agentic
+  curation v2 is measured against.
 
 - [x] **Search filters built from the catalog** (2026-09-29). The country and decade
   dropdowns were hard-coded before the Latin American expansion: 35 canon titles from

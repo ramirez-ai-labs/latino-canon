@@ -91,7 +91,7 @@ apps/api  (/search, /titles, /similar, /agents/curate)
 The server calls no model, so its tool names, descriptions, schemas and connect-time instructions are all an
 assistant has to go on. That wording is tested like code: `packages/eval/src/run-mcp-tools.ts` connects to the
 live server as a client, reads `initialize` and `tools/list`, and gives exactly those to Llama 3.3 70B
-(Workers AI function calling, temperature 0) with each of 30 requests in `datasets/mcp-tools.jsonl`.
+(Workers AI function calling, temperature 0) with each of 41 requests in `datasets/mcp-tools.jsonl`.
 
 | Group | Example | Expected |
 |---|---|---|
@@ -101,12 +101,23 @@ live server as a client, reads `initialize` and `tools/list`, and gives exactly 
 | More like this | "More like Coco, please" | `similar_titles` with `coco-2017` |
 | Recommend | "Something uplifting by a Latina director" | `curate` |
 | Off-topic | "What's the capital of Peru?" | no tool |
+| Hard (11 of the 41) | "Films set in 1940s Los Angeles, around the zoot suit riots" | `search_titles`, and **not** `decade: 1940` - *Zoot Suit* is set then but came out in 1981 |
+
+The first run (2026-09-29) scored 30/30 on the original 30 requests, which meant the set couldn't tell a good
+description from a worse one. The 11 hard requests (2026-09-30) are the places a model reading the tools loosely
+goes wrong: a story's setting taken as its release decade, "Mexican-American" taken as `country: MX`, a
+multi-step ask whose id can't be guessed (so it must search first), Spanish follow-ups for every tool, a plain
+genre lookup sent to `curate`, and off-topic questions that name a canon title. Each has a `note` with why its
+answer is the right one.
 
 A case passes when the tool is right (or rightly none), the arguments pass the tool's input schema (what the
 server itself would reject), expected ids and filters match, and a plain lookup adds no search filter.
 Filters exclude, so a guessed filter can hide the right answer - the same failure as incident 5 in
-`docs/operations/monitoring.md`, one layer out. Scores: pass rate (the headline), tool accuracy, argument
-accuracy, and pass rate per group. A call the model writes into its text reply instead of `tool_calls` still
+`docs/operations/monitoring.md`, one layer out. A hard case can also forbid a value (`forbidArgs`) or accept any
+of several (`args.id: [..]`). Scores: pass rate (the headline), tool accuracy, argument accuracy, pass rate per
+group, and the hard requests' pass rate on their own. The workflow's `model` input scores another
+function-calling model (Llama 4 Scout, Mistral Small 3.1) on the same requests; the Eval page shows the 70B's
+latest run and each other model's beside it. A call the model writes into its text reply instead of `tool_calls` still
 counts, since a client would run it.
 
 ```bash

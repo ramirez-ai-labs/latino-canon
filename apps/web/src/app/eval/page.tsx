@@ -15,7 +15,7 @@ import {
 } from "@/lib/eval-insights";
 import { BlurbGateDaily } from "@/components/eval/BlurbGateDaily";
 import { RetrievalTrend } from "@/components/eval/RetrievalTrend";
-import { ToolSelection, weakToolCategories } from "@/components/eval/ToolSelection";
+import { pickToolRuns, ToolSelection, weakToolCategories } from "@/components/eval/ToolSelection";
 import { Badge } from "@/components/ui/Badge";
 
 export const metadata = { title: "Eval" };
@@ -293,7 +293,8 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
     listEvalRuns(RETRIEVAL_RUNS_SHOWN, "retrieval"),
     listEvalRuns(GROUNDEDNESS_RUNS_SHOWN, "groundedness"),
     getBlurbGateDaily(14).catch(() => ({ days: [] })),
-    listEvalRuns(1, "mcp-tools").catch(() => ({ runs: [] })),
+    // Several: the reference model's latest run and other models' on the same case set.
+    listEvalRuns(20, "mcp-tools").catch(() => ({ runs: [] })),
   ]);
   const runs = [...retrievalRuns.runs, ...groundednessRuns.runs].sort((a, b) => b.runAt.localeCompare(a.runAt));
   const validGroundedness = groundednessRuns.runs.filter((r) => !isInvalid(r));
@@ -320,7 +321,7 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
   const judgedDays = gateDaily.days.filter((d) => d.judged > 0);
   const gateTotals = judgedDays.reduce((t, d) => ({ judged: t.judged + d.judged, approved: t.approved + d.approved }), { judged: 0, approved: 0 });
 
-  const toolRun = toolRuns.runs[0];
+  const { main: toolRun, others: otherToolRuns } = pickToolRuns(toolRuns.runs);
   const weakTools = weakToolCategories(toolRun);
 
   // "Is this good?" for each tile: our target, and one line of context from the data itself.
@@ -704,7 +705,7 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
               )}
             </Headline>
             <Section title="AI assistants using the canon">
-              <ToolSelection run={toolRun} />
+              <ToolSelection run={toolRun} others={otherToolRuns} />
             </Section>
           </>
         )}
@@ -728,7 +729,8 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
             <p>
               <strong className="text-text">Tool selection</strong> connects to the live MCP server like any client,
               reads its instructions and tool list, and gives them to Llama 3.3 70B with each test request (some carry an
-              earlier turn, as in &quot;tell me more about the second one&quot;). A request passes when the model calls the
+              earlier turn, as in &quot;tell me more about the second one&quot;). Some requests are written to trip a model
+              up - a film set in the 1940s is not a 1940s film - and other models are scored on the same requests. A request passes when the model calls the
               right tool, or none for an off-topic question, with valid arguments, the expected title id or filter, and
               no search filter the person didn&apos;t ask for - filters exclude, so a guessed one can hide the answer.
               Runs are started by hand from{" "}

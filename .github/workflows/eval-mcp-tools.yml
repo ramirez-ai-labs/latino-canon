@@ -5,14 +5,29 @@ name: Run MCP tool-selection eval
 # packages/eval/src/mcp-tools.ts, the cases in datasets/mcp-tools.jsonl, and the result is
 # recorded in D1 for the Eval page.
 #
-# Not on a push trigger: ~30 Llama 3.3 70B calls with the tool list in every prompt cost
-# about 1k neurons, so this counts as the day's one extra 70B job (CLAUDE.md, budget
-# rules). Run it after changing a tool's name, description, schema or the server's
-# instructions, and compare with the last run on the Eval page.
+# Not on a push trigger: 41 cases with the tool list in every prompt cost ~1.9k neurons on
+# the 70B (the first 30-case run measured 1,408), so this is the day's one extra 70B job
+# (CLAUDE.md, budget rules). Run it after changing a tool's name, description, schema or the
+# server's instructions, and compare with the last run on the Eval page.
+#
+# `model` scores a second function-calling model against the same cases (Llama 4 Scout, ~1.7k
+# on this set: most of the cost is input tokens, priced close to the 70B's), to show whether
+# the descriptions work beyond the model they were written against. The budget claim is per
+# kind, so a second model the same day is allowed, but two full runs together (~3.6k) are
+# over the ~2k cap: run the second model on another day.
 
 on:
   workflow_dispatch:
     inputs:
+      model:
+        description: "Model to score (each has function calling in the Workers AI catalog)"
+        type: choice
+        required: false
+        default: "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        options:
+          - "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+          - "@cf/meta/llama-4-scout-17b-16e-instruct"
+          - "@cf/mistralai/mistral-small-3.1-24b-instruct"
       cases:
         description: "Comma-separated case ids to run (blank = all). A subset isn't recorded."
         required: false
@@ -33,13 +48,14 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CASES: ${{ inputs.cases }}
+      TOOL_MODEL: ${{ inputs.model || '@cf/meta/llama-3.3-70b-instruct-fp8-fast' }}
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
       # The budget rule, enforced (apps/ingest/src/budget.ts): this is the day's one extra
-      # 70B job (~1k neurons, under the ~2k cap, so a queue day is fine). A subset run
+      # 70B job (~1.9k neurons, just under the ~2k cap, so a queue day is fine). A subset run
       # spends too, so it claims as well.
       - name: Claim today's 70B budget slot
         env:
