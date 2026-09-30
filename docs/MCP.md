@@ -110,6 +110,10 @@ multi-step ask whose id can't be guessed (so it must search first), Spanish foll
 genre lookup sent to `curate`, and off-topic questions that name a canon title. Each has a `note` with why its
 answer is the right one.
 
+First run on the 41 (2026-09-30, Llama 3.3 70B): pass 95%, hard requests 82%. Both misses searched for a
+question that named a canon title or director but asked for a translation or a pronunciation, so the server's
+instructions now say that naming one doesn't make a question about the canon.
+
 A case passes when the tool is right (or rightly none), the arguments pass the tool's input schema (what the
 server itself would reject), expected ids and filters match, and a plain lookup adds no search filter.
 Filters exclude, so a guessed filter can hide the right answer - the same failure as incident 5 in
