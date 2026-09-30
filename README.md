@@ -21,14 +21,14 @@ or PR that shows it, with the number it moved.
 
 | Skill | Where it shows | Result |
 |---|---|---|
-| **Hybrid retrieval (RAG)** | BM25 over D1 FTS5 + `bge-m3` embeddings in Vectorize, fused with weighted reciprocal rank fusion ([hybrid.ts](apps/api/src/search/hybrid.ts)) | recall@5 **0.818**, recall@10 **0.905** on a 97-query golden set |
+| **Hybrid retrieval (RAG)** | BM25 over D1 FTS5 + `bge-m3` embeddings in Vectorize, fused with weighted reciprocal rank fusion ([hybrid.ts](apps/api/src/search/hybrid.ts)) | recall@5 **0.829**, recall@10 **0.905** on a 97-query golden set |
 | **LLM query understanding, with guardrails** | The LLM extracts filters only; inferred filters re-rank, explicit ones exclude ([run-search.ts](apps/api/src/search/run-search.ts)); retrieval runs on the user's own words [#215](https://github.com/ramirez-ai-labs/latino-canon/pull/215), [#284](https://github.com/ramirez-ai-labs/latino-canon/pull/284) | recall@5 0.680 → **0.806** after one wrong filter guess stopped excluding answers; genre/era/kind queries **0.564 → 0.764** |
 | **Grounded generation with citations** | "Why it matters" notes written only from supplied sources, citing them inline; OMDb awards as a source ([prompts.ts](packages/core/src/prompts.ts), [blurb-sources.ts](packages/core/src/blurb-sources.ts)) | Every note shows the sources behind its claims |
 | **LLM-as-judge, versioned** | A 70B groundedness judge frozen at v3; runs from before it saw source text are kept and labeled invalid ([run-groundedness.ts](packages/eval/src/run-groundedness.ts)) | Scores only compare within a judge version; the record is corrected, never deleted |
 | **Eval-gated generation** | The same judge gates every new note at ingest, plus a deterministic citation check for what the judge misses ([groundedness.ts](packages/core/src/groundedness.ts)) [#261](https://github.com/ramirez-ai-labs/latino-canon/pull/261)–[#263](https://github.com/ramirez-ai-labs/latino-canon/pull/263) | Daily auto-approval **33% → 87%** after the prompt and citation fixes |
 | **Safe regeneration** | Old notes are rewritten, and a rewrite replaces one only if it passes the gate ([blurb-regen.ts](apps/ingest/src/blurb-regen.ts)) [#275](https://github.com/ramirez-ai-labs/latino-canon/pull/275) | A visible note is never swapped for a worse one |
 | **MCP server** | A remote, stateless Streamable HTTP server with four read-only tools, typed structured output, and DNS-rebinding protection ([apps/mcp](apps/mcp)) [#267](https://github.com/ramirez-ai-labs/latino-canon/pull/267), [#285](https://github.com/ramirez-ai-labs/latino-canon/pull/285) | Works in Claude Desktop, Claude Code and the MCP Inspector; no model or API key on the server |
-| **Tool-use eval for the MCP server** | A model gets only what the live server tells every assistant (instructions + `tools/list`) and must call the right tool with the right arguments, or none; 30 cases, scored on tool, schema-valid arguments, and no filter nobody asked for ([mcp-tools.ts](packages/eval/src/mcp-tools.ts)) | Tool wording is tested like code: a description change is measured before it ships |
+| **Tool-use eval for the MCP server** | A model gets only what the live server tells every assistant (instructions + `tools/list`) and must call the right tool with the right arguments, or none; 30 cases, scored on tool, schema-valid arguments, and no filter nobody asked for ([mcp-tools.ts](packages/eval/src/mcp-tools.ts)) | 30/30 on the first run (2026-09-29, Llama 3.3 70B, ~1.4k neurons); tool wording is tested like code |
 | **Agent with a visible reasoning trail** | The curation agent: intent → hybrid search → LLM tone scoring → re-rank ([curation-agent.ts](apps/api/src/agents/curation-agent.ts)) | Every step logged and shown to the user |
 | **Bilingual search** | Multilingual embeddings, English/Spanish stopwords in keyword search, a Spanish golden set tagged by failure mode [#274](https://github.com/ramirez-ai-labs/latino-canon/pull/274), [#284](https://github.com/ramirez-ai-labs/latino-canon/pull/284) | Spanish recall@5 measured on 28 queries, not 8 |
 | **AI cost engineering** | Cache-first search, per-client rate limits, a keyword fallback when the AI budget runs out, and zero-neuron features by design (`/similar`, MCP reads) [#236](https://github.com/ramirez-ai-labs/latino-canon/pull/236), [#266](https://github.com/ramirez-ai-labs/latino-canon/pull/266) | **$0/month**; every AI call has a measured cost |
@@ -63,7 +63,7 @@ or PR that shows it, with the number it moved.
 | **Durable pipelines** | Ingest as a Cloudflare Workflow with retried, idempotent steps, fed by a daily queue ([workflow.ts](apps/ingest/src/workflow.ts), [ingest-queue.ts](apps/ingest/src/ingest-queue.ts)) [#249](https://github.com/ramirez-ai-labs/latino-canon/pull/249) | Ingest volume fixed at 15 titles a day, however many PRs merge |
 | **Resilience** | A keyword fallback when embeddings fail, a cache keyed by deployed version, degraded results never cached | Search keeps working when the AI budget runs out |
 | **Security** | Admin operations only on the ingest worker behind a token, with a test that fails if an admin route returns to the public API; per-client rate limits; MCP host validation | An unauthenticated admin route that shipped twice now can't ship again |
-| **Testing** | Worker tests against real local D1/KV/R2, fakes for Workers AI and Vectorize, a red-then-green regression test for each incident | ~330 tests across api, ingest, mcp, core and eval |
+| **Testing** | Worker tests against real local D1/KV/R2, fakes for Workers AI and Vectorize, a red-then-green regression test for each incident | ~380 tests across api, ingest, mcp, core and eval |
 | **API design** | A typed REST API with an OpenAPI spec and Swagger UI, zod validation, and structured MCP tool schemas | [Public API docs](https://latino-canon-api.ai-builders-studio-latinx.workers.dev/docs) |
 | **Frontend and design systems** | Next.js 15 on Workers; the Cartelera identity with runtime light/dark tokens chosen from three documented directions ([IDENTITY_DIRECTIONS.md](docs/design/IDENTITY_DIRECTIONS.md)) [#276](https://github.com/ramirez-ai-labs/latino-canon/pull/276) | WCAG AA contrast in both themes |
 
@@ -76,8 +76,8 @@ or PR that shows it, with the number it moved.
 | **Evaluate before merge** | Ranking changes measured on a non-live Worker version (`wrangler versions upload`) against the live baseline [#284](https://github.com/ramirez-ai-labs/latino-canon/pull/284) | Regressions found before users see them |
 | **Release management** | Semver releases with written highlights; the version shown in the product and reported by the MCP server | v1.0.0 → v1.6.0 |
 | **Observability and incident response** | Structured JSON logs, AI Gateway, a daily blurb-gate chart, and a runbook built from eight real incidents ([monitoring.md](docs/operations/monitoring.md)) | Every incident has a cause, a fix and a guard |
-| **Cost management (FinOps)** | Measured cost per AI job, and a daily budget rule for the account-wide limit | $0/month runtime with 294 titles live |
-| **Supply chain** | A weekly `pnpm audit` in CI with targeted overrides ([security-audit.yml](.github/workflows/security-audit.yml)) | 4 advisories (2 high) cleared, now watched |
+| **Cost management (FinOps)** | Measured cost per AI job, and a daily budget rule for the account-wide limit | $0/month runtime with 337 titles live |
+| **Supply chain** | A weekly `pnpm audit` in CI with targeted overrides ([security-audit.yml](.github/workflows/security-audit.yml)) | All 49 open Dependabot alerts (7 critical) closed by one coordinated vitest/vite/pool-workers upgrade ([#310](https://github.com/ramirez-ai-labs/latino-canon/pull/310)); a new advisory fails the next PR |
 
 ---
 
@@ -378,7 +378,7 @@ Measured costs (2026-09-24, Workers AI analytics, `aiInferenceAdaptiveGroups`):
 | Ingest classify + blurb + judge (daily queue, 15 titles) | 70B | ~3.2k/day (~200 per title + ~13 for the judge) |
 | Groundedness eval, 212 blurbs | 70B | ~2.8k per run |
 | Retrieval eval, 97 queries | 8B + bge-m3 | ~0.15k hybrid / ~0.4k all modes |
-| MCP tool-selection eval, 30 cases | 70B | ~1k per run (estimated from tokens; each run prints its own) |
+| MCP tool-selection eval, 30 cases | 70B | ~1.4k per run (measured 2026-09-29: 1,408) |
 
 Rules this project follows: besides the daily ingest queue, at most one 70B job
 (blurb regeneration, a sampled judge run) per day, capped at ~2k, so the planned day stays
@@ -397,7 +397,7 @@ by accident.
 
 ## Evaluation results
 
-*(Last refreshed 2026-09-27, against the live catalog of 294 titles. Both evals now run
+*(Last refreshed 2026-09-30, against the live catalog of 337 titles. Both evals now run
 from CI and record to `eval_runs`; the live history is on the site's Eval page.)*
 
 ### Retrieval
@@ -405,16 +405,22 @@ from CI and record to `eval_runs`; the live history is on the site's Eval page.)
 `pnpm eval:retrieval` runs the golden query set (`packages/eval/src/datasets/queries.jsonl`,
 97 queries) against the deployed `api` worker, after every api deploy (hybrid mode) and
 weekly (all modes). A run fails when hybrid recall@5 drops more than 0.03 against the last
-passing run on the same golden set. Current baseline, hybrid, by query type:
+passing run on the same golden set. Latest run (2026-09-30, after the #310 deploy), hybrid,
+by query type:
 
 | query type | n | recall@5 | MRR |
 |---|---|---|---|
 | known-item (exact titles, typos, aliases) | 7 | 1.000 | 1.000 |
-| person (director/actor named) | 10 | 0.800 | 0.694 |
-| plot (half-remembered descriptions) | 44 | 0.799 | 0.752 |
-| facet (genre, kind, decade asks) | 8 | 0.764 | 0.781 |
-| spanish (original titles, native plots, people) | 28 | 0.825 | 0.687 |
-| **all** | 97 | **0.818** | 0.748 |
+| person (director/actor named) | 10 | 0.800 | 0.644 |
+| plot (half-remembered descriptions) | 44 | 0.822 | 0.746 |
+| facet (genre, kind, decade asks) | 8 | 0.639 | 0.674 |
+| spanish (original titles, native plots, people) | 28 | 0.861 | 0.666 |
+| **all** | 97 | **0.829** | 0.725 |
+
+Read the small categories with care. The query rewrite is an LLM call, so runs differ, and in
+an 8- or 10-query category one query moves recall@5 by 0.1 or more: between the 2026-09-29
+and 2026-09-30 runs, with nothing in ranking changed, person went 0.700 → 0.800 and facet
+0.764 → 0.639. The overall number moved 0.003, well inside the 0.03 gate.
 
 The Spanish set grew from 8 queries, mostly translations of English plot queries (0.453),
 to 28 that include original Spanish titles, native Spanish plot descriptions and people
@@ -424,8 +430,8 @@ condensed keywords, and keyword search drops English and Spanish stopwords
 ([#284](https://github.com/ramirez-ai-labs/latino-canon/pull/284)): the rewrite had been
 dropping the words that found the answer ("telenovela parody series" lost *Jane the Virgin*),
 and genre, era and kind queries rose from 0.564 to 0.764. The change was measured on a non-live
-version before merge; the one trade-off is Spanish rank quality (MRR 0.732 -> 0.687). Plot
-descriptions (0.799) are now the weakest type, and the inferred-genre boost is the next fix on
+version before merge; the one trade-off is Spanish rank quality (MRR 0.732 -> 0.687). Facet
+is the weakest type in this run, and the inferred-genre boost is the next fix on
 the [roadmap](docs/ROADMAP.md). Exact titles now always rank first: a query that names a
 title pins it to the top ([#258](https://github.com/ramirez-ai-labs/latino-canon/pull/258)),
 which took known-item MRR from 0.833 to 1.000.
@@ -444,8 +450,8 @@ found by hand, is why the eval now runs on every deploy.
 ### Groundedness
 
 `pnpm eval:groundedness` has an LLM judge (70B) check each approved blurb's claims against
-the sources it was written from. **Current baseline: 0.682** (211 of 212 blurbs scored,
-judge v3). About 120 of the ~140 flagged blurbs fail on a single "It matters…" sentence
+the sources it was written from. **Current baseline: 0.685** (205 blurbs scored,
+judge v3, 2026-09-27; the first valid run scored 0.682). About 120 of the ~140 flagged blurbs fail on a single "It matters…" sentence
 that no source supports. New blurbs are written without it (sourced facts only, with
 OMDb's awards line as a source), and ingest now runs the same v3 judge on each one:
 a blurb with every claim supported is approved automatically (`approved_by = 'judge'`),
@@ -477,14 +483,15 @@ Claude Desktop (see the
 [release notes](https://github.com/ramirez-ai-labs/latino-canon/releases/tag/latino-canon-v1.6.0)). See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind
 what's built vs. what's next, and a prioritized backlog. See [docs/operations/monitoring.md](docs/operations/monitoring.md)
 for how to operate this in production — resource names, AI Gateway/neuron-budget checks, and an
-incident response runbook built around six real production incidents. See [docs/FEATURES_COMPLETED.md](docs/FEATURES_COMPLETED.md)
+incident response runbook built around eight real production incidents. See [docs/FEATURES_COMPLETED.md](docs/FEATURES_COMPLETED.md)
 for a summary of all shipped features.
 
 The ingest resolve → fetch → normalize → persist → classify → embed → blurb path
 is implemented and has been run end-to-end against live TMDB/OMDb and a deployed
-Workflow — 264 titles are live in production D1/Vectorize (ingested, classified,
-embedded, blurbed), not just covered by fixture tests. The seed holds 331 after the Latin
-American cinema expansion; the daily queue ingests the rest at 15 a day.
+Workflow — 337 titles are live in production D1/Vectorize (ingested, classified,
+embedded, blurbed), not just covered by fixture tests. The Latin American cinema backlog
+drained on 2026-09-29; new seed entries go live at up to 15 a day, and `GET /queue` shows
+anything held.
 
 `GET /titles/:id` hydrates the full `Title` (metadata + credits + tags + approved
 blurb, with each source's cited id and text) from D1 rather than returning a raw row, and poster images are served from R2

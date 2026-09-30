@@ -425,7 +425,10 @@ about 200 neurons per title (dashboard headline, 3.38k → 4.6k for 6 titles).
 - [x] **Release v1.6.0.**
 - [x] **MCP tool-selection eval**: 30 requests scored on the tool and arguments a model picks
   from the live server's own instructions and tool list; manual workflow, results on the Eval
-  page. First run pending.
+  page. *First run (2026-09-29, Llama 3.3 70B):* 30/30 on tool and arguments, 1,408 neurons.
+  A perfect score means the set can't tell a good tool description from a worse one yet. Before
+  it gates agentic curation v2, add cases that can fail (ambiguous asks, Spanish, negation,
+  multi-step requests) and score a second model (8B) against the same set.
 
 - [x] **Search filters built from the catalog** (2026-09-29). The country and decade
   dropdowns were hard-coded before the Latin American expansion: 35 canon titles from
@@ -439,10 +442,17 @@ about 200 neurons per title (dashboard headline, 3.38k → 4.6k for 6 titles).
   countries, France, Qatar and Hong Kong among them; titles aren't hidden by this, only the
   dropdown's options, and the api still returns every country.
 
-**Next:** check the blurb gate's pass rate under the citation checks, then regenerate old
-blurbs (~20/day under the 70B budget rule); grow the Spanish golden set, then 5b; a decision
-on `/feedback`; classifier eval and the first MCP tool-selection run after the queue drains
-(~Oct 1).
+- [x] **Security upgrade** ([#310](https://github.com/ramirez-ai-labs/latino-canon/pull/310),
+  2026-09-30): vitest 2 → 4, vite 7, `@cloudflare/vitest-pool-workers` 0.22 and workers-types 5,
+  moved together (Dependabot's single-package PR #304 couldn't), plus brace-expansion
+  overrides for four advisories published mid-PR. All 49 open Dependabot alerts (7 critical)
+  closed. Vitest 4 fails a run on an unhandled rejection, which surfaced a test fake whose
+  async wrapper left a rejection briefly unhandled.
+
+**Next (2026-09-30):** the queue has drained and the gate passed 14 of 14 on 2026-09-29, so
+start regenerating old blurbs (~20/day under the 70B budget rule; none attempted yet); the
+cron heartbeat (#17); the classifier eval; harder MCP tool-selection cases; then 5 and 5b,
+facet queries first. A decision on `/feedback` is still open.
 
 ## Immediate (do first — small, high-visibility)
 
@@ -607,11 +617,11 @@ deferred rather than bundled in:
 10. ~~Add real linting~~ **Done**, see Week 2 above ([PR #169](https://github.com/ramirez-ai-labs/latino-canon/pull/169)).
 11. ~~Smaller: add a LICENSE, a Dependabot config, confirm branch protection is
     actually enabled on `main`~~ LICENSE and Dependabot: **done**, see Week 1 above
-    — though Dependabot was later disabled again (repo went public, then
-    Dependabot's own update PRs caused repeat breaking-change chaos: TypeScript
-    5→7 a second time, an untested zod 3→4 major bump), pending either a
-    post-merge lockfile-sync CI step or scoping it to security-only updates
-    (both raised, neither built yet). Branch protection: **done** — required
+    — Dependabot was disabled on 2026-09-21 (its update PRs caused repeat
+    breaking-change chaos: TypeScript 5→7 a second time, an untested zod 3→4 major
+    bump) and re-enabled on 2026-09-28 with rules (`.github/dependabot.yml`): majors
+    ignored, `@cloudflare/vitest-pool-workers` minors ignored, minor and patch
+    updates grouped into one weekly PR. Security updates are on as well (2026-09-29). Branch protection: **done** — required
     status checks + 1 approving review + CODEOWNERS
     ([PR #166](https://github.com/ramirez-ai-labs/latino-canon/pull/166)). The
     review requirement has no second human to satisfy it on a solo-maintainer
@@ -678,7 +688,7 @@ deferred rather than bundled in:
       +6h): GitHub doesn't guarantee schedule times. Not a bug; worth knowing before
       relying on one for timing.
     - Dependabot's security-update jobs failed 3 times on 2026-09-29, so the 45 alerts
-      didn't become fix PRs (see the security upgrade).
+      didn't become fix PRs. *Fixed by #310:* all of them are closed.
 
     Future work, one small `fix(ingest)` PR:
     - **Heartbeat:** every cron run writes a `cron_runs` row (ran_at; titles the queue
