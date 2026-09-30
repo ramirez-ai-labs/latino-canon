@@ -156,6 +156,49 @@ export const ingestOpenApiSpec = {
         },
       },
     },
+    "/cron": {
+      get: {
+        summary: "The daily cron's heartbeat",
+        description:
+          "One row per run of the 08:00 UTC cron (ingest queue, errored-job retries, popularity refresh), newest first. A count is null when its task failed, and the matching error says why. No row for a day means the cron didn't fire; a row of zeros means it ran with nothing to do.",
+        tags: ["Admin"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "limit", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 100, default: 14 } },
+        ],
+        responses: {
+          "200": {
+            description: "Recent cron runs",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    runs: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          startedAt: { type: "string" },
+                          durationMs: { type: "number" },
+                          queueStarted: { type: "number", nullable: true, description: "Titles the ingest queue started" },
+                          jobsRetried: { type: "number", nullable: true, description: "Errored jobs re-queued" },
+                          titlesRefreshed: { type: "number", nullable: true, description: "Titles whose TMDB popularity was refreshed" },
+                          queueError: { type: "string", nullable: true },
+                          retryError: { type: "string", nullable: true },
+                          refreshError: { type: "string", nullable: true },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "401": { description: "Missing or invalid bearer token" },
+        },
+      },
+    },
     "/jobs": {
       get: {
         summary: "List pending and errored jobs",

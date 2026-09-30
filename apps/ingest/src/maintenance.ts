@@ -11,11 +11,13 @@ import { isStaleRetry, seedTitles } from "./ingest-queue.js";
  * corrupted an unrelated title (Firefly) this project has already hit once; see
  * docs/operations/monitoring.md's incident #2.
  */
-export async function retryErroredJobs(env: Env): Promise<void> {
+export async function retryErroredJobs(env: Env): Promise<number> {
   const { results } = await env.DB.prepare(
     "SELECT id, params FROM ingest_jobs WHERE status = 'error' AND attempts < 3 LIMIT 25",
   ).all<{ id: string; params: string | null }>();
 
+  // Jobs actually re-queued, for the cron heartbeat (cron.ts) - not rows looked at.
+  let retried = 0;
   for (const job of results) {
     // Bump attempts regardless of outcome below - this is what makes the `attempts < 3`
     // cap in the query above actually stop retrying a poison job after 3 tries.
@@ -41,7 +43,9 @@ export async function retryErroredJobs(env: Env): Promise<void> {
     // row before failing later in the pipeline (e.g. classify/embed/blurb) - without
     // it, "check exists" would just skip and this retry would be a silent no-op.
     await env.INGEST_WORKFLOW.create({ params: { ...params, force: true } });
+    retried++;
   }
+  return retried;
 }
 
 /**
@@ -49,13 +53,15 @@ export async function retryErroredJobs(env: Env): Promise<void> {
  * fixed-size daily batch eventually rotates through the whole catalog rather than
  * always hitting the same titles.
  */
-export async function refreshPopularity(env: Env): Promise<void> {
+export async function refreshPopularity(env: Env): Promise<number> {
   const { results } = await env.DB.prepare(
     `SELECT id, tmdb_id, kind FROM titles
      WHERE tmdb_id IS NOT NULL AND updated_at < datetime('now', '-30 days')
      ORDER BY updated_at ASC LIMIT 25`,
   ).all<{ id: string; tmdb_id: number; kind: "film" | "series" }>();
 
+  // Titles actually refreshed, for the cron heartbeat (cron.ts).
+  let refreshed = 0;
   for (const title of results) {
     try {
       const details = await fetchTmdbDetails(env, title.tmdb_id, title.kind);
@@ -64,10 +70,12 @@ export async function refreshPopularity(env: Env): Promise<void> {
       await env.DB.prepare("UPDATE titles SET popularity = ?, updated_at = datetime('now') WHERE id = ?")
         .bind(details.popularity, title.id)
         .run();
+      refreshed++;
     } catch (err) {
       // One bad TMDB lookup (e.g. a since-removed id) shouldn't abort the whole
       // batch - same reasoning as the groundedness eval's own per-title try/catch.
       console.warn(`[refreshPopularity] ${title.id}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
+  return refreshed;
 }

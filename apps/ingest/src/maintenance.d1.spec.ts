@@ -47,7 +47,7 @@ describe("retryErroredJobs", () => {
       .bind("job-retry-1", params.ref, "classify", "error", 1, JSON.stringify(params))
       .run();
 
-    await retryErroredJobs(env);
+    expect(await retryErroredJobs(env)).toBe(1); // re-queued, counted for the cron heartbeat
 
     expect(create).toHaveBeenCalledTimes(1);
     expect(create).toHaveBeenCalledWith({ params: { ...params, force: true } });
@@ -85,7 +85,7 @@ describe("retryErroredJobs", () => {
       .bind("job-retry-2", "No Params (2020)", "classify", "error", 0)
       .run();
 
-    await retryErroredJobs(env);
+    expect(await retryErroredJobs(env)).toBe(0); // looked at, not re-queued
 
     expect(create).not.toHaveBeenCalled();
     const row = await env.DB.prepare("SELECT attempts FROM ingest_jobs WHERE id = ?")
@@ -145,7 +145,7 @@ describe("refreshPopularity", () => {
       ),
     );
 
-    await refreshPopularity({ ...testEnv, TMDB_API_KEY: "test-key" });
+    expect(await refreshPopularity({ ...testEnv, TMDB_API_KEY: "test-key" })).toBe(1);
 
     const row = await testEnv.DB.prepare("SELECT popularity FROM titles WHERE id = ?")
       .bind("stale-title-2000")
@@ -190,7 +190,8 @@ describe("refreshPopularity", () => {
       }),
     );
 
-    await refreshPopularity({ ...testEnv, TMDB_API_KEY: "test-key" });
+    // Only the lookup that worked counts as refreshed (the cron heartbeat's titles_refreshed).
+    expect(await refreshPopularity({ ...testEnv, TMDB_API_KEY: "test-key" })).toBe(1);
 
     const good = await testEnv.DB.prepare("SELECT popularity FROM titles WHERE id = ?")
       .bind("good-title-2000")
