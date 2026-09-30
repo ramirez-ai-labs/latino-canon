@@ -74,7 +74,7 @@ or PR that shows it, with the number it moved.
 | **CI** | Every PR: lint with warning caps, typecheck, tests, the web build, seed validation, and a dependency audit ([validate-pr.yml](.github/workflows/validate-pr.yml)) | A merge that silently dropped seven titles is now caught in CI |
 | **CD with verification** | Path-scoped deploys; migrations applied first, and the ingest deploy waits for them; every deploy checks itself live: a retrieval eval gate, an MCP client smoke test, a web smoke test [#264](https://github.com/ramirez-ai-labs/latino-canon/pull/264), [#281](https://github.com/ramirez-ai-labs/latino-canon/pull/281) | Each deploy proves it works, not just that it built |
 | **Evaluate before merge** | Ranking changes measured on a non-live Worker version (`wrangler versions upload`) against the live baseline [#284](https://github.com/ramirez-ai-labs/latino-canon/pull/284) | Regressions found before users see them |
-| **Release management** | Semver releases with written highlights; the version shown in the product and reported by the MCP server | v1.0.0 → v1.6.0 |
+| **Release management** | Semver releases with written highlights; the version shown in the product and reported by the MCP server | v1.0.0 → v1.7.0 |
 | **Observability and incident response** | Structured JSON logs, AI Gateway, a daily blurb-gate chart, and a runbook built from eight real incidents ([monitoring.md](docs/operations/monitoring.md)) | Every incident has a cause, a fix and a guard |
 | **Cost management (FinOps)** | Measured cost per AI job, and a daily budget rule for the account-wide limit | $0/month runtime with 337 titles live |
 | **Supply chain** | A weekly `pnpm audit` in CI with targeted overrides ([security-audit.yml](.github/workflows/security-audit.yml)) | All 49 open Dependabot alerts (7 critical) closed by one coordinated vitest/vite/pool-workers upgrade ([#310](https://github.com/ramirez-ai-labs/latino-canon/pull/310)); a new advisory fails the next PR |
@@ -313,8 +313,8 @@ Worker** / **Deploy ingest Worker** manually.
 
 Pull requests are labeled automatically by changed area and conventional title
 prefix. Releases are created manually from **Actions -> Release** using the next
-semantic version (current: `1.6.0`); the workflow creates a tag like
-`latino-canon-v1.6.0`, generates release notes from merged PRs since the last tag,
+semantic version (current: `1.7.0`); the workflow creates a tag like
+`latino-canon-v1.7.0`, generates release notes from merged PRs since the last tag,
 and supports prereleases.
 
 Adding a title to the canon is a normal PR: edit
@@ -472,15 +472,15 @@ or sources actually change.
 
 ## Status
 
-**v1.6.0.** v1.5.0 gave the project its own look (the Cartelera identity, paper and ink by
-default with a dark mode on a toggle) and a sharper view of its quality. v1.6.0 makes search
-and its checks stronger: retrieval on the user's own words with English/Spanish stopwords
-(genre, era and kind searches 0.564 → 0.764 recall@5, measured on a non-live version before
-merge), a daily record of the blurb gate (auto-approval 33% → 87% after the prompt and
-citation fixes), a live smoke test after every web deploy, an Evals page that explains its
-metrics in plain language, and an MCP server that connects cleanly from Claude Code and
-Claude Desktop (see the
-[release notes](https://github.com/ramirez-ai-labs/latino-canon/releases/tag/latino-canon-v1.6.0)). See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind
+**v1.7.0.** v1.6.0 made search and its checks stronger. v1.7.0 makes the system hold itself
+to its own rules: the Workers AI budget rule is enforced in code, with a written reason for
+any override (#303); a tool-selection eval tests the MCP server's wording like code, 30/30 on
+its first run (#299); old blurbs are rewritten 20 a day behind the same gate new ones face
+(#312); and the daily cron leaves a heartbeat, so a quiet day no longer looks like a failed
+one (#313). It also rebuilds the Evals page as a summary strip and tabs with targets
+(#305–#307), builds the search filters from the catalog (#300, #301), and closes all 49 open
+Dependabot alerts with one coordinated test-toolchain upgrade (#310) (see the
+[release notes](https://github.com/ramirez-ai-labs/latino-canon/releases/tag/latino-canon-v1.7.0)). See [docs/ROADMAP.md](docs/ROADMAP.md) for the design philosophy behind
 what's built vs. what's next, and a prioritized backlog. See [docs/operations/monitoring.md](docs/operations/monitoring.md)
 for how to operate this in production — resource names, AI Gateway/neuron-budget checks, and an
 incident response runbook built around eight real production incidents. See [docs/FEATURES_COMPLETED.md](docs/FEATURES_COMPLETED.md)

@@ -278,7 +278,7 @@ pnpm --filter @latino-canon/mcp test          # tools via the SDK's own Client, 
 - Groundedness runs are manual (`eval-groundedness.yml`). Blurb regeneration runs daily at
   10:00 UTC (`regenerate-blurbs.yml`) and takes the day's 70B slot while the backlog lasts,
   so run another 70B eval before 10:00 UTC or with an override.
-- Releases are cut from **Actions → Release** (semver; current `1.6.0`).
+- Releases are cut from **Actions → Release** (semver; current `1.7.0`).
 - CI secrets are `CLOUDFLARE_API_TOKEN` (needs D1:Edit) and `CLOUDFLARE_ACCOUNT_ID`.
   Worker secrets are `TMDB_API_KEY`, `OMDB_API_KEY` and `INGEST_ADMIN_TOKEN`, all on
   ingest. See `infra/README.md`.

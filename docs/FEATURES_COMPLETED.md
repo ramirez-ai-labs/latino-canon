@@ -1,6 +1,6 @@
 # Post-Week 3 Major Features
 
-All features listed below have been implemented, tested, and deployed to production (v1.0.0 through v1.6.0).
+All features listed below have been implemented, tested, and deployed to production (v1.0.0 through v1.7.0).
 
 ## Feature Inventory
 
@@ -165,6 +165,15 @@ retrieval eval after every api deploy with per-category scores on the Eval page.
 | Search on the user's own words, EN/ES stopwords, dual keyword lists (genre/era/kind 0.564 → 0.764) | #284 | ✅ Complete | v1.6.0 |
 | MCP server answers GET/DELETE with 405 (spec), so Claude Code and Desktop connect | #285 | ✅ Complete | v1.6.0 |
 | README: what this project demonstrates (AI, ML, data science, architecture, DevOps) | #286 | ✅ Complete | v1.6.0 |
+| LLM JSON replies with unescaped quotes repaired before parsing (a quoted nickname had left a title without a blurb) | #296 | ✅ Complete | v1.7.0 |
+| MCP tool-selection eval: 30 requests scored on the tool and arguments a model picks from the live server's instructions (30/30 on the first run) | #299 | ✅ Complete | v1.7.0 |
+| Search filters built from the catalog (`GET /titles/facets`): every canon country and decade, A-Z; country options scoped to the US, Spain and Latin America | #300, #301 | ✅ Complete | v1.7.0 |
+| Workers AI budget rule enforced in code (`ai_budget_claims`, `GET /budget`, `POST /budget/claim`); overrides need a written reason | #303 | ✅ Complete | v1.7.0 |
+| Evals page as a summary strip and four tabs, an intro, and tiles that say whether each number meets its target | #305–#307 | ✅ Complete | v1.7.0 |
+| MCP tools accept numbers sent as text and a filter without a query; off-topic rule in the server instructions | #308 | ✅ Complete | v1.7.0 |
+| Security upgrade: vitest 4, vite 7, vitest-pool-workers 0.22, workers-types 5, brace-expansion overrides; all 49 open Dependabot alerts closed | #310 | ✅ Complete | v1.7.0 |
+| Daily blurb regeneration (`regenerate-blurbs.yml`): 20 a day, dry run first, skips when nothing is due | #312 | ✅ Complete | v1.7.0 |
+| Cron heartbeat: `Promise.allSettled`, a `cron_runs` row per run, `GET /cron` | #313 | ✅ Complete | v1.7.0 |
 | Latin American cinema expansion: 219 → 331 seed titles | #226–#253 | ✅ Merged; ingesting via the queue (279 live at release) | v1.3.0 |
 
 **All features including the two v1.0.0 nice-to-haves (OpenAPI + ESLint) are production-ready and live.**
