@@ -13,10 +13,23 @@ import {
   writeTags,
 } from "./persist.js";
 
+/**
+ * titles.tmdb_id is UNIQUE, so each fixture id gets its own tmdbId (the same id always
+ * maps to the same one, so an upsert of a title keeps it). A shared default of 1 only
+ * worked while vitest-pool-workers rolled storage back after every test; since 0.22
+ * (vitest 4) storage is isolated per file, and the second title inserted collided.
+ */
+function fixtureTmdbId(id: string): number {
+  let h = 0;
+  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) % 1_000_000_007;
+  return 1_000_000 + h;
+}
+
 function makeTitle(overrides: Partial<Title> = {}): Title {
+  const id = overrides.id ?? "test-title-2020";
   return {
-    id: "test-title-2020",
-    tmdbId: 1,
+    id,
+    tmdbId: fixtureTmdbId(id),
     imdbId: "tt0000001",
     kind: "film",
     title: "Test Title",
@@ -236,14 +249,18 @@ describe("writeBlurb source format", () => {
   });
 
   it("re-ingesting the same blurb in the new source format keeps an existing approval", async () => {
-    await persistTitle(env, makeTitle({ id: "blurb-format-2020", tmdbId: 77 }));
+    // Its own title: the test above already gave blurb-format-2020 a blurb, and storage is
+    // shared across a file's tests since vitest-pool-workers 0.22.
+    await persistTitle(env, makeTitle({ id: "blurb-format-legacy-2020", tmdbId: 77 }));
     await env.DB.prepare(
       "INSERT INTO blurbs (title_id, text, sources, model, approved) VALUES (?1, ?2, ?3, 'm', 1)",
     )
-      .bind("blurb-format-2020", text, JSON.stringify(legacySources))
+      .bind("blurb-format-legacy-2020", text, JSON.stringify(legacySources))
       .run();
-    await writeBlurb(env, "blurb-format-2020", { result: { text, claims: [] }, sources: newSources, model: "m" });
-    const row = await env.DB.prepare("SELECT approved FROM blurbs WHERE title_id = ?").bind("blurb-format-2020").first<{ approved: number }>();
+    await writeBlurb(env, "blurb-format-legacy-2020", { result: { text, claims: [] }, sources: newSources, model: "m" });
+    const row = await env.DB.prepare("SELECT approved FROM blurbs WHERE title_id = ?")
+      .bind("blurb-format-legacy-2020")
+      .first<{ approved: number }>();
     expect(row?.approved).toBe(1);
   });
 });

@@ -1,5 +1,6 @@
-import { defineWorkersConfig, readD1Migrations } from "@cloudflare/vitest-pool-workers/config";
+import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-pool-workers";
 import { fileURLToPath } from "node:url";
+import { defineConfig } from "vitest/config";
 
 // apps/api/migrations is the actual source of truth for the shared D1 schema (both
 // workers bind the same "latino-canon" database) - reused here rather than a
@@ -12,18 +13,20 @@ const migrations = await readD1Migrations(migrationsPath);
 // of changing runtime behavior for tests that were already passing. Only D1-backed
 // tests (*.d1.spec.ts) run here, on workerd via Miniflare, real bindings, fully
 // local - same reasoning as apps/api/vitest.config.ts.
-export default defineWorkersConfig({
+// vitest 4 + @cloudflare/vitest-pool-workers 0.22: the pool is a plugin (see
+// apps/api/vitest.config.ts); storage is isolated per test file.
+export default defineConfig({
+  plugins: [
+    cloudflareTest({
+      wrangler: { configPath: "./wrangler.test.jsonc" },
+      miniflare: {
+        bindings: { TEST_MIGRATIONS: migrations },
+      },
+    }),
+  ],
   test: {
     include: ["src/**/*.d1.spec.ts"],
     setupFiles: ["./src/test/apply-migrations.ts"],
-    poolOptions: {
-      workers: {
-        wrangler: { configPath: "./wrangler.test.jsonc" },
-        miniflare: {
-          bindings: { TEST_MIGRATIONS: migrations },
-        },
-      },
-    },
   },
   resolve: {
     alias: {

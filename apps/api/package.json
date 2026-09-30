@@ -20,10 +20,11 @@
   },
   "devDependencies": {
     "@latino-canon/eval": "workspace:*",
-    "@cloudflare/vitest-pool-workers": "^0.5.40",
-    "@cloudflare/workers-types": "^4.20260101.0",
+    "@cloudflare/vitest-pool-workers": "^0.22.0",
+    "@cloudflare/workers-types": "^5.20260929.1",
     "typescript": "^5.9.3",
-    "vitest": "^2.1.8",
+    "vitest": "^4.1.11",
+    "vite": "^7.3.6",
     "wrangler": "^4.141.0"
   }
 }
