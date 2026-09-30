@@ -89,6 +89,15 @@ Merged seed titles are **not** ingested by a workflow. The ingest worker's daily
 - **Purpose**: override - ingest titles added since `base_ref` immediately, outside the queue
 - **Note**: spends 70B neurons now; check the day's budget first
 
+### regenerate-blurbs.yml
+- **Trigger**: daily 10:00 UTC; manual (`workflow_dispatch`: `count`, `dry_run`, `override_reason`)
+- **Purpose**: rewrite pre-gate blurbs, ~20 a day (ROADMAP item 6); a rewrite replaces a blurb only if it passes the ingest gate
+- **What it does**:
+  - Dry run first (no AI calls, no budget claim); stops there when nothing is due, leaving the day's 70B slot free
+  - Otherwise runs `regenerate:blurbs`, which claims `blurb-regen` for the UTC day (~2k neurons for 20)
+  - Refuses more than 20 without `override_reason`; a budget refusal (409) fails the run with the reason
+- **Note**: while it runs daily, an eval that needs the day's 70B slot runs before 10:00 UTC or with an override
+
 ---
 
 ## Evaluation

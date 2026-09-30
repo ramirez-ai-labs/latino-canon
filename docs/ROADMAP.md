@@ -186,9 +186,14 @@ Order below: fix the measurements first, then what they measure.
   approval now also requires clean inline citations (`blurbTextProblems`, #262, #263).
   *Regeneration tooling done:* `POST /regenerate-blurbs` (ingest) rewrites old blurbs and
   replaces one only when the rewrite passes the gate - a visible blurb is never swapped
-  for a worse one; held titles wait 7 days. **Still open:** running it - check the first
-  queue days' pass rate under the citation checks, size the backlog with
-  `regenerate:blurbs --dry-run`, then ~20 titles a day (~2k neurons).
+  for a worse one; held titles wait 7 days. *Running daily (2026-09-30):* the gate
+  passed 14 of 14 on 2026-09-29 under the citation checks. Sized from production D1 with the
+  worker's own `pickCandidates`: 259 to rewrite - 78 with no approved note, 116 with the
+  unsupported sentence, 65 with citation problems. `regenerate-blurbs.yml` rewrites 20 a day
+  at 10:00 UTC (~2k neurons), about 13 days. The first ~4 days add notes to titles that have
+  none, which the groundedness eval doesn't score (it judges approved notes), so the score
+  moves from about day 5. **Still open:** a full groundedness run on a day with no queue
+  work and no regeneration due, once the backlog is done.
 - [ ] **5. Rewrite rework.** *Cache-first is done:* the cache is checked before the LLM
   call, keyed on the normalized raw query, and uncached queries are rate-limited per
   client (30/min, Rate Limiting binding). *Original words done (2026-09-27, #284):* retrieval

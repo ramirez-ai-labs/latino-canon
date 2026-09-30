@@ -1,0 +1,136 @@
+name: Regenerate old blurbs
+
+# Rewrites pre-gate "why it matters" notes under the current prompt, ~20 a day
+# (ROADMAP item 6). A rewrite replaces a note only when it passes the same v3 judge and
+# citation checks new blurbs face at ingest (apps/ingest/src/blurb-regen.ts), so a visible
+# note is never swapped for a worse one.
+#
+# Budget (CLAUDE.md "Architecture decisions" #2): blurb regeneration is the day's one
+# optional 70B job, ~2k neurons for 20 titles. The worker enforces it: the first real call
+# claims `blurb-regen` for the UTC day and is refused (409) if a different 70B job already
+# claimed it. Scheduled at 10:00 UTC, after the 08:00 ingest queue has recorded its run.
+# While this runs daily, an eval that needs the day's slot (MCP tool selection, classifier)
+# has to run before 10:00 UTC or give an override reason.
+#
+# A dry run comes first and costs nothing (no AI calls, no claim). When nothing is due -
+# the backlog is done, or every remaining title was attempted within the last 7 days - the
+# job stops there, so the day's slot stays free for a full groundedness run.
+#
+# Sized 2026-09-30 from production D1 with the worker's own pickCandidates: 259 notes
+# (78 with no approved note, 116 with the unsupported "It matters" sentence, 65 with
+# citation problems), about 13 days at 20 a day.
+
+on:
+  schedule:
+    - cron: "0 10 * * *" # daily 10:00 UTC, after the 08:00 ingest queue
+  workflow_dispatch:
+    inputs:
+      count:
+        description: "Titles to rewrite (1-20; more needs override_reason)"
+        required: false
+        default: "20"
+      dry_run:
+        description: "Only size the backlog and list the next titles (no AI calls, no budget claim)"
+        type: boolean
+        required: false
+        default: false
+      override_reason:
+        description: "Run even if today's 70B slot is taken, or rewrite more than 20 (recorded with the claim). Blank = follow the budget rule."
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+# One run at a time: two overlapping runs would pick the same titles.
+concurrency:
+  group: regenerate-blurbs
+  cancel-in-progress: false
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      INGEST_URL: ${{ vars.INGEST_URL }}
+      INGEST_ADMIN_TOKEN: ${{ secrets.INGEST_ADMIN_TOKEN }}
+      # Inputs reach the shell as environment variables, never interpolated into a script.
+      # A scheduled run has no inputs, so these fall back to the daily defaults.
+      COUNT: ${{ inputs.count || '20' }}
+      DRY_RUN: ${{ inputs.dry_run == true }}
+      OVERRIDE_REASON: ${{ inputs.override_reason }}
+
+    steps:
+      - name: Check the requested count
+        run: |
+          if ! [[ "$COUNT" =~ ^[0-9]+$ ]] || [ "$COUNT" -lt 1 ]; then
+            echo "::error::count must be a positive whole number, got '$COUNT'"
+            exit 1
+          fi
+          # ~20 titles is the ~2k-neuron cap for the day's optional 70B job.
+          if [ "$COUNT" -gt 20 ] && [ -z "$OVERRIDE_REASON" ]; then
+            echo "::error::count $COUNT is over the daily cap of 20 (~2k neurons). Give override_reason to run more."
+            exit 1
+          fi
+
+      # No AI calls and no budget claim (the worker skips the claim for dryRun).
+      - name: Size the backlog (dry run)
+        id: size
+        run: |
+          status=$(curl -sS -o dry.json -w '%{http_code}' -X POST "$INGEST_URL/regenerate-blurbs" \
+            -H "authorization: Bearer $INGEST_ADMIN_TOKEN" -H "content-type: application/json" \
+            -d '{"dryRun":true,"limit":10}')
+          if [ "$status" != "200" ]; then
+            echo "::error::dry run failed: HTTP $status $(cat dry.json)"
+            exit 1
+          fi
+          considered=$(jq -r '.considered' dry.json)
+          echo "considered=$considered" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Blurb regeneration backlog"
+            echo
+            echo "Due today: **$considered** ($(jq -r '.byReason | to_entries | map("\(.key) \(.value)") | join(", ")' dry.json))"
+            echo
+            echo "Next up: $(jq -r '[.next[] | "\(.titleId) (\(.reason))"] | join(", ")' dry.json)"
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat dry.json; echo
+
+      - name: Nothing due
+        if: steps.size.outputs.considered == '0'
+        run: |
+          echo "Nothing due today: no budget claimed, so today's 70B slot stays free." | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Set up pnpm
+        if: env.DRY_RUN != 'true' && steps.size.outputs.considered != '0'
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.28.2
+
+      - name: Set up Node.js
+        if: env.DRY_RUN != 'true' && steps.size.outputs.considered != '0'
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        if: env.DRY_RUN != 'true' && steps.size.outputs.considered != '0'
+        run: pnpm install --frozen-lockfile
+
+      # scripts/regenerate-blurbs.ts batches the run in calls of 10 and fails on a budget
+      # refusal (409), so a day whose slot was taken shows as a failed run with the reason.
+      - name: Regenerate
+        if: env.DRY_RUN != 'true' && steps.size.outputs.considered != '0'
+        run: |
+          args=("$COUNT")
+          if [ -n "$OVERRIDE_REASON" ]; then args+=(--override "$OVERRIDE_REASON"); fi
+          set -o pipefail
+          pnpm --filter @latino-canon/ingest regenerate:blurbs "${args[@]}" | tee regen.log
+          {
+            echo
+            echo "### Result"
+            echo
+            echo '```'
+            grep -E '^(batch:|Replaced|held )' regen.log || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
