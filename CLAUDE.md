@@ -4,7 +4,7 @@
 
 A search and curation product for Latino-led films and series: "type anything and find it"
 retrieval (including Spanish and half-remembered plots) over a small, editorially curated
-catalog with context on why each title matters. Live, with ~320 titles in production.
+catalog with context on why each title matters. Live, with ~340 titles in production.
 
 Four Cloudflare Workers plus shared packages, all on the **free tier**:
 
@@ -51,7 +51,7 @@ at 00:00 UTC. Running out breaks live search, not just ingest. Measured costs:
 | Ingest queue, classify+blurb+judge (70B), 15 titles/day | ~3.2k (~200/title + ~13 judge) |
 | Groundedness judge run | ~2.8k |
 | Retrieval eval | ~0.15k hybrid, ~0.4k all modes |
-| MCP tool-selection eval (30 cases, 70B) | ~1k (estimated; the run prints its own) |
+| MCP tool-selection eval (30 cases, 70B) | ~1.4k (measured 2026-09-29: 1,408) |
 
 Rules:
 
@@ -208,8 +208,8 @@ README and `monitoring.md`.
    2:1 in RRF (ROADMAP 5b).
 3. **Blurb groundedness is 0.685** (2026-09-27 v3 run). Most failures are one
    unsupported "It matters…" sentence from the old prompt. New blurbs are gated at
-   ingest; the old ones are being rewritten through `/regenerate-blurbs` - 254 in the
-   backlog, about 20 a day (ROADMAP item 6).
+   ingest; the old ones are rewritten through `/regenerate-blurbs` - 254 in the backlog,
+   about 20 a day, not started as of 2026-09-30 (ROADMAP item 6).
 4. **The curation agent is a fixed 4-step pipeline.** No LLM chooses its tools.
 5. **`apps/web` has no unit tests.** A post-deploy smoke test (`scripts/smoke-web.ts`, run by
    `deploy-web.yml`) checks that home, search, a title, Evals, About and a 404 render, that
@@ -232,15 +232,18 @@ README and `monitoring.md`.
 
 See `docs/ROADMAP.md` for the authoritative list. Current order:
 
-1. Rewrite the pre-gate blurbs: ~20 a day through `/regenerate-blurbs`, more once the
-   ingest queue drains (item 6).
+1. Rewrite the pre-gate blurbs: ~20 a day through `/regenerate-blurbs` (item 6). The
+   ingest queue drained on 2026-09-29 and the gate passed 14 of 14 that day, so nothing
+   blocks the first batch.
 2. Facet and Spanish ranking: search on the user's original words and let the LLM
-   extract filters only (item 5); Spanish keyword collisions (5b). Facet (0.627) is the
-   weakest query type.
+   extract filters only (item 5); Spanish keyword collisions (5b). Facet (0.639 on
+   2026-09-30) is the weakest query type; with 8-10 queries per category, one query moves
+   a category's recall@5 by 0.1 or more between runs.
 3. Cartelera steps 2-4: layouts for home, cards and title pages
    (`docs/design/IDENTITY_DIRECTIONS.md`).
 4. Classifier eval (item 8), then an agentic curation v2, gated by the MCP tool-selection
-   eval (first run pending).
+   eval. Its first run (2026-09-29) scored 30/30, so it needs harder cases before it can
+   gate anything.
 
 ## Testing
 
