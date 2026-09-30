@@ -454,9 +454,11 @@ about 200 neurons per title (dashboard headline, 3.38k → 4.6k for 6 titles).
   closed. Vitest 4 fails a run on an unhandled rejection, which surfaced a test fake whose
   async wrapper left a rejection briefly unhandled.
 
-**Next (2026-09-30):** the queue has drained and the gate passed 14 of 14 on 2026-09-29, so
-start regenerating old blurbs (~20/day under the 70B budget rule; none attempted yet); the
-cron heartbeat (#17); the classifier eval; harder MCP tool-selection cases; then 5 and 5b,
+- [x] **Daily blurb regeneration** (#312) and the **cron heartbeat** (#313, ROADMAP #17).
+- [x] **Release v1.7.0.**
+
+**Next (2026-09-30):** old blurbs are being rewritten daily (#312, ~20/day under the 70B
+budget rule); then the classifier eval; harder MCP tool-selection cases; then 5 and 5b,
 facet queries first. A decision on `/feedback` is still open.
 
 ## Immediate (do first — small, high-visibility)
