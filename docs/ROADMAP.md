@@ -695,14 +695,14 @@ deferred rather than bundled in:
     - Dependabot's security-update jobs failed 3 times on 2026-09-29, so the 45 alerts
       didn't become fix PRs. *Fixed by #310:* all of them are closed.
 
-    Future work, one small `fix(ingest)` PR:
-    - **Heartbeat:** every cron run writes a `cron_runs` row (ran_at; titles the queue
-      started; jobs retried; titles refreshed; duration; each task's error, if any).
-    - **`Promise.allSettled`** so one failing task can't hide the others; log each failure
-      as `{"event":"cron.task","task":…,"outcome":"error"}`.
-    - **`GET /cron`** (admin, next to `GET /budget`): the last 14 runs. Runbook entry in
-      `docs/operations/monitoring.md`.
-    - **Optional:** a daily GitHub check that fails when no heartbeat is newer than 26h,
+    *Done (2026-09-30), one `fix(ingest)` PR:*
+    - [x] **Heartbeat:** every cron run writes a `cron_runs` row (migration 0030: start time,
+      duration, titles the queue started, jobs retried, titles refreshed, each task's error).
+    - [x] **`Promise.allSettled`** (`apps/ingest/src/cron.ts`) so one failing task can't hide
+      the others; each failure logs `{"event":"cron.task","task":…,"outcome":"error"}`.
+    - [x] **`GET /cron`** (admin, next to `GET /budget`): the last 14 runs. Runbook entry
+      "Alert: cron heartbeat" in `docs/operations/monitoring.md`.
+    - [ ] **Optional:** a daily GitHub check that fails when no heartbeat is newer than 26h,
       so a stopped cron is noticed the same day.
 
 ## Long-term: developer experience

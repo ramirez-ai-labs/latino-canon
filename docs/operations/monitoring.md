@@ -409,6 +409,24 @@ seed's current pin already failed (check `GET /jobs`), or a job finished but no 
 title has that `tmdbId` (a slug collision). The fix is a corrected pin in the seed, not
 a retry - the nightly retry skips jobs the seed has since re-pinned.
 
+### Alert: cron heartbeat
+
+```bash
+curl -s https://latino-canon-ingest.ai-builders-studio-latinx.workers.dev/cron   -H "authorization: Bearer $INGEST_ADMIN_TOKEN" | python3 -m json.tool
+```
+
+One row per run of the 08:00 UTC cron (`cron_runs`, migration 0030), newest first. Read it
+by day:
+
+- **No row for a day:** the cron didn't fire. Check the ingest worker's Cron Triggers in
+  the dashboard and whether a deploy dropped `triggers.crons` from `wrangler.jsonc`.
+- **A row of zeros:** it ran with nothing to do (queue drained, no errored jobs, no title
+  stale for 30+ days). This is the case that looked like a failure on 2026-09-29 before the
+  heartbeat existed (ROADMAP #17).
+- **A `*Error` column set:** that task threw; its count is `null` and the other tasks still
+  ran (`Promise.allSettled`). Search Workers Logs for `{"event":"cron.task"}` for the same
+  message with its timestamp.
+
 ### Alert: blurb approval count
 
 ```bash

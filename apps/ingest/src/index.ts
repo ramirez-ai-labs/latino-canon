@@ -1,12 +1,12 @@
 import type { AliasKind, Env, IngestParams } from "./bindings.js";
-import { retryErroredJobs, refreshPopularity } from "./maintenance.js";
 import { fetchTmdbPersonGender, fetchTmdbDetails } from "./sources/tmdb.js";
 import { slugId } from "./normalize.js";
 import { removeInvalidTmdbEntries } from "./cleanup/index.js";
 import { rebuildVectors, reindexFts, writeAliases, writeContentAdvisory } from "./persist.js";
 import { classifyContentAdvisory } from "./ai.js";
 import { ingestOpenApiSpec } from "./openapi.js";
-import { loadQueuePlan, runIngestQueue } from "./ingest-queue.js";
+import { loadQueuePlan } from "./ingest-queue.js";
+import { recentCronRuns, runCron } from "./cron.js";
 import { regenerateBlurbs } from "./blurb-regen.js";
 import { OPTIONAL_KINDS, budgetDay, claimBudget, claimsToday, isOptionalKind, recordIngestRun } from "./budget.js";
 
@@ -26,6 +26,8 @@ export default {
    *                                                               claims the day's budget slot)
    *   GET  /budget                                            → today's 70B jobs, and whether the
    *                                                               queue still has work
+   *   GET  /cron?limit=14                                     → the daily cron's last runs:
+   *                                                               each task's count or error
    *   POST /budget/claim    { kind, overrideReason? }         → claim today's 70B slot for an
    *                                                               eval run outside this worker
    *   POST /aliases         { titleId, aliases: {alias, kind}[] } → backfill aliases for a
@@ -376,6 +378,13 @@ export default {
       return Response.json({ day: budgetDay(), claims, queueHasWork: plan.eligible > 0 });
     }
 
+    // The daily cron's heartbeat (cron.ts): the last 14 runs, newest first. No row for a
+    // day means the cron didn't fire; a row with zeros means it ran with nothing to do.
+    if (req.method === "GET" && url.pathname === "/cron") {
+      const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 14, 1), 100);
+      return Response.json({ runs: await recentCronRuns(env, limit) });
+    }
+
     // For 70B jobs that run outside this worker (the groundedness and MCP tool-selection
     // evals call Workers AI from GitHub Actions): claim the day's slot before spending.
     if (req.method === "POST" && url.pathname === "/budget/claim") {
@@ -478,10 +487,8 @@ export default {
     return new Response("not found", { status: 404 });
   },
 
-  /** Nightly cron. */
-  async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
-    ctx.waitUntil(
-      Promise.all([runIngestQueue(env), retryErroredJobs(env), refreshPopularity(env)]).then(() => undefined),
-    );
+  /** Daily cron (08:00 UTC): the queue, retries and popularity refresh, with a heartbeat row. */
+  scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): void {
+    ctx.waitUntil(runCron(env));
   },
 };

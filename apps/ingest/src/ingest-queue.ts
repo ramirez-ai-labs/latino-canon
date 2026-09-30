@@ -111,8 +111,11 @@ export async function loadQueuePlan(env: Env): Promise<QueuePlan> {
   return planQueue(seedTitles(), live.results, jobs.results, perDayLimit(env));
 }
 
-/** The cron's step: start today's batch. Idempotent within a day only via job state - run it once a day. */
-export async function runIngestQueue(env: Env): Promise<void> {
+/**
+ * The cron's step: start today's batch. Idempotent within a day only via job state - run it
+ * once a day. Returns how many titles it started, for the cron heartbeat (cron.ts).
+ */
+export async function runIngestQueue(env: Env): Promise<number> {
   const plan = await loadQueuePlan(env);
   for (const t of plan.picked) {
     const { ref, title, year, kind, tmdbId, seedInclusionTypes, aliases } = t;
@@ -129,4 +132,5 @@ export async function runIngestQueue(env: Env): Promise<void> {
       held: plan.held.length,
     }),
   );
+  return plan.picked.length;
 }

@@ -292,6 +292,17 @@ and whether the ingest queue still has work (which makes today an ingest day). R
 { "day": "2026-09-30", "claims": [{ "kind": "ingest-queue", "claimedAt": "2026-09-30 08:00:03", "reason": null, "override": 0 }], "queueHasWork": false }
 ```
 
+### `GET /cron` (Admin)
+
+The daily cron's heartbeat (`cron_runs`): one row per run of the 08:00 UTC cron, newest first,
+`?limit=` 1-100 (default 14). A count is `null` when its task failed, and the matching error
+says why. No row for a day means the cron didn't fire; a row of zeros means it ran with
+nothing to do.
+
+```json
+{ "runs": [{ "startedAt": "2026-10-01T08:00:00.123Z", "durationMs": 2140, "queueStarted": 0, "jobsRetried": 0, "titlesRefreshed": 12, "queueError": null, "retryError": null, "refreshError": null }] }
+```
+
 ### `POST /budget/claim` (Admin)
 
 Claims today's 70B slot for a job that runs outside this worker. The groundedness and MCP tool-selection
