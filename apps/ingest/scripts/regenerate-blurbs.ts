@@ -20,7 +20,9 @@ const url = process.env.INGEST_URL ?? "http://localhost:8788";
 const dryRun = process.argv.includes("--dry-run");
 const overrideAt = process.argv.indexOf("--override");
 const overrideReason = overrideAt >= 0 ? process.argv[overrideAt + 1] : undefined;
-const total = Number(process.argv.find((a) => /^\d+$/.test(a)) ?? 20);
+// `: string` annotations: @cloudflare/workers-types v5 declares `process` as `any`, which
+// wins over @types/node's in this mixed tsconfig, so argv callbacks lose their type.
+const total = Number(process.argv.find((a: string) => /^\d+$/.test(a)) ?? 20);
 
 interface RegenResult {
   considered: number;

@@ -24,7 +24,7 @@ if (!titleId || !kind || rest.length === 0) {
 }
 
 async function setAliases(): Promise<void> {
-  const aliases = rest.map((alias) => ({ alias, kind }));
+  const aliases = rest.map((alias: string) => ({ alias, kind }));
   const res = await fetch(`${url}/aliases`, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${token}` },

@@ -1,11 +1,13 @@
 name: Security audit
 
-# Dependabot is off (.github/dependabot.yml: its auto-PRs caused lockfile sync cycles),
-# which left nothing watching for advisories - by 2026-09-26 four postcss advisories (two
-# high) had piled up under next unnoticed. This is the replacement: no auto-PRs, just a
-# failing check. Weekly for new advisories against what's already locked, and on any PR
-# that changes the lockfile. Fix with a targeted `pnpm.overrides` entry in the root
-# package.json (see the postcss one) or a direct upgrade.
+# A failing check for known advisories: weekly against what's already locked, and on any
+# PR that changes the lockfile. Fix with a direct upgrade or a targeted `pnpm.overrides`
+# entry in the root package.json (see the postcss and undici ones).
+#
+# It complements Dependabot rather than replacing it: security updates are on (repo
+# setting, 2026-09-29) and open fix PRs, but they can't do a coordinated upgrade -
+# Dependabot's vitest 2 -> 4 PR (#304) failed CI because vitest, vite and
+# @cloudflare/vitest-pool-workers have to move together.
 
 on:
   schedule:
@@ -40,7 +42,11 @@ jobs:
         with:
           node-version: 22
 
-      # Production dependencies only: dev tooling never ships to a Worker. High and
-      # critical fail the check; moderate and low still print for review.
-      - name: Audit production dependencies
-        run: pnpm audit --prod --audit-level high
+      # All dependencies, dev tooling included. It was production-only ("dev tooling never
+      # ships to a Worker"), and missed 45 advisories - 7 critical - in the test and build
+      # toolchain (vitest, vite, undici, an old wrangler inside vitest-pool-workers). That
+      # tooling runs in CI with CLOUDFLARE_API_TOKEN in its environment and on developer
+      # machines, so it's supply chain too. High and critical fail the check; moderate and
+      # low still print for review.
+      - name: Audit all dependencies
+        run: pnpm audit --audit-level high

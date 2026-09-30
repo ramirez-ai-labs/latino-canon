@@ -22,7 +22,7 @@ if (refs.length === 0 || !url || !token) {
 }
 
 const seed = parseSeedFile(readFileSync(new URL("../src/seed/canon.seed.json", import.meta.url), "utf8"));
-const titles = refs.map((ref) => {
+const titles = refs.map((ref: string) => {
   const t = seed.find((s) => s.ref === ref);
   if (!t) {
     console.error(`not in canon.seed.json: "${ref}"`);

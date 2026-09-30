@@ -1,5 +1,5 @@
 import { env } from "cloudflare:test";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import type { Title } from "@latino-canon/core";
 import type { Env } from "./bindings.js";
 import { regenerateBlurbs } from "./blurb-regen.js";
@@ -55,7 +55,15 @@ const read = (id: string) =>
     .bind(id)
     .first<{ text: string; approved: number; approved_by: string | null; groundedness: number | null; regen_attempted_at: string | null }>();
 
-beforeAll(async () => {
+// Every test starts from the same three blurbs. vitest-pool-workers used to roll storage
+// back after each test; since 0.22 (vitest 4) it isolates per file, so a replaced or
+// attempted blurb would leak into the next test - reset and reseed instead.
+const IDS = ["regen-pass-2020", "regen-held-2020", "regen-fine-2020"] as const;
+
+beforeEach(async () => {
+  await env.DB.prepare(`DELETE FROM blurbs WHERE title_id IN (${IDS.map(() => "?").join(",")})`)
+    .bind(...IDS)
+    .run();
   for (const [id, pop] of [["regen-pass-2020", 50], ["regen-held-2020", 40], ["regen-fine-2020", 30]] as const) {
     await persistTitle(env, title(id, pop));
   }
