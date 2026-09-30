@@ -33,7 +33,9 @@ director"). Every result has a url to its page on the site - cite it. Only state
 the canon's notes are grounded in their sources, and answers built on them should be too.
 
 These tools only cover the canon's films and series. For anything else - general knowledge, math,
-translation, small talk - answer directly and don't call a tool.`;
+translation, small talk - answer directly and don't call a tool. A question that names a title or a
+person but asks for something these tools don't hold - how to translate a title, how to pronounce a
+name - is still answered directly.`;
 
 /**
  * A whole number that also accepts its digits as a string. Open models often send numbers

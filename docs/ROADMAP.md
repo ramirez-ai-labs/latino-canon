@@ -436,9 +436,14 @@ about 200 neurons per title (dashboard headline, 3.38k → 4.6k for 6 titles).
   release decade, "Mexican-American" vs `country: MX`, a multi-step ask whose id can't be
   guessed, Spanish follow-ups for every tool, a genre lookup vs `curate`, off-topic questions
   naming a canon title. A `model` input scores Llama 4 Scout or Mistral Small 3.1 on the same
-  set (the 8B Llama isn't marked for function calling in the Workers AI catalog). **Next:**
-  the first 70B run on the 41, then Scout on another day - that pair is the baseline agentic
-  curation v2 is measured against.
+  set (the 8B Llama isn't marked for function calling in the Workers AI catalog).
+  *First run on the 41 (2026-09-30, 70B, #315):* pass 95%, hard 82% (9 of 11), 1,934 neurons.
+  Every filter trap, the multi-step ask and the Spanish follow-ups passed; both misses searched
+  for an off-topic question that named a canon title or director (a translation, a
+  pronunciation). The server's instructions now say that naming one doesn't make such a
+  question about the canon. **Next:** measure that fix on the live server (the `none` and
+  named-title search cases, ~0.5k), then Scout on another day - with the 70B run, the baseline
+  agentic curation v2 is measured against.
 
 - [x] **Search filters built from the catalog** (2026-09-29). The country and decade
   dropdowns were hard-coded before the Latin American expansion: 35 canon titles from

@@ -200,6 +200,14 @@ describe("server instructions", () => {
     expect(client.getInstructions()).toMatch(/only cover the canon's films and series/);
     expect(client.getInstructions()).toMatch(/answer directly and don't call a tool/);
   });
+
+  // The 2026-09-30 run (41 cases): both misses searched for a question that named a canon
+  // title or director but asked for a translation or a pronunciation.
+  it("say that naming a title or person doesn't make a translation or pronunciation question about the canon", async () => {
+    const client = await connect(fakeApi({}).api);
+    expect(client.getInstructions()).toMatch(/names a title or a\s+person but asks for something these tools don't hold/);
+    expect(client.getInstructions()).toMatch(/how to translate a title, how to pronounce a\s+name/);
+  });
 });
 
 describe("get_title", () => {
