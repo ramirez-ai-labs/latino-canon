@@ -31,7 +31,7 @@ describe("decideClaim - the Workers AI budget rule", () => {
   });
 
   it("allows the smaller 70B jobs on an ingest day - the queue runs daily, so the old rule blocked everything", () => {
-    for (const kind of ["blurb-regen", "eval-mcp-tools", "eval-classifier"] as const) {
+    for (const kind of ["blurb-regen", "eval-mcp-tools", "eval-classifier", "eval-curation"] as const) {
       expect(decideClaim(kind, ["ingest-queue"], true)).toEqual({ allow: true, override: false });
     }
   });

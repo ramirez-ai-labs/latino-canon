@@ -306,8 +306,8 @@ nothing to do.
 ### `POST /budget/claim` (Admin)
 
 Claims today's 70B slot for a job that runs outside this worker. The groundedness and MCP tool-selection
-eval workflows call it before spending. `kind` is one of `blurb-regen`, `eval-groundedness`,
-`eval-mcp-tools`, `eval-classifier`.
+eval workflows call it before spending, and so does the curation eval when it targets the v2 agent. `kind`
+is one of `blurb-regen`, `eval-groundedness`, `eval-mcp-tools`, `eval-classifier`, `eval-curation`.
 
 - **Granted** (200 `{ "granted": true, "override": false }`): nothing else ran today, or only the queue
   ran and the job fits under the ~2k cap.

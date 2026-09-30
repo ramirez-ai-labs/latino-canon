@@ -150,6 +150,15 @@ Merged seed titles are **not** ingested by a workflow. The ingest worker's daily
   day's one extra 70B job
 - **When**: after changing a tool's name, description or schema, or the server's instructions
 
+### eval-curation.yml
+- **Trigger**: manual (`workflow_dispatch`: `api_url`, `v2`, `cases`, `override_reason`)
+- **Purpose**: the ship gate for agentic curation v2 - do the agent's picks meet each request's hard constraints?
+- **What it does**:
+  - Sends the 10 requests in `datasets/curation.jsonl` to `POST /agents/curate` (live, or a preview via `api_url`)
+  - Checks every pick against catalog metadata (director gender, kind, decade, country, genre, advisory, theme); no LLM judge
+  - Claims the day's 70B slot first when `v2` is set (~1.8k neurons); a v1 run costs a few 8B neurons and doesn't claim
+  - Records the run in D1 (skipped for a `cases` subset)
+
 ---
 
 ## Release (Manual trigger)

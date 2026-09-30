@@ -144,6 +144,10 @@ Tone ("uplifting", "something to cry to") isn't checkable from metadata, so no r
 | Picks returned | Returning fewer than 5 is right when the catalog has fewer; precision doesn't punish it |
 | Neurons and latency per request | Measured cost, against the estimate above |
 
+**v1 baseline (2026-09-30, PR 3):** constraint precision@5 **0.52** on 50 picks - director gender
+0.40 and country 0.48, against 0.87-1.00 for genre, kind, decade, advisory and theme. So the gate below
+means v2 needs at least 0.80.
+
 No LLM judge: every check is a metadata comparison, so a score can't drift with a judge's mood (the
 groundedness judge's lesson). Ten requests × 5 picks is 50 pick-level checks. A v2 run is ~1.8k neurons,
 the day's one optional 70B job; a v1 run is a few neurons and can run any day.
@@ -165,7 +169,7 @@ ranking changes are (CLAUDE.md, "Conventions"), and compared with v1's live run.
 | 1 | This design | none |
 | 2 | Shared tool contract: MCP tool names, descriptions and schemas move to `packages/core`; the MCP server imports them. No wording change, so no tool-selection re-run. | none |
 | 3 | Curation eval: dataset, deterministic scorer, workflow; **v1 baseline run** | a few neurons |
-| 4 | v2 behind `CURATE_AGENT` (default `v1`): `LlmClient` gains tool calling (through AI Gateway), the loop, validation, fallback, the v2 cap; tests on a fake model (grounding, step limit, fallback, cap) | none (tests) |
+| 4 | v2 behind `CURATE_AGENT` (default `v1`): `LlmClient` gains tool calling (through AI Gateway), the loop, validation, fallback, the v2 cap; the response cache key gains the agent version (it has none, so a v2 preview would read v1's cached answers from the shared KV); tests on a fake model (grounding, step limit, fallback, cap) | none (tests) |
 | 5 | Measure v2 on a preview version; if the gate passes, flip the default, show `steps` on the site, update the budget table (README, `monitoring.md`), release | ~1.8k (one eval run) |
 
 ## Decisions needed
