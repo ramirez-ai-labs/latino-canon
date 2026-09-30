@@ -243,8 +243,8 @@ See `docs/ROADMAP.md` for the authoritative list. Current order:
    a category's recall@5 by 0.1 or more between runs.
 3. Cartelera steps 2-4: layouts for home, cards and title pages
    (`docs/design/IDENTITY_DIRECTIONS.md`).
-4. Classifier eval (item 8), then an agentic curation v2, gated by the MCP tool-selection
-   eval. Its first run (2026-09-29) scored 30/30; 11 hard cases were added 2026-09-30, and
+4. Classifier eval (item 8), then an agentic curation v2 (design:
+   `docs/design/AGENTIC_CURATION_V2.md`), gated by the MCP tool-selection eval. Its first run (2026-09-29) scored 30/30; 11 hard cases were added 2026-09-30, and
    the first run on them is the baseline the agent is measured against.
 
 ## Testing

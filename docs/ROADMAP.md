@@ -441,7 +441,8 @@ about 200 neurons per title (dashboard headline, 3.38k → 4.6k for 6 titles).
   Every filter trap, the multi-step ask and the Spanish follow-ups passed; both misses searched
   for an off-topic question that named a canon title or director (a translation, a
   pronunciation). The server's instructions now say that naming one doesn't make such a
-  question about the canon. **Next:** measure that fix on the live server (the `none` and
+  question about the canon. Agentic curation v2's design, gated by this eval and a new
+  deterministic curation eval: [AGENTIC_CURATION_V2.md](design/AGENTIC_CURATION_V2.md). **Next:** measure that fix on the live server (the `none` and
   named-title search cases, ~0.5k), then Scout on another day - with the 70B run, the baseline
   agentic curation v2 is measured against.
 
