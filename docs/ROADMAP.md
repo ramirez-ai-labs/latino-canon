@@ -665,6 +665,30 @@ deferred rather than bundled in:
     `genre=Animation` down with it). Now filter-only queries relax one inferred filter at a
     time, least trustworthy first (#214), and inferred filters on queries with real
     content only re-rank (#215) - see Week 4.
+17. **Cron observability: a quiet day looks like a failed one.** Checked 2026-09-29 after
+    a report that the cron jobs weren't completing. The ingest worker's daily cron
+    (`0 8 * * *`: the ingest queue, retrying errored jobs, refreshing popularity) did fire
+    on Sep 26, 27 and 28 - 15 jobs each at 08:00-08:02, all done, none errored. On Sep 29 it
+    left no trace, and there was nothing for it to do: the queue had drained, no job had
+    errored, and popularity only refreshes titles untouched for 30+ days (the oldest are
+    ~2 weeks old). D1 can't tell "ran with nothing to do" from "didn't run". Also found:
+    - `scheduled()` runs the three tasks under `Promise.all` inside `waitUntil`, so a task
+      that throws is never recorded anywhere a person would look.
+    - GitHub scheduled workflows run, but hours late (retrieval eval +5h, security audit
+      +6h): GitHub doesn't guarantee schedule times. Not a bug; worth knowing before
+      relying on one for timing.
+    - Dependabot's security-update jobs failed 3 times on 2026-09-29, so the 45 alerts
+      didn't become fix PRs (see the security upgrade).
+
+    Future work, one small `fix(ingest)` PR:
+    - **Heartbeat:** every cron run writes a `cron_runs` row (ran_at; titles the queue
+      started; jobs retried; titles refreshed; duration; each task's error, if any).
+    - **`Promise.allSettled`** so one failing task can't hide the others; log each failure
+      as `{"event":"cron.task","task":…,"outcome":"error"}`.
+    - **`GET /cron`** (admin, next to `GET /budget`): the last 14 runs. Runbook entry in
+      `docs/operations/monitoring.md`.
+    - **Optional:** a daily GitHub check that fails when no heartbeat is newer than 26h,
+      so a stopped cron is noticed the same day.
 
 ## Long-term: developer experience
 
