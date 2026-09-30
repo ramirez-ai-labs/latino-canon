@@ -1,0 +1,10 @@
+{"id":"female-directed-docs","request":"female directed documentaries","constraints":{"directorGender":"female","genre":"Documentary"},"available":10,"note":"v1 missed the director constraint on 2026-09-30: its regex matches 'female director', not 'female directed'."}
+{"id":"kids-immigration","request":"a family movie about immigration my kids could watch","constraints":{"kind":"film","contentAdvisory":"general","theme":"immigration"},"available":23,"note":"'My kids could watch' is the general content advisory; v1 never checked it on 2026-09-30."}
+{"id":"colombia-2010s","request":"Colombian films from the 2010s","constraints":{"country":"CO","decade":2010,"kind":"film"},"available":8,"note":"v1 dropped the country on 2026-09-30 ('Colombian films from the 2010s made by women', which no title meets; split into this and spain-women)."}
+{"id":"latina-showrunner-series","request":"TV series created by Latina showrunners","constraints":{"kind":"series","directorGender":"female"},"available":7,"note":"For a series, the card's director is the first credited director or, failing that, creator (led_by covers showrunners)."}
+{"id":"animated-family","request":"animated movies the whole family can watch","constraints":{"genre":"Animation","contentAdvisory":"general"},"available":9}
+{"id":"chile-docs","request":"Chilean documentaries","constraints":{"country":"CL","genre":"Documentary"},"available":4}
+{"id":"spain-women","request":"films from Spain directed by women","constraints":{"country":"ES","directorGender":"female"},"available":9,"note":"Country is a production country, so a co-production with Spain counts (CRITERIA.md: production countries record financing)."}
+{"id":"cuba-1960s","request":"Cuban cinema from the 1960s","constraints":{"country":"CU","decade":1960},"available":3}
+{"id":"brazil-2000s","request":"Brazilian films from the 2000s","constraints":{"country":"BR","decade":2000,"kind":"film"},"available":11}
+{"id":"gritty-crime-series","request":"a gritty crime series","constraints":{"kind":"series","genre":"Crime"},"available":5,"note":"'Gritty' is a tone, which metadata can't check; only the kind and genre are scored."}

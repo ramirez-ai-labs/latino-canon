@@ -14,15 +14,15 @@ import type { Env } from "./bindings.js";
  * recorded next to the claim.
  */
 export const INGEST_KINDS = ["ingest-queue", "ingest-manual"] as const;
-export const OPTIONAL_KINDS = ["blurb-regen", "eval-groundedness", "eval-mcp-tools", "eval-classifier"] as const;
+export const OPTIONAL_KINDS = ["blurb-regen", "eval-groundedness", "eval-mcp-tools", "eval-classifier", "eval-curation"] as const;
 export type IngestKind = (typeof INGEST_KINDS)[number];
 export type OptionalKind = (typeof OPTIONAL_KINDS)[number];
 export type HeavyJobKind = IngestKind | OptionalKind;
 
 /**
  * Jobs too big to share a day with the queue. The others (blurb regeneration's ~20/day,
- * the MCP tool-selection eval's ~1k, a sampled classifier eval) fit under the ~2k cap on
- * top of it.
+ * the MCP tool-selection eval's ~1.9k, a sampled classifier eval, a curation eval against the
+ * v2 agent at ~1.8k) fit under the ~2k cap on top of it.
  */
 export const QUIET_DAY_KINDS: readonly OptionalKind[] = ["eval-groundedness"];
 

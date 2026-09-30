@@ -52,6 +52,7 @@ at 00:00 UTC. Running out breaks live search, not just ingest. Measured costs:
 | Groundedness judge run | ~2.8k |
 | Retrieval eval | ~0.15k hybrid, ~0.4k all modes |
 | MCP tool-selection eval (41 cases, 70B) | ~1.9k (30 cases measured 1,408 on 2026-09-29) |
+| Curation eval (10 requests) | v1: a few (8B); v2: ~1.8k (70B, design estimate) |
 
 Rules:
 
@@ -123,6 +124,9 @@ metadata and broke every filtered semantic query (incident 4).
   after changing a tool's name, description or schema; it counts as the day's one extra 70B
   job. Its `model` input scores Llama 4 Scout or Mistral Small 3.1 on the same set - on
   another day, since two runs together are over the ~2k cap.
+- The curation eval (`eval-curation.yml`, manual) checks the curation agent's picks against each
+  request's hard constraints from catalog metadata (no judge): the ship gate for agentic
+  curation v2. v1 baseline: precision@5 0.52. A run against v2 claims the day's 70B slot.
 - Earlier invalid runs stay on the Eval page, labeled invalid. Correct the record; don't
   delete it.
 
