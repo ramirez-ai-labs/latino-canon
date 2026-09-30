@@ -143,7 +143,7 @@ Merged seed titles are **not** ingested by a workflow. The ingest worker's daily
   server's own instructions and tool list (`packages/eval/src/run-mcp-tools.ts`, see `docs/MCP.md`)
 - **What it does**:
   - Connects to the live MCP server (`initialize`, `tools/list`)
-  - Sends each of the 30 requests in `datasets/mcp-tools.jsonl` to Llama 3.3 70B with those tools
+  - Sends each of the 41 requests in `datasets/mcp-tools.jsonl` (11 hard) to the chosen model (`model` input; Llama 3.3 70B by default) with those tools
   - Scores tool, schema-valid arguments, expected ids/filters, and no unrequested filters
   - Records the run in D1 (skipped for a `cases` subset); shown on the `/eval` page
 - **Cost**: ~1k neurons per full run (estimated from tokens; the log prints the run's own). It's the

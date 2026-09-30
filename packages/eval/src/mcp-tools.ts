@@ -45,13 +45,23 @@ export interface ToolCase {
   request: string;
   /** The tool the model should call, or null when no tool fits (the model should answer itself). */
   tool: string | null;
-  /** Arguments that must equal these values (other arguments are allowed). */
-  args?: Record<string, string | number>;
+  /** Arguments that must equal these values (other arguments are allowed). A list means any
+   * one of them is right ("which came out first?" can open either title). */
+  args?: Record<string, string | number | (string | number)[]>;
+  /** Arguments that must not take these values - the traps: a story *set* in the 1940s is not
+   * `decade: 1940` (the film is from 1981), and "Mexican-American" is not `country: "MX"`. */
+  forbidArgs?: Record<string, string | number>;
   /** Phrases the `query` argument must contain, compared without accents or case - the
    * tools ask for "the person's own words". */
   queryMentions?: string[];
   /** search_titles filters narrow strictly, so a plain lookup must not add any. */
   noFilters?: boolean;
+  /** Written to fail a model that reads the tool list loosely (added 2026-09-30, after the first
+   * run scored 30/30 and so couldn't tell a good description from a worse one). Scored in
+   * the headline too, and reported on its own as `hardPassRate`. */
+  hard?: boolean;
+  /** Why the expected answer is the right one, for a reader of the case file. */
+  note?: string;
 }
 
 export interface ToolCall {
@@ -63,6 +73,7 @@ export interface CaseResult {
   id: string;
   category: ToolCaseCategory;
   expected: string | null;
+  hard: boolean;
   called: ToolCall | null;
   toolCorrect: boolean;
   /** Only meaningful when toolCorrect and a tool was expected. */
@@ -172,14 +183,15 @@ export const fold = (s: string) =>
  * A model will often pass a whole number as "1990" or 1990.0; compare loosely so the
  * eval measures the choice, not the JSON typing (schemaProblems reports the typing).
  */
-function sameValue(actual: unknown, expected: string | number): boolean {
-  if (typeof expected === "number") return Number(actual) === expected;
+function sameValue(actual: unknown, expected: string | number | (string | number)[]): boolean {
+  if (Array.isArray(expected)) return expected.some((e) => sameValue(actual, e));
+  if (typeof expected === "number") return actual !== undefined && actual !== null && Number(actual) === expected;
   return typeof actual === "string" && actual.trim().toLowerCase() === expected.toLowerCase();
 }
 
 export function scoreCase(c: ToolCase, called: ToolCall | null, tools: McpTool[]): CaseResult {
   const problems: string[] = [];
-  const base = { id: c.id, category: c.category, expected: c.tool, called };
+  const base = { id: c.id, category: c.category, expected: c.tool, hard: c.hard === true, called };
 
   if (c.tool === null) {
     const pass = called === null;
@@ -201,6 +213,9 @@ export function scoreCase(c: ToolCase, called: ToolCall | null, tools: McpTool[]
     const got = called.arguments[key];
     if (!sameValue(got, want)) problems.push(`"${key}" is ${got === undefined ? "missing" : JSON.stringify(got)}, expected ${JSON.stringify(want)}`);
   }
+  for (const [key, bad] of Object.entries(c.forbidArgs ?? {})) {
+    if (sameValue(called.arguments[key], bad)) problems.push(`"${key}" is ${JSON.stringify(bad)}, which the request doesn't mean`);
+  }
   const query = typeof called.arguments.query === "string" ? fold(called.arguments.query) : "";
   for (const phrase of c.queryMentions ?? []) {
     if (!query.includes(fold(phrase))) problems.push(`query doesn't contain "${phrase}"`);
@@ -221,6 +236,8 @@ export interface ToolEvalSummary {
   toolAccuracy: number;
   /** Of the cases where the right tool was called, the share with correct arguments. */
   argAccuracy: number;
+  /** The `hard` cases alone; absent when the run had none. */
+  hard?: { n: number; passRate: number };
   byCategory: Record<string, { n: number; passRate: number }>;
 }
 
@@ -236,11 +253,13 @@ export function summarize(results: CaseResult[]): ToolEvalSummary {
     c.passRate += r.pass ? 1 : 0;
   }
   for (const c of Object.values(byCategory)) c.passRate = share(c.passRate, c.n);
+  const hard = results.filter((r) => r.hard);
   return {
     n: results.length,
     passRate: share(results.filter((r) => r.pass).length, results.length),
     toolAccuracy: share(toolHits.length, results.length),
     argAccuracy: share(withArgs.filter((r) => r.argsCorrect).length, withArgs.length),
+    ...(hard.length > 0 ? { hard: { n: hard.length, passRate: share(hard.filter((r) => r.pass).length, hard.length) } } : {}),
     byCategory,
   };
 }

@@ -7,8 +7,9 @@
  *   CF_ACCOUNT_ID=... CLOUDFLARE_API_TOKEN=... pnpm --filter @latino-canon/eval mcp-tools
  *
  * MCP_URL points at another server (a preview deploy, say). CASES=id1,id2 runs a subset.
- * Manual only (eval-mcp-tools.yml): ~30 70B calls with the tool list in every prompt is
- * about 1k neurons - see the budget table in README.
+ * Manual only (eval-mcp-tools.yml): 41 cases with the tool list in every prompt. The first
+ * 30-case run cost 1,408 neurons on the 70B (~47 a case), so a full run is ~1.9k - under the
+ * ~2k cap for the day's one optional 70B job. TOOL_MODEL picks another model (see prices).
  */
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -34,9 +35,19 @@ const CLOUDFLARE_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
  * the right tool from these descriptions, the descriptions are doing their job.
  */
 const MODEL = process.env.TOOL_MODEL ?? "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
-/** Workers AI prices for the model above, in neurons per million tokens - for the cost line. */
-const NEURONS_PER_M_INPUT = 26_668;
-const NEURONS_PER_M_OUTPUT = 204_805;
+/**
+ * Workers AI prices in neurons per million tokens [input, output], for the cost line
+ * (developers.cloudflare.com/workers-ai/platform/pricing, 2026-09-30). Only models the model
+ * catalog marks "Function calling" are here; the 8B Llama isn't marked, so a low score from it
+ * would partly measure the API rather than the tool descriptions. A second model shows
+ * whether the descriptions work beyond the one they were written against.
+ */
+const TOOL_MODEL_PRICES: Record<string, [number, number]> = {
+  "@cf/meta/llama-3.3-70b-instruct-fp8-fast": [26_668, 204_805],
+  "@cf/meta/llama-4-scout-17b-16e-instruct": [24_545, 77_273],
+  "@cf/mistralai/mistral-small-3.1-24b-instruct": [31_876, 50_488],
+};
+const PRICE = TOOL_MODEL_PRICES[MODEL];
 const PROTOCOL_VERSION = "2025-06-18";
 
 /** What a client tells its model around the server's own instructions. */
@@ -103,6 +114,8 @@ const log = (line: string) => process.stdout.write(`${line}\n`);
 const pct = (x: number) => `${(x * 100).toFixed(0)}%`;
 
 async function main() {
+  // Refuse before spending: a model with no known price can't report what the run cost.
+  if (!PRICE) throw new Error(`no price for ${MODEL}; use one of: ${Object.keys(TOOL_MODEL_PRICES).join(", ")}`);
   if (!CF_ACCOUNT_ID || !CLOUDFLARE_API_TOKEN) {
     throw new Error("set CF_ACCOUNT_ID and CLOUDFLARE_API_TOKEN (Workers AI REST API)");
   }
@@ -141,9 +154,9 @@ async function main() {
   }
 
   const s = summarize(results);
-  const neurons = Math.round((inTokens * NEURONS_PER_M_INPUT + outTokens * NEURONS_PER_M_OUTPUT) / 1e6);
+  const neurons = Math.round((inTokens * PRICE[0] + outTokens * PRICE[1]) / 1e6);
   log(
-    `\npass ${pct(s.passRate)}  tool ${pct(s.toolAccuracy)}  args ${pct(s.argAccuracy)}  (n=${s.n}, failed=${failures.length})`,
+    `\npass ${pct(s.passRate)}  tool ${pct(s.toolAccuracy)}  args ${pct(s.argAccuracy)}${s.hard ? `  hard ${pct(s.hard.passRate)} of ${s.hard.n}` : ""}  (n=${s.n}, failed=${failures.length})`,
   );
   for (const [cat, v] of Object.entries(s.byCategory)) log(`  ${cat.padEnd(10)} ${pct(v.passRate)} of ${v.n}`);
   log(`tokens in ${inTokens}, out ${outTokens}: ~${neurons} neurons`);
@@ -163,6 +176,7 @@ async function main() {
       passRate: s.passRate,
       toolAccuracy: s.toolAccuracy,
       argAccuracy: s.argAccuracy,
+      ...(s.hard ? { hardPassRate: s.hard.passRate } : {}),
       ...Object.fromEntries(Object.entries(s.byCategory).map(([cat, v]) => [`category.${cat}`, v.passRate])),
       neurons,
     },
@@ -171,9 +185,10 @@ async function main() {
       caseSetHash: hash,
       serverVersion: init.serverInfo?.version ?? null,
       byCategory: s.byCategory,
+      hard: s.hard ?? null,
       misses: results
         .filter((r) => !r.pass)
-        .map((r) => ({ id: r.id, category: r.category, expected: r.expected, called: r.called, problems: r.problems })),
+        .map((r) => ({ id: r.id, category: r.category, hard: r.hard, expected: r.expected, called: r.called, problems: r.problems })),
       failures,
     },
   });
