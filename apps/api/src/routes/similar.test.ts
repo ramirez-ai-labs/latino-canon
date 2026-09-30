@@ -30,7 +30,11 @@ function withVectorize(queryById: (id: string) => Promise<{ matches: { id: strin
   const testEnv = {
     ...env,
     VECTORIZE: {
-      queryById: async (id: string) => {
+      // Not async: an async wrapper returns a second promise that adopts the fake's one
+      // tick later, and workerd reports the fake's rejection as unhandled in that gap
+      // (vitest 4 fails the run on it). Returning the fake's promise directly lets
+      // similarTitleHits' .catch attach to the rejected promise itself.
+      queryById: (id: string) => {
         calls.push(id);
         return queryById(id);
       },
