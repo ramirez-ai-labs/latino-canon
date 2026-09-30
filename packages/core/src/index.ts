@@ -10,3 +10,4 @@ export * from "./embedding.js";
 export * from "./blurb-sources.js";
 export * from "./facets.js";
 export * from "./groundedness.js";
+export * from "./tools.js";

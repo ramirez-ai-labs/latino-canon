@@ -7,7 +7,7 @@
  *
  * Pure scoring lives here (tested in mcp-tools.test.ts); run-mcp-tools.ts does the I/O.
  */
-import { extractJson } from "@latino-canon/core";
+import { extractJson, SEARCH_TOOL_FILTERS } from "@latino-canon/core";
 
 /** One entry of the MCP server's tools/list, as the server sends it. */
 export interface McpTool {
@@ -82,8 +82,8 @@ export interface CaseResult {
   problems: string[];
 }
 
-/** search_titles' optional filters; each excludes titles that don't match. */
-export const SEARCH_FILTERS = ["kind", "decade", "country", "theme", "genre", "inclusionType"] as const;
+/** search_titles' optional filters, from the shared tool contract (packages/core/src/tools.ts). */
+export const SEARCH_FILTERS = SEARCH_TOOL_FILTERS;
 
 /**
  * Workers AI's function-calling format: `{ name, description, parameters }` per tool. The

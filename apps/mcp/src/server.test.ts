@@ -1,7 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import type { Title, TitleCard } from "@latino-canon/core";
+import { CANON_TOOLS, type Title, type TitleCard } from "@latino-canon/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiClient, type ApiFetcher } from "./api.js";
 import { handleMcp } from "./index.js";
@@ -191,6 +191,18 @@ describe("search_titles", () => {
     expect(res.isError).toBe(true);
     expect(text(res)).toMatch(/query, or at least one filter/);
     expect(requests).toEqual([]);
+  });
+});
+
+describe("the shared tool contract (packages/core/src/tools.ts)", () => {
+  // The curation agent gives its model these same definitions, so the tool-selection eval
+  // measures what the agent sees only if this server advertises them unchanged.
+  it("advertises each tool with the shared title and description", async () => {
+    const { tools } = await (await connect(fakeApi({}).api)).listTools();
+    for (const [name, def] of Object.entries(CANON_TOOLS)) {
+      expect(tools.find((t) => t.name === name), name).toMatchObject({ title: def.title, description: def.description });
+    }
+    expect(tools.map((t) => t.name).sort()).toEqual(Object.keys(CANON_TOOLS).sort());
   });
 });
 
