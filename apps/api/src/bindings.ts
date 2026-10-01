@@ -11,4 +11,10 @@ export interface Env {
 
   AI_GATEWAY_ID: string;
   SEARCH_CACHE_TTL_SECONDS: string;
+  /**
+   * Which curation agent answers POST /agents/curate: "v1" (the fixed pipeline) or "v2" (a
+   * model choosing tools, docs/design/AGENTIC_CURATION_V2.md). Anything else, or absent, is v1:
+   * v2 becomes the default only after the curation eval's ship gate passes.
+   */
+  CURATE_AGENT?: string;
 }

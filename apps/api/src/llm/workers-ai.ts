@@ -1,10 +1,19 @@
-import { coerceLlmText, MODELS, type LlmCallOptions, type LlmClient, type LlmResult } from "@latino-canon/core";
+import {
+  coerceLlmText,
+  MODELS,
+  type LlmCallOptions,
+  type LlmClient,
+  type LlmResult,
+  type ToolCallingClient,
+  type ToolCallOptions,
+  type ToolCallResult,
+} from "@latino-canon/core";
 
 /**
  * Workers AI via the native binding, routed through AI Gateway for logging + caching.
  * The gateway is attached per-call with the `gateway` option (no code change to swap it off).
  */
-export class WorkersAiClient implements LlmClient {
+export class WorkersAiClient implements LlmClient, ToolCallingClient {
   readonly provider = "workers-ai" as const;
 
   constructor(
@@ -48,6 +57,27 @@ export class WorkersAiClient implements LlmClient {
       model,
       provider: this.provider,
       cached: false, // gateway cache status is available via response headers on REST, not the binding
+    };
+  }
+
+  /**
+   * One turn of a tool-calling loop (the curation agent v2). Through AI Gateway like every
+   * other call, never cached there: each turn's messages differ, and a cached turn would
+   * replay a stale tool call. Temperature 0, as the tool-selection eval runs the same model.
+   */
+  async callTools(opts: ToolCallOptions): Promise<ToolCallResult> {
+    const res = (await this.ai.run(
+      opts.model,
+      { messages: opts.messages, tools: opts.tools, max_tokens: opts.maxTokens, temperature: 0 } as Parameters<Ai["run"]>[1],
+      { gateway: { id: this.gatewayId, skipCache: true, metadata: { task: "curate-agent", caller: opts.caller } } },
+    )) as {
+      response?: unknown;
+      tool_calls?: { name?: string; arguments?: unknown }[];
+      usage?: { prompt_tokens?: number; completion_tokens?: number };
+    };
+    return {
+      reply: { response: res.response, tool_calls: res.tool_calls },
+      usage: res.usage ? { inputTokens: res.usage.prompt_tokens ?? 0, outputTokens: res.usage.completion_tokens ?? 0 } : null,
     };
   }
 }

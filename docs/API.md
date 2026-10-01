@@ -196,7 +196,16 @@ curl -X POST "https://latino-canon-api.ai-builders-studio-latinx.workers.dev/age
   -d '{"query": "films directed by women with a female lead", "limit": 5}'
 ```
 
-Returns `topResults`, the `extractedIntent`, and a step-by-step `reasoning` array.
+Returns `topResults`, the `extractedIntent`, and a step-by-step `reasoning` array, plus `agentVersion` (`v1`
+or `v2`). Two agents answer this endpoint, switched by the api's `CURATE_AGENT` variable (`v1` until the
+curation eval's ship gate passes):
+
+- **v1**, a fixed pipeline: rules and an 8B rewrite extract filters, one hybrid search, 8B tone scoring.
+- **v2**, a model choosing tools ([design](design/AGENTIC_CURATION_V2.md)): Llama 3.3 70B calls `search_titles`,
+  `get_title` and `similar_titles` (the MCP server's definitions), reads the results, and finishes with
+  `recommend`. Every pick is a title a tool returned; `matchedCriteria` come from the searches' filters. Its tool
+  calls are in `steps`. On any failure, or past v2's cap of 10 uncached requests a day, v1 answers and
+  `fallbackReason` says why.
 
 ---
 

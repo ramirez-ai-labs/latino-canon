@@ -68,7 +68,10 @@
 	],
 	"vars": {
 		"AI_GATEWAY_ID": "latino-canon",
-		"SEARCH_CACHE_TTL_SECONDS": "3600"
+		"SEARCH_CACHE_TTL_SECONDS": "3600",
+		// v1 until the curation eval's ship gate passes (docs/design/AGENTIC_CURATION_V2.md).
+		// Measure v2 on a non-live version: wrangler versions upload --var CURATE_AGENT:v2
+		"CURATE_AGENT": "v1"
 	}
 	// No secrets - Workers AI via the native binding needs no account id or API key.
 }

@@ -1,7 +1,13 @@
 # Agentic curation v2: a model that chooses its tools
 
-**Status:** proposed (2026-09-30). Nothing here changes the live site; the build follows in the PRs
-listed under "Plan", each merged separately, with v2 behind a flag until its eval passes.
+**Status:** PR 4 built (2026-10-01): v2 is in the api behind `CURATE_AGENT`, default `v1`. Next: measure it
+on a non-live version against v1's 0.52 (PR 5). Nothing here changes the live site until that gate passes.
+
+**As built, where it differs from the plan below:** `max_tokens` is 384, not 256 (a `recommend` with 10
+picks and a reason each needs it), and the last model call is told to call `recommend` rather than spent on
+a search nothing will read. The tool-result message format (`role: "tool"`, named for the tool) isn't in
+Workers AI's docs: PR 5's live run verifies it, and if the model rejects it, v2 falls back to v1 and the run
+shows `model_error`.
 
 ## Why
 
