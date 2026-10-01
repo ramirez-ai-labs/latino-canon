@@ -265,7 +265,11 @@ export const OPENAPI_SPEC = {
           },
         },
         responses: {
-          "200": { description: "topResults, extractedIntent, and a step-by-step reasoning array" },
+          "200": {
+            description:
+              "topResults, extractedIntent, and a step-by-step reasoning array. Also agentVersion (v1 or v2), " +
+              "fallbackReason when v2 handed the request to v1, and steps (v2's tool calls, in order).",
+          },
           "400": { description: "Missing or invalid query" },
           "429": { description: "Rate limited" },
         },

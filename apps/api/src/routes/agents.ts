@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { Env } from "../bindings.js";
 import { curate } from "../agents/curation-agent.js";
+import { curateV2 } from "../agents/v2-curate.js";
 import { clientIp } from "../rate-limit.js";
 import type { CurationRequest, CurationResponse } from "../agents/types.js";
 
@@ -31,6 +32,27 @@ export async function isRateLimited(env: Env, ip: string): Promise<boolean> {
   if (current >= RATE_LIMIT_PER_MINUTE) return true;
   await env.CACHE.put(key, String(current + 1), { expirationTtl: 90 });
   return false;
+}
+
+/**
+ * v2's own daily cap (docs/design/AGENTIC_CURATION_V2.md, "Cost"). v1 costs a few 8B neurons
+ * a request; v2 is a 70B loop at ~180, so DAILY_BUDGET's 200 would be ~36k - several times
+ * the account's 10k. Ten uncached v2 requests are ~1.8k; past them, v1 answers.
+ */
+export const V2_DAILY_CAP = 10;
+
+export function selectedAgent(env: Env): "v1" | "v2" {
+  return env.CURATE_AGENT === "v2" ? "v2" : "v1";
+}
+
+/** Takes one of today's v2 slots; false once V2_DAILY_CAP are spent. Same KV pattern as below. */
+export async function claimV2Slot(env: Env): Promise<boolean> {
+  const today = new Date().toISOString().slice(0, 10);
+  const key = `agents:curate:v2-count:${today}`;
+  const current = Number((await env.CACHE.get(key)) ?? "0");
+  if (current >= V2_DAILY_CAP) return false;
+  await env.CACHE.put(key, String(current + 1), { expirationTtl: 90_000 });
+  return true;
 }
 
 /** Account-wide (not per-IP) daily cap - the thing the per-IP limit above can't catch. */
@@ -68,7 +90,10 @@ agentsRoute.post("/curate", async (c) => {
   // Cache check comes before either cost guard below - a hit costs zero Workers AI
   // calls, so it shouldn't count against a per-IP or account-wide budget meant to
   // bound exactly that cost.
-  const cacheKey = `agents:curate:${body.query.trim().toLowerCase()}:${body.limit ?? 5}`;
+  // Keyed by agent: without it, a non-live version running v2 would read v1's cached
+  // answers from the shared KV, and the curation eval would score v1 as v2.
+  const agent = selectedAgent(c.env);
+  const cacheKey = `agents:curate:${agent}:${body.query.trim().toLowerCase()}:${body.limit ?? 5}`;
   const cached = await c.env.CACHE.get<CurationResponse>(cacheKey, "json");
   if (cached) {
     console.warn(JSON.stringify({ event: "agents.curate", outcome: "cache_hit", query: body.query }));
@@ -86,12 +111,25 @@ agentsRoute.post("/curate", async (c) => {
   }
 
   try {
-    const response = await curate(c.env, body);
-    c.executionCtx.waitUntil(
-      c.env.CACHE.put(cacheKey, JSON.stringify(response), {
-        expirationTtl: Number(c.env.SEARCH_CACHE_TTL_SECONDS),
-      }),
-    );
+    let response: CurationResponse;
+    if (agent === "v1") {
+      response = { ...(await curate(c.env, body)), agentVersion: "v1" };
+    } else if (await claimV2Slot(c.env)) {
+      response = await curateV2(c.env, body, () => curate(c.env, body));
+    } else {
+      const r = await curate(c.env, body);
+      response = { ...r, agentVersion: "v1", fallbackReason: "daily_cap", reasoning: [`v2's daily cap (${V2_DAILY_CAP}) is spent; v1 answered`, ...r.reasoning] };
+    }
+    // Only an answer from the agent that was asked for is cached. A fallback is a degraded
+    // answer, and degraded answers are never cached (CLAUDE.md #8): tomorrow's request should
+    // get v2 again, not today's v1 stand-in.
+    if (response.agentVersion === agent) {
+      c.executionCtx.waitUntil(
+        c.env.CACHE.put(cacheKey, JSON.stringify(response), {
+          expirationTtl: Number(c.env.SEARCH_CACHE_TTL_SECONDS),
+        }),
+      );
+    }
     return c.json(response);
   } catch (err) {
     return c.json({ error: `Agent error: ${err instanceof Error ? err.message : String(err)}` }, 500);

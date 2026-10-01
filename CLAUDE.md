@@ -216,7 +216,9 @@ README and `monitoring.md`.
    unsupported "It matters…" sentence from the old prompt. New blurbs are gated at
    ingest; the old ones are rewritten through `/regenerate-blurbs` - 254 in the backlog,
    about 20 a day, not started as of 2026-09-30 (ROADMAP item 6).
-4. **The curation agent is a fixed 4-step pipeline.** No LLM chooses its tools.
+4. **The live curation agent is still the fixed 4-step pipeline (v1).** v2, a model choosing
+   tools, is built behind `CURATE_AGENT` (default `v1`) and ships only when the curation eval's
+   gate passes: precision@5 >= 0.80 and +0.20 over v1's 0.52 (`docs/design/AGENTIC_CURATION_V2.md`).
 5. **`apps/web` has no unit tests.** A post-deploy smoke test (`scripts/smoke-web.ts`, run by
    `deploy-web.yml`) checks that home, search, a title, Evals, About and a 404 render, that
    About names the release, and that both themes ship. It catches a broken page after
