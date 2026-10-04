@@ -7,7 +7,7 @@
  *
  * Pure scoring lives here (tested in mcp-tools.test.ts); run-mcp-tools.ts does the I/O.
  */
-import { extractJson, SEARCH_TOOL_FILTERS } from "@latino-canon/core";
+import { SEARCH_TOOL_FILTERS, type ToolCall } from "@latino-canon/core";
 
 /** One entry of the MCP server's tools/list, as the server sends it. */
 export interface McpTool {
@@ -64,10 +64,7 @@ export interface ToolCase {
   note?: string;
 }
 
-export interface ToolCall {
-  name: string;
-  arguments: Record<string, unknown>;
-}
+export type { ToolCall };
 
 export interface CaseResult {
   id: string;
@@ -100,44 +97,9 @@ export function toWorkersAiTools(tools: McpTool[]) {
   });
 }
 
-function asArgs(value: unknown): Record<string, unknown> {
-  if (typeof value === "string") {
-    try {
-      return asArgs(JSON.parse(value));
-    } catch {
-      return {};
-    }
-  }
-  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
-}
-
-/**
- * The first tool call in a Workers AI reply, or null when the model answered in text.
- * Normally `tool_calls: [{ name, arguments }]`. Llama models sometimes write the call into
- * `response` instead - as JSON (`{"name":…,"parameters":…}`) or as `<function=name>{…}</function>` -
- * which a client would also treat as a call, so those count too, if the name is a real tool.
- */
-export function parseToolCall(
-  result: { response?: unknown; tool_calls?: { name?: string; arguments?: unknown }[] },
-  toolNames: string[],
-): ToolCall | null {
-  const first = result.tool_calls?.find((c) => typeof c.name === "string");
-  if (first?.name) return { name: first.name, arguments: asArgs(first.arguments) };
-
-  const text = typeof result.response === "string" ? result.response.trim() : "";
-  if (!text) return null;
-  const tagged = /<function=([\w-]+)>\s*(\{[\s\S]*?\})\s*<\/function>/.exec(text);
-  if (tagged && toolNames.includes(tagged[1]!)) return { name: tagged[1]!, arguments: asArgs(tagged[2]) };
-  if (!text.includes("{")) return null;
-  try {
-    const obj = asArgs(extractJson(text));
-    const name = typeof obj.name === "string" ? obj.name : null;
-    if (name && toolNames.includes(name)) return { name, arguments: asArgs(obj.parameters ?? obj.arguments) };
-  } catch {
-    // Prose with a brace in it, not a call.
-  }
-  return null;
-}
+// The parser lives with the shared tool contract, so the curation agent reads a model's
+// reply exactly as this eval scores it.
+export { parseToolCall } from "@latino-canon/core";
 
 /**
  * Checks arguments against the tool's input schema, as the MCP SDK does server-side
