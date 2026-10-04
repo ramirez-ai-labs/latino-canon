@@ -100,6 +100,14 @@ jobs:
         run: |
           echo "Nothing due today: no budget claimed, so today's 70B slot stays free." | tee -a "$GITHUB_STEP_SUMMARY"
 
+      # The dry run above is plain curl and needs no repo, but setup-node's pnpm cache and
+      # pnpm install do. Found live: without this step every scheduled run from 10-01 to
+      # 10-04 failed at "Dependencies lock file is not found", after the dry run and before
+      # any rewrite, so the backlog sat untouched.
+      - name: Check out
+        if: env.DRY_RUN != 'true' && steps.size.outputs.considered != '0'
+        uses: actions/checkout@v4
+
       - name: Set up pnpm
         if: env.DRY_RUN != 'true' && steps.size.outputs.considered != '0'
         uses: pnpm/action-setup@v6
