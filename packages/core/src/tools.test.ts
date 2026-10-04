@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { CANON_TOOLS, intArg, SEARCH_TOOL_FILTERS } from "./tools.js";
+import { CANON_TOOLS, intArg, parseToolCalls, SEARCH_TOOL_FILTERS, toWorkersAiTool } from "./tools.js";
 
 describe("CANON_TOOLS", () => {
   it("defines the four read-only tools the MCP server and the curation agent share", () => {
@@ -34,5 +34,31 @@ describe("intArg", () => {
     expect(limit.safeParse("six").success).toBe(false);
     expect(limit.safeParse("6.5").success).toBe(false);
     expect(limit.safeParse("20").success).toBe(false);
+  });
+});
+
+describe("toWorkersAiTool", () => {
+  it("gives Workers AI the shared description and a plain JSON Schema, integers advertised as integers", () => {
+    const t = toWorkersAiTool("similar_titles");
+    expect(t.description).toBe(CANON_TOOLS.similar_titles.description);
+    expect(t.parameters).not.toHaveProperty("$schema");
+    expect(t.parameters).toMatchObject({ type: "object", required: ["id"], properties: { limit: { type: "integer", minimum: 1, maximum: 12 } } });
+  });
+});
+
+describe("parseToolCalls", () => {
+  it("returns every call in a reply, in order, for the agent loop", () => {
+    const calls = parseToolCalls(
+      { tool_calls: [{ name: "search_titles", arguments: { country: "CO" } }, { name: "get_title", arguments: '{"id":"monos-2019"}' }] },
+      ["search_titles", "get_title"],
+    );
+    expect(calls).toEqual([
+      { name: "search_titles", arguments: { country: "CO" } },
+      { name: "get_title", arguments: { id: "monos-2019" } },
+    ]);
+  });
+
+  it("returns none for prose", () => {
+    expect(parseToolCalls({ response: "Here are some films." }, ["search_titles"])).toEqual([]);
   });
 });

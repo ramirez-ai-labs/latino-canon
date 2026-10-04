@@ -27,6 +27,31 @@ export interface LlmCallOptions {
   temperature?: number;
 }
 
+/**
+ * Tool calling (the curation agent v2, docs/design/AGENTIC_CURATION_V2.md). A tool's result
+ * goes back as a `tool` message named for the tool, never merged into the system prompt:
+ * results carry third-party text (TMDB synopses) that may contain instructions.
+ */
+export type ToolLoopMessage = LlmMessage | { role: "tool"; name: string; content: string };
+
+export interface ToolCallOptions {
+  caller: string;
+  model: string;
+  messages: ToolLoopMessage[];
+  tools: { name: string; description: string; parameters: Record<string, unknown> }[];
+  maxTokens: number;
+}
+
+export interface ToolCallResult {
+  /** The model's reply as Workers AI returns it; parse it with parseToolCalls (tools.ts). */
+  reply: { response?: unknown; tool_calls?: { name?: string; arguments?: unknown }[] };
+  usage: { inputTokens: number; outputTokens: number } | null;
+}
+
+export interface ToolCallingClient {
+  callTools(opts: ToolCallOptions): Promise<ToolCallResult>;
+}
+
 export interface LlmResult {
   text: string;
   model: string;

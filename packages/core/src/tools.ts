@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { extractJson } from "./llm.js";
 import { GENRES, INCLUSION_TYPES, THEMES } from "./taxonomy.js";
 
 /**
@@ -87,3 +88,72 @@ export const CANON_TOOLS = {
 } as const;
 
 export type CanonToolName = keyof typeof CANON_TOOLS;
+
+/** A tool's spec in Workers AI's function-calling format: `{ name, description, parameters }`. */
+export interface WorkersAiTool {
+  name: string;
+  description: string;
+  parameters: Record<string, unknown>;
+}
+
+/**
+ * A shared tool as Workers AI takes it. The JSON Schema is the input side (`io: "input"`):
+ * `intArg` advertises a plain bounded integer, as the MCP server's tools/list does.
+ */
+export function toWorkersAiTool(name: CanonToolName): WorkersAiTool {
+  const parameters = z.toJSONSchema(z.object(CANON_TOOLS[name].inputSchema), { io: "input" }) as Record<string, unknown>;
+  delete parameters.$schema; // the draft URL is noise to a model, and Workers AI doesn't need it
+  return { name, description: CANON_TOOLS[name].description, parameters };
+}
+
+export interface ToolCall {
+  name: string;
+  arguments: Record<string, unknown>;
+}
+
+function asArgs(value: unknown): Record<string, unknown> {
+  if (typeof value === "string") {
+    try {
+      return asArgs(JSON.parse(value));
+    } catch {
+      return {};
+    }
+  }
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+type ModelReply = { response?: unknown; tool_calls?: { name?: string; arguments?: unknown }[] };
+
+/**
+ * Every tool call in a Workers AI reply, in order; empty when the model answered in text.
+ * Normally `tool_calls: [{ name, arguments }]`. Llama models sometimes write the call into
+ * `response` instead - as JSON (`{"name":…,"parameters":…}`) or as `<function=name>{…}</function>` -
+ * which a client would also treat as a call, so those count too, if the name is a real tool.
+ * The MCP tool-selection eval (packages/eval) and the curation agent both read replies with
+ * this, so the eval scores what the agent would do.
+ */
+export function parseToolCalls(result: ModelReply, toolNames: string[]): ToolCall[] {
+  const calls = (result.tool_calls ?? [])
+    .filter((c): c is { name: string; arguments?: unknown } => typeof c.name === "string")
+    .map((c) => ({ name: c.name, arguments: asArgs(c.arguments) }));
+  if (calls.length > 0) return calls;
+
+  const text = typeof result.response === "string" ? result.response.trim() : "";
+  if (!text) return [];
+  const tagged = /<function=([\w-]+)>\s*(\{[\s\S]*?\})\s*<\/function>/.exec(text);
+  if (tagged && toolNames.includes(tagged[1]!)) return [{ name: tagged[1]!, arguments: asArgs(tagged[2]) }];
+  if (!text.includes("{")) return [];
+  try {
+    const obj = asArgs(extractJson(text));
+    const name = typeof obj.name === "string" ? obj.name : null;
+    if (name && toolNames.includes(name)) return [{ name, arguments: asArgs(obj.parameters ?? obj.arguments) }];
+  } catch {
+    // Prose with a brace in it, not a call.
+  }
+  return [];
+}
+
+/** The first tool call in a reply, or null - what the tool-selection eval scores. */
+export function parseToolCall(result: ModelReply, toolNames: string[]): ToolCall | null {
+  return parseToolCalls(result, toolNames)[0] ?? null;
+}
