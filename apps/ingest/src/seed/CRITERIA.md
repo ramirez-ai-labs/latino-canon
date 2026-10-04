@@ -94,7 +94,6 @@ Revisit once TMDB updates the record — a `force: true` re-POST will pick it up
 
 | Title | Verified tags (ready to apply once ingestable) |
 |---|---|
-| *Suárez* (2026) | `about_community`, `produced_by` (Wilmer Valderrama) |
 | *20 Pounds to Happiness* (2025) | `led_by`, `created_by`, `starring`, `about_community` |
 
 ## Considered and excluded
