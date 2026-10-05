@@ -15,16 +15,16 @@
   },
   "dependencies": {
     "@latino-canon/core": "workspace:*",
-    "hono": "^4.13.9",
+    "hono": "^4.13.12",
     "zod": "^4.6.5"
   },
   "devDependencies": {
     "@latino-canon/eval": "workspace:*",
     "@cloudflare/vitest-pool-workers": "^0.22.0",
-    "@cloudflare/workers-types": "^5.20260929.1",
+    "@cloudflare/workers-types": "^5.20261002.1",
     "typescript": "^5.9.3",
     "vitest": "^4.1.11",
     "vite": "^7.3.6",
-    "wrangler": "^4.141.0"
+    "wrangler": "^4.146.0"
   }
 }
