@@ -14,6 +14,7 @@ import {
   THEME_LABELS,
 } from "@latino-canon/core";
 import { ApiError, getSimilarTitles, getTitle, posterUrl, search } from "@/lib/api";
+import { formatCountries } from "@/lib/countries";
 import { sourceLink, type SourceLink } from "@/lib/source-links";
 import { Badge } from "@/components/ui/Badge";
 import { TitleCard } from "@/components/TitleCard";
@@ -71,6 +72,7 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
   // Director if credited, else the first-ordered creator - same fallback db/cards.ts's
   // hydrateCards uses for TitleCard.directorGender - drives led_by's gendered label.
   const directorGender = primaryCreativeLead(title.credits)?.person.gender ?? null;
+  const countries = formatCountries(title.country);
 
   // "More like this": the title's nearest neighbors in embedding space (GET
   // /titles/:id/similar - no model call). This rail used to be every title sharing one
@@ -102,7 +104,8 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
         </div>
         <p className="mt-1 text-muted">
           {title.yearStart}
-          {title.yearEnd ? `–${title.yearEnd}` : ""} · {title.kind} · {title.country.join(", ")}
+          {title.yearEnd ? `–${title.yearEnd}` : ""} · {title.kind}
+          {countries.primary && ` · ${countries.primary}`}
         </p>
 
         {title.representationHandling && (
@@ -129,7 +132,7 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
             ))}
         </div>
 
-        {(title.credits.length > 0 || Boolean(title.runtime)) && (
+        {(title.credits.length > 0 || Boolean(title.runtime) || Boolean(countries.primary)) && (
           <section className="mt-6 space-y-1.5 text-[0.9rem]">
             {title.credits.filter((c) => c.role === "creator" || c.role === "director").length > 0 && (
               <p>
@@ -155,6 +158,25 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
                 <strong>Runtime:</strong> {title.runtime} min
               </p>
             ) : null}
+            {/* Spelled out in the page, not a tooltip: a phone has no hover, and "Norway"
+                beside "Latino-directed" needs its explanation where the reader sees it. */}
+            {countries.primary && (
+              <>
+                <p>
+                  <strong>Produced in:</strong> {countries.primary}
+                </p>
+                {countries.coProducers && (
+                  <p>
+                    <strong>Co-produced with:</strong> {countries.coProducers}
+                  </p>
+                )}
+                <p className="text-sm text-muted">
+                  {countries.coProducers
+                    ? `The countries whose companies made or helped pay for the film, from TMDB. A co-producer shares the funding; ${countries.coProducers} backing it doesn't change whose story or film it is.`
+                    : "The countries whose companies made the film, from TMDB."}
+                </p>
+              </>
+            )}
           </section>
         )}
 
