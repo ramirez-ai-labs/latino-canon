@@ -552,6 +552,10 @@ once this was confirmed working end-to-end.
    own reasoning argued for keeping, not a leftover to fix. `/collections/[slug]`
    itself is still a plain grid, not a hero+carousel page; only the homepage got the
    full treatment.
+7b. **Where to watch.** Once a reader finds a title, the next question is where to watch
+   it: streaming, free (including library apps like Kanopy and Hoopla), or rent and buy. TMDB's watch-provider data
+   (JustWatch) comes back on the TMDB call ingest already makes, so it costs no extra
+   request and no neurons. Design and decisions: `docs/design/WHERE_TO_WATCH.md`.
 
 ## Representation honesty: contextual/critical-archive schema
 
