@@ -1,3 +1,18 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# Targeted fixes for transitive advisories that a direct upgrade can't reach (see
+# .github/workflows/security-audit.yml). These lived under "pnpm.overrides" in the root
+# package.json until pnpm 11 stopped reading that field; here both pnpm 10 and 11 apply them.
+overrides:
+  "postcss@<8.5.23": "^8.5.28"
+  "undici@>=7.0.0 <7.29.1": "^7.29.1"
+  # GHSA-wq5f-xc86-pv6w (librsvg), via wrangler > miniflare.
+  "sharp@<0.35.5": "^0.35.5"
+  "brace-expansion@>=2.0.0 <2.1.6": "^2.1.6"
+  "brace-expansion@>=4.0.0 <5.0.11": "^5.0.11"
+  # GHSA-68fv-2mgg-jv7q, via @tailwindcss/postcss > @tailwindcss/node.
+  "source-map-js@>=1.0.0 <1.2.2": "^1.2.2"
+  # GHSA-5j98-mcp5-4vw2, via @opennextjs/aws > @node-minify/core 9 (Dependabot #324).
+  "glob@>=10.2.0 <10.5.0": "^10.5.0"
