@@ -1,8 +1,9 @@
 name: Security audit
 
 # A failing check for known advisories: weekly against what's already locked, and on any
-# PR that changes the lockfile. Fix with a direct upgrade or a targeted `pnpm.overrides`
-# entry in the root package.json (see the postcss and undici ones).
+# PR that changes the lockfile. Fix with a direct upgrade or a targeted `overrides`
+# entry in pnpm-workspace.yaml (see the postcss and undici ones). Not "pnpm.overrides" in
+# package.json: pnpm 11 ignores that field, and CI's setup ends up on an 11 launcher.
 #
 # It complements Dependabot rather than replacing it: security updates are on (repo
 # setting, 2026-09-29) and open fix PRs, but they can't do a coordinated upgrade -
