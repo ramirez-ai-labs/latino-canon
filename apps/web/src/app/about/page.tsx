@@ -75,6 +75,22 @@ export default async function AboutPage() {
           page shows how well both are working.
         </p>
       </div>
+      {/* TMDB's API terms require visible attribution; until this section the site credited
+          neither TMDB nor OMDb anywhere, though every synopsis, poster and credit comes from them. */}
+      <div>
+        <h2 className="mb-2 text-xl font-semibold">Data sources</h2>
+        <p className="text-[0.95rem] leading-relaxed text-text/90">
+          Synopses, posters and credits come from{" "}
+          <a href="https://www.themoviedb.org/" className={linkClass} target="_blank" rel="noopener noreferrer">
+            The Movie Database (TMDB)
+          </a>
+          . This product uses the TMDB API but is not endorsed or certified by TMDB. Award counts come from{" "}
+          <a href="https://www.omdbapi.com/" className={linkClass} target="_blank" rel="noopener noreferrer">
+            OMDb
+          </a>
+          , which reports IMDb&apos;s data. Every cited source on a title page links back to the page it came from.
+        </p>
+      </div>
 
       {/* Colophon: the edition line of a printed program - what you're looking at, and how current it is. */}
       <footer className="border-t-[1.5px] border-ink-rule pt-4">
