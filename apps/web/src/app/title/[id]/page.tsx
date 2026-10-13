@@ -15,6 +15,7 @@ import {
 } from "@latino-canon/core";
 import { ApiError, getSimilarTitles, getTitle, posterUrl, search } from "@/lib/api";
 import { formatCountries } from "@/lib/countries";
+import { sourceLink, type SourceLink } from "@/lib/source-links";
 import { Badge } from "@/components/ui/Badge";
 import { TitleCard } from "@/components/TitleCard";
 import { Rail, RailItem } from "@/components/ui/Rail";
@@ -207,6 +208,7 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
                   {title.blurb.sources.map((s, i) => (
                     <li key={i} id={s.id ? `source-${s.id}` : undefined}>
                       <strong className="text-text/80">{s.kind}</strong> — {s.text ?? s.quote ?? s.ref}
+                      <SourceOrigin link={sourceLink(s, title)} />
                     </li>
                   ))}
                 </ol>
@@ -238,6 +240,8 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
                       {note.sources.map((s, j) => (
                         <li key={j}>
                           <strong className="text-text/80">{s.kind}</strong> — {s.quote ?? s.ref}
+                          {/* A quoted source used to hide its URL entirely; the link keeps it checkable. */}
+                          <SourceOrigin link={sourceLink(s, title)} />
                         </li>
                       ))}
                     </ul>
@@ -269,5 +273,20 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
         </section>
       )}
     </article>
+  );
+}
+
+/** "· TMDB ↗" after a source: the site it came from, linked so the reader can check it. */
+function SourceOrigin({ link }: { link: SourceLink | null }) {
+  if (!link) return null;
+  return (
+    <>
+      {" · "}
+      <a href={link.href} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+        {link.label}
+        <span aria-hidden="true"> ↗</span>
+        <span className="sr-only"> (opens in a new tab)</span>
+      </a>
+    </>
   );
 }
