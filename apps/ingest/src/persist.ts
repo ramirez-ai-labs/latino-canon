@@ -15,15 +15,24 @@ import { embedText, embedTexts } from "./ai.js";
 export async function persistTitle(env: Env, t: Title): Promise<void> {
   const statements = [
     env.DB.prepare(
+      // The watch flags are written only when this fetch checked them: a re-ingest whose
+      // TMDB response lacked the watch/providers block keeps the last known answer rather
+      // than resetting it to "not checked" (docs/design/WHERE_TO_WATCH.md).
       `INSERT INTO titles (id, tmdb_id, imdb_id, kind, title, original_title, year_start, year_end,
-         countries, languages, synopsis, popularity, runtime, genres, updated_at)
-       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14, datetime('now'))
+         countries, languages, synopsis, popularity, runtime, genres,
+         watch_us, watch_anywhere, watch_checked_at, updated_at)
+       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17, datetime('now'))
        ON CONFLICT(id) DO UPDATE SET
-         synopsis=excluded.synopsis, popularity=excluded.popularity, genres=excluded.genres, updated_at=datetime('now')`,
+         synopsis=excluded.synopsis, popularity=excluded.popularity, genres=excluded.genres,
+         watch_us=COALESCE(excluded.watch_us, titles.watch_us),
+         watch_anywhere=COALESCE(excluded.watch_anywhere, titles.watch_anywhere),
+         watch_checked_at=COALESCE(excluded.watch_checked_at, titles.watch_checked_at),
+         updated_at=datetime('now')`,
     ).bind(
       t.id, t.tmdbId, t.imdbId, t.kind, t.title, t.originalTitle, t.yearStart, t.yearEnd,
       JSON.stringify(t.country), JSON.stringify(t.language), t.synopsis, t.popularity, t.runtime,
       JSON.stringify(t.genres),
+      t.watch ? Number(t.watch.us) : null, t.watch ? Number(t.watch.anywhere) : null, t.watch?.checkedAt ?? null,
     ),
     // re-ingest is idempotent: drop this title's credits and rebuild from the fresh fetch
     env.DB.prepare(`DELETE FROM credits WHERE title_id = ?1`).bind(t.id),

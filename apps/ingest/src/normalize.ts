@@ -63,6 +63,7 @@ export function normalizeTitle(
     // Classified separately from the main ingest pipeline (see ai.ts's
     // classifyContentAdvisory) - null here means "not yet classified", not "general".
     contentAdvisory: null,
+    watch: details.watch ? { ...details.watch, checkedAt: new Date().toISOString() } : null,
   };
 }
 

@@ -45,6 +45,7 @@ const title = (id: string, popularity: number): Title => ({
   oscarWin: null,
   genres: [],
   contentAdvisory: null,
+  watch: null,
 });
 
 const OLD = "A young man in rural Mexico [s1]. It matters as a portrayal of the drug war.";

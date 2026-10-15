@@ -12,6 +12,8 @@ import {
   REPRESENTATION_HANDLING_LABELS,
   splitCitations,
   THEME_LABELS,
+  watchState,
+  type WatchState,
 } from "@latino-canon/core";
 import { ApiError, getSimilarTitles, getTitle, posterUrl, search } from "@/lib/api";
 import { formatCountries } from "@/lib/countries";
@@ -107,6 +109,7 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
           {title.yearEnd ? `–${title.yearEnd}` : ""} · {title.kind}
           {countries.primary && ` · ${countries.primary}`}
         </p>
+        <WhereToWatch state={watchState(title)} />
 
         {title.representationHandling && (
           <p className="mt-3 rounded-lg border-l-[3px] border-gold bg-gold/10 px-3 py-2 text-sm">
@@ -277,6 +280,41 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
 }
 
 /** "· TMDB ↗" after a source: the site it came from, linked so the reader can check it. */
+/**
+ * A link to TMDB's watch page, where the reader picks a country and their services - the
+ * site doesn't list offers itself (docs/design/WHERE_TO_WATCH.md). A title TMDB lists no
+ * US offers for says so instead of linking to TMDB's "There are no offers".
+ */
+function WhereToWatch({ state }: { state: WatchState }) {
+  if (state.kind === "none") return null;
+  const checked = (iso: string) =>
+    ` Checked ${new Date(iso).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" })}.`;
+  const tmdbLink = (href: string, label: string) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-accent hover:underline">
+      {label}
+      <span aria-hidden="true"> ↗</span>
+      <span className="sr-only"> (opens TMDB in a new tab)</span>
+    </a>
+  );
+
+  return (
+    <p className="mt-2 text-sm">
+      {state.kind === "link" && tmdbLink(state.href, "Where to watch")}
+      {state.kind === "elsewhere" && (
+        <span className="text-muted">
+          Not available in the US right now. {tmdbLink(state.href, "See other countries on TMDB")}
+          {checked(state.checkedAt)}
+        </span>
+      )}
+      {state.kind === "nowhere" && (
+        <span className="text-muted">
+          Not available to stream, rent or buy right now.{checked(state.checkedAt)}
+        </span>
+      )}
+    </p>
+  );
+}
+
 function SourceOrigin({ link }: { link: SourceLink | null }) {
   if (!link) return null;
   return (

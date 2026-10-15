@@ -67,8 +67,16 @@ export async function refreshPopularity(env: Env): Promise<number> {
       const details = await fetchTmdbDetails(env, title.tmdb_id, title.kind);
       // updated_at reset here is what makes this a rotation, not a fixed top-25 -
       // this title won't be selected again until the other stale titles catch up.
-      await env.DB.prepare("UPDATE titles SET popularity = ?, updated_at = datetime('now') WHERE id = ?")
-        .bind(details.popularity, title.id)
+      // The same response carries the where-to-watch flags, so this rotation is also what
+      // keeps them about a month fresh; a response without them leaves the last answer.
+      const w = details.watch;
+      await env.DB.prepare(
+        `UPDATE titles SET popularity = ?1,
+           watch_us = COALESCE(?2, watch_us), watch_anywhere = COALESCE(?3, watch_anywhere),
+           watch_checked_at = COALESCE(?4, watch_checked_at), updated_at = datetime('now')
+         WHERE id = ?5`,
+      )
+        .bind(details.popularity, w ? Number(w.us) : null, w ? Number(w.anywhere) : null, w ? new Date().toISOString() : null, title.id)
         .run();
       refreshed++;
     } catch (err) {

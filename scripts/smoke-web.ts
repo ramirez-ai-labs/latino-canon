@@ -59,7 +59,8 @@ const CHECKS: Check[] = [
       return /<option value="FR">/.test(page.html) ? "offers France, a co-producer outside the canon's scope" : null;
     },
   },
-  { name: "title page", run: expectPage("/title/coco-2017", 200, ["Coco", "Why it matters", /More like this|Related titles/]) },
+  // Where to watch: a TMDB watch link, or the "not available" line when TMDB lists no US offers.
+  { name: "title page", run: expectPage("/title/coco-2017", 200, ["Coco", "Why it matters", /More like this|Related titles/, /themoviedb\.org\/movie\/\d+\/watch\?locale=US|Not available/]) },
   { name: "evals", run: expectPage("/eval", 200, ["Evals", "Search quality over time"]) },
   // The colophon must name this release - the version the deploy was built from.
   { name: "about + edition", run: expectPage("/about", 200, ["About Latino Canon", "Edition", `v${version}`]) },

@@ -50,6 +50,7 @@ function makeTitle(overrides: Partial<Title> = {}): Title {
     oscarWin: null,
     genres: [],
     contentAdvisory: null,
+    watch: null,
     ...overrides,
   };
 }
@@ -100,6 +101,17 @@ describe("persistTitle", () => {
       .all();
     expect(results).toHaveLength(1);
     expect(results[0]?.person_id).toBe("p2");
+  });
+
+  it("writes the where-to-watch flags, and a re-persist that didn't check them keeps the last answer", async () => {
+    const checkedAt = "2026-10-15T08:00:00.000Z";
+    await persistTitle(env, makeTitle({ id: "persist-watch-2020", watch: { us: false, anywhere: true, checkedAt } }));
+    // A later re-ingest whose TMDB response lacked watch/providers mustn't reset to "not checked".
+    await persistTitle(env, makeTitle({ id: "persist-watch-2020", watch: null }));
+    const row = await env.DB.prepare("SELECT watch_us, watch_anywhere, watch_checked_at FROM titles WHERE id = ?")
+      .bind("persist-watch-2020")
+      .first();
+    expect(row).toEqual({ watch_us: 0, watch_anywhere: 1, watch_checked_at: checkedAt });
   });
 
   it("rebuilds the FTS index entry so the title becomes lexically searchable", async () => {
