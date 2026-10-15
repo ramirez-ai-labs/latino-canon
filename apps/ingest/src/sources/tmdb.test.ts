@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Env } from "../bindings.js";
-import { fetchTmdbDetails, resolveTmdbId } from "./tmdb.js";
+import { fetchTmdbDetails, resolveTmdbId, watchFlags } from "./tmdb.js";
 
 const env = { TMDB_API_KEY: "test-key" } as Env;
 
@@ -145,6 +145,27 @@ describe("fetchTmdbDetails", () => {
     ]);
     expect(details.credits.creators).toEqual([]);
     expect(details.credits.cast).toHaveLength(2);
+    // No watch/providers block in this payload - unknown, not "nowhere".
+    expect(details.watch).toBeNull();
+  });
+
+  it("asks for watch/providers on the same call and derives the where-to-watch flags", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        id: 1902,
+        title: "Open Your Eyes",
+        release_date: "1997-12-19",
+        credits: {},
+        "watch/providers": { results: { US: { link: "https://x", flatrate: [{ provider_id: 1899 }] } } },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const details = await fetchTmdbDetails(env, 1902, "film");
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("append_to_response=credits,external_ids,watch/providers");
+    expect(details.watch).toEqual({ us: true, anywhere: true });
   });
 
   it("maps TMDB's gender enum (0/1/2/3), defaulting anything but 1/2/3 to null", async () => {
@@ -210,5 +231,30 @@ describe("fetchTmdbDetails", () => {
   it("throws when the payload has no release or air date to derive a year from", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ id: 1, title: "Untitled" })));
     await expect(fetchTmdbDetails(env, 1, "film")).rejects.toThrow(/release\/air date/);
+  });
+});
+
+describe("watchFlags", () => {
+  it("US offers of any type count - stream, free, ads, rent or buy", () => {
+    for (const type of ["flatrate", "free", "ads", "rent", "buy"]) {
+      expect(watchFlags({ results: { US: { [type]: [{ provider_id: 1 }] } } })).toEqual({ us: true, anywhere: true });
+    }
+  });
+
+  it("offers only abroad: not in the US, but somewhere (other countries on TMDB)", () => {
+    expect(watchFlags({ results: { MX: { rent: [{}] }, ES: { flatrate: [{}] } } })).toEqual({ us: false, anywhere: true });
+  });
+
+  it("no offers anywhere is an answer: TMDB's watch page would say 'There are no offers' (Bound by Honor)", () => {
+    expect(watchFlags({ results: {} })).toEqual({ us: false, anywhere: false });
+  });
+
+  it("a region with only a link and empty lists isn't an offer", () => {
+    expect(watchFlags({ results: { US: { link: "https://x", flatrate: [] } } })).toEqual({ us: false, anywhere: false });
+  });
+
+  it("a missing block is unknown (null), never 'nowhere' - so it can't hide a working link", () => {
+    expect(watchFlags(undefined)).toBeNull();
+    expect(watchFlags({})).toBeNull();
   });
 });

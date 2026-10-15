@@ -162,7 +162,9 @@ export const OPENAPI_SPEC = {
         summary: "Get a full title",
         description:
           "Metadata, credits, tags with confidence, and the 'why it matters' blurb. Each blurb source carries the " +
-          "id the blurb cites inline ([s1] synopsis, [d0] first director) and the text the blurb model was given.",
+          "id the blurb cites inline ([s1] synopsis, [d0] first director) and the text the blurb model was given. " +
+          "`watch` is { us, anywhere, checkedAt }: whether TMDB's watch-provider data (from JustWatch) lists any " +
+          "offer in the US and in any country - null until the title is first checked.",
         tags: ["Catalog"],
         parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", example: "coco-2017" } }],
         responses: {

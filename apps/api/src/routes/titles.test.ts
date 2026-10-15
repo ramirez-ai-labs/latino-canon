@@ -109,6 +109,17 @@ describe("GET /titles/:id", () => {
     ]);
   });
 
+  it("returns watch as null until TMDB is checked, then the two flags with the check date", async () => {
+    const get = async () => (await (await app.request("/titles/blue-beetle-2023", {}, env)).json<Title>()).watch;
+    // Not checked yet - unknown, which the web page treats as "link to TMDB", not "nowhere".
+    expect(await get()).toBeNull();
+
+    await env.DB.prepare(
+      "UPDATE titles SET watch_us = 0, watch_anywhere = 1, watch_checked_at = '2026-10-15T08:00:00.000Z' WHERE id = 'blue-beetle-2023'",
+    ).run();
+    expect(await get()).toEqual({ us: false, anywhere: true, checkedAt: "2026-10-15T08:00:00.000Z" });
+  });
+
   it("returns an unapproved blurb (auto-approved)", async () => {
     const res = await app.request("/titles/unapproved-2020", {}, env);
     const body = (await res.json()) as Title;

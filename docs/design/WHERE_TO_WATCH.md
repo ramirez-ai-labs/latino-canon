@@ -1,7 +1,7 @@
 # Where to watch: a link to TMDB's watch page, shown when the US has offers
 
-**Status:** Proposed (2026-10-13), revised 2026-10-15. Nothing here is built. The decisions are
-settled (see "Decisions").
+**Status:** Built (2026-10-15), steps 1-3 of "Plan" in one PR; step 4 is later work. Proposed
+2026-10-13, revised 2026-10-15; the decisions are under "Decisions".
 
 ## Why
 
@@ -85,8 +85,8 @@ No provider tables. The flags are all the page needs.
 "watch": { "us": false, "anywhere": true, "checkedAt": "2026-10-20T08:00:00Z" }
 ```
 
-`watch` is `null` until the title is first checked. The zod schema in packages/core and
-`docs/API.md` describe it. `/titles/:id` isn't KV-cached (`routes/titles.ts`), so this adds no KV
+`watch` is `null` until the title is first checked. The `Title` type in packages/core, the
+OpenAPI description and `docs/API.md` describe it. `/titles/:id` isn't KV-cached (`routes/titles.ts`), so this adds no KV
 writes. Not added to `/search` results: cards don't show it.
 
 ### Web
@@ -147,9 +147,11 @@ TMDB credit on About (#328) covers it. TMDB's own page credits JustWatch.
    `refreshPopularity`. Tests: a fixture-backed test for US offers, offers elsewhere only, none
    anywhere, and a response missing the watch block (flags unchanged); a D1 spec for the refresh
    write.
-2. **API:** the `watch` field, zod schema, `docs/API.md`, a workerd test for `null` vs checked.
+2. **API:** the `watch` field, the `Title` type, `docs/API.md`, a workerd test for `null` vs
+   checked.
 3. **Web:** the link and the "not available" states, and a check in `smoke-web.ts` that the title
-   page links to `themoviedb.org/…/watch`.
+   page links to `themoviedb.org/…/watch`. The link logic is `watchState` in packages/core
+   (`watch.ts`), unit-tested there, since apps/web has no unit tests.
 4. **Later:** a "streaming in the US" filter on search, from `watch_us`; and `watch` in the MCP
    server's `get_title` output. Changing the MCP tool means re-running the tool-selection eval
    (~1.9k neurons, the day's 70B slot).

@@ -70,6 +70,7 @@ const title = (approved: boolean): Title => ({
   oscarWin: null,
   genres: ["Animation"],
   contentAdvisory: "general",
+  watch: null,
 });
 
 /** A fake api worker: routes by path, records every request it receives. */
