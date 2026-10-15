@@ -553,10 +553,10 @@ once this was confirmed working end-to-end.
    itself is still a plain grid, not a hero+carousel page; only the homepage got the
    full treatment.
 7b. **Where to watch.** Once a reader finds a title, the next question is where to watch
-   it in the US: streaming, free (including library apps like Kanopy and Hoopla), with ads, or rent and buy;
-   other countries and a reader's own services are a link to TMDB's watch page. TMDB's watch-provider data
-   (JustWatch) comes back on the TMDB call ingest already makes, so it costs no extra
-   request and no neurons. Design and decisions: `docs/design/WHERE_TO_WATCH.md`.
+   it. The title page links to TMDB's watch page (opening on the US), where readers pick a country
+   and their services; a title with no US offers says so instead of linking to a dead end. Two
+   flags from TMDB's watch-provider data, on the TMDB call ingest already makes: no extra
+   request, no neurons. Design and decisions: `docs/design/WHERE_TO_WATCH.md`.
 
 ## Representation honesty: contextual/critical-archive schema
 
