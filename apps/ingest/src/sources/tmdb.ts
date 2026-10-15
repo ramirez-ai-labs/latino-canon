@@ -29,6 +29,8 @@ export interface TmdbDetails {
   popularity: number;
   adult: boolean; // TMDB adult content flag - exclude if true
   genres: string[]; // TMDB genre names, e.g. "Animation" - always present on this endpoint
+  /** Whether any offer exists, from watch/providers. null = the block was missing - unknown. */
+  watch: WatchFlags | null;
   credits: {
     directors: TmdbPerson[];
     writers: TmdbPerson[];
@@ -154,12 +156,47 @@ interface TmdbRaw {
   // Present on every /movie/{id} and /tv/{id} detail response (distinct from the
   // genre_ids-only shape on search/list endpoints) - no extra API call needed.
   genres?: TmdbGenreRaw[];
+  // Appended to the same call: offers per country (ISO 3166-1), from JustWatch.
+  "watch/providers"?: { results?: Record<string, TmdbWatchRegionRaw> };
+}
+
+interface TmdbWatchRegionRaw {
+  link?: string;
+  flatrate?: unknown[];
+  free?: unknown[];
+  ads?: unknown[];
+  rent?: unknown[];
+  buy?: unknown[];
+}
+
+export interface WatchFlags {
+  us: boolean;
+  anywhere: boolean;
+}
+
+const OFFER_TYPES = ["flatrate", "free", "ads", "rent", "buy"] as const;
+
+function hasOffers(region: TmdbWatchRegionRaw | undefined): boolean {
+  return OFFER_TYPES.some((k) => (region?.[k]?.length ?? 0) > 0);
+}
+
+/**
+ * The two where-to-watch flags from a watch/providers block. TMDB's watch page exists for
+ * every title - Bound by Honor's says "There are no offers" - so the site can only tell
+ * from this data whether linking to it leads anywhere (docs/design/WHERE_TO_WATCH.md).
+ * A region counts only if it lists an offer; a bare `link` isn't one. A missing block is
+ * null, not "nowhere": a response that lost it must not hide a link that works.
+ */
+export function watchFlags(block: TmdbRaw["watch/providers"]): WatchFlags | null {
+  const results = block?.results;
+  if (!results || typeof results !== "object") return null;
+  return { us: hasOffers(results.US), anywhere: Object.values(results).some(hasOffers) };
 }
 
 /** Full details + credits for a resolved id. */
 export async function fetchTmdbDetails(env: Env, id: number, kind: "film" | "series" | "special"): Promise<TmdbDetails> {
   const path = kind === "series" ? "tv" : "movie";
-  const url = `${BASE}/${path}/${id}?append_to_response=credits,external_ids&api_key=${env.TMDB_API_KEY}`;
+  const url = `${BASE}/${path}/${id}?append_to_response=credits,external_ids,watch/providers&api_key=${env.TMDB_API_KEY}`;
   const raw = await fetchJson<TmdbRaw>(url);
 
   const releaseDate = raw.release_date || raw.first_air_date || "";
@@ -183,6 +220,7 @@ export async function fetchTmdbDetails(env: Env, id: number, kind: "film" | "ser
     popularity: raw.popularity ?? 0,
     adult: raw.adult ?? false, // TMDB adult content flag
     genres: (raw.genres ?? []).map((g) => g.name),
+    watch: watchFlags(raw["watch/providers"]),
     credits: mapCredits(raw),
   };
 }

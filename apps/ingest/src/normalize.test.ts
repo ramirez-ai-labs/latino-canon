@@ -46,6 +46,7 @@ function details(overrides: Partial<TmdbDetails> = {}): TmdbDetails {
     popularity: 8.4,
     adult: false,
     genres: [],
+    watch: null,
     credits: { directors: [], writers: [], creators: [], cast: [] },
     ...overrides,
   };

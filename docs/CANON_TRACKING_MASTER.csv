@@ -70,7 +70,7 @@
 "La Ciénaga","2001","Lucrecia Martel","Argentina, France, Spain","✅ IN CANON","","YES","","led_by, created_by, about_community, starring",""
 "Son of the Bride","2001","Juan José Campanella","Argentina, Spain","✅ IN CANON","100, 158","YES","","led_by, created_by, about_community, starring","Alzheimer, family themes"
 "Spy Kids","2001","Robert Rodriguez","US","✅ IN CANON","","YES","","led_by, created_by, about_community, breakthrough, starring",""
-"The Devil's Backbone","2001","Guillermo del Toro","Spain","❌ EXCLUDED","100, 158","NO","Spanish director (though set in Spanish Civil War context); not Latino-led","led_by (fails criterion)","Spanish director, though acclaimed horror"
+"The Devil's Backbone","2001","Guillermo del Toro","Spain, Mexico","✅ IN CANON","100, 158","YES","Earlier exclusion was wrong: del Toro is Mexican (and Spain is in scope); seeded as El espinazo del diablo","led_by, created_by","Ghost story, Spanish Civil War orphanage"
 "The Swamp","2001","Lucrecia Martel","Argentina","✅ IN CANON","100, 158","YES","Already merged to canon.seed.json as \"La Ciénaga\" (original title; tracking file was stale)","led_by, about_community","Two women, provincial town"
 "Tortilla Soup","2001","María Ripoll","US","✅ IN CANON","","YES","","led_by, about_community, starring",""
 "Y Tu Mamá También","2001","Alfonso Cuarón","Mexico","✅ IN CANON","100, 158","YES","","led_by, created_by, about_community, starring","Teenage road trip, sexual discovery"

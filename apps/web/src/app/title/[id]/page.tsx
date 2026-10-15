@@ -12,8 +12,12 @@ import {
   REPRESENTATION_HANDLING_LABELS,
   splitCitations,
   THEME_LABELS,
+  watchState,
+  type WatchState,
 } from "@latino-canon/core";
 import { ApiError, getSimilarTitles, getTitle, posterUrl, search } from "@/lib/api";
+import { formatCountries } from "@/lib/countries";
+import { sourceLink, type SourceLink } from "@/lib/source-links";
 import { Badge } from "@/components/ui/Badge";
 import { TitleCard } from "@/components/TitleCard";
 import { Rail, RailItem } from "@/components/ui/Rail";
@@ -70,6 +74,7 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
   // Director if credited, else the first-ordered creator - same fallback db/cards.ts's
   // hydrateCards uses for TitleCard.directorGender - drives led_by's gendered label.
   const directorGender = primaryCreativeLead(title.credits)?.person.gender ?? null;
+  const countries = formatCountries(title.country);
 
   // "More like this": the title's nearest neighbors in embedding space (GET
   // /titles/:id/similar - no model call). This rail used to be every title sharing one
@@ -101,8 +106,10 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
         </div>
         <p className="mt-1 text-muted">
           {title.yearStart}
-          {title.yearEnd ? `–${title.yearEnd}` : ""} · {title.kind} · {title.country.join(", ")}
+          {title.yearEnd ? `–${title.yearEnd}` : ""} · {title.kind}
+          {countries.primary && ` · ${countries.primary}`}
         </p>
+        <WhereToWatch state={watchState(title)} />
 
         {title.representationHandling && (
           <p className="mt-3 rounded-lg border-l-[3px] border-gold bg-gold/10 px-3 py-2 text-sm">
@@ -128,7 +135,7 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
             ))}
         </div>
 
-        {(title.credits.length > 0 || Boolean(title.runtime)) && (
+        {(title.credits.length > 0 || Boolean(title.runtime) || Boolean(countries.primary)) && (
           <section className="mt-6 space-y-1.5 text-[0.9rem]">
             {title.credits.filter((c) => c.role === "creator" || c.role === "director").length > 0 && (
               <p>
@@ -154,6 +161,25 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
                 <strong>Runtime:</strong> {title.runtime} min
               </p>
             ) : null}
+            {/* Spelled out in the page, not a tooltip: a phone has no hover, and "Norway"
+                beside "Latino-directed" needs its explanation where the reader sees it. */}
+            {countries.primary && (
+              <>
+                <p>
+                  <strong>Produced in:</strong> {countries.primary}
+                </p>
+                {countries.coProducers && (
+                  <p>
+                    <strong>Co-produced with:</strong> {countries.coProducers}
+                  </p>
+                )}
+                <p className="text-sm text-muted">
+                  {countries.coProducers
+                    ? `The countries whose companies made or helped pay for the film, from TMDB. A co-producer shares the funding; ${countries.coProducers} backing it doesn't change whose story or film it is.`
+                    : "The countries whose companies made the film, from TMDB."}
+                </p>
+              </>
+            )}
           </section>
         )}
 
@@ -185,6 +211,7 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
                   {title.blurb.sources.map((s, i) => (
                     <li key={i} id={s.id ? `source-${s.id}` : undefined}>
                       <strong className="text-text/80">{s.kind}</strong> — {s.text ?? s.quote ?? s.ref}
+                      <SourceOrigin link={sourceLink(s, title)} />
                     </li>
                   ))}
                 </ol>
@@ -216,6 +243,8 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
                       {note.sources.map((s, j) => (
                         <li key={j}>
                           <strong className="text-text/80">{s.kind}</strong> — {s.quote ?? s.ref}
+                          {/* A quoted source used to hide its URL entirely; the link keeps it checkable. */}
+                          <SourceOrigin link={sourceLink(s, title)} />
                         </li>
                       ))}
                     </ul>
@@ -247,5 +276,55 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
         </section>
       )}
     </article>
+  );
+}
+
+/** "· TMDB ↗" after a source: the site it came from, linked so the reader can check it. */
+/**
+ * A link to TMDB's watch page, where the reader picks a country and their services - the
+ * site doesn't list offers itself (docs/design/WHERE_TO_WATCH.md). A title TMDB lists no
+ * US offers for says so instead of linking to TMDB's "There are no offers".
+ */
+function WhereToWatch({ state }: { state: WatchState }) {
+  if (state.kind === "none") return null;
+  const checked = (iso: string) =>
+    ` Checked ${new Date(iso).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" })}.`;
+  const tmdbLink = (href: string, label: string) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-accent hover:underline">
+      {label}
+      <span aria-hidden="true"> ↗</span>
+      <span className="sr-only"> (opens TMDB in a new tab)</span>
+    </a>
+  );
+
+  return (
+    <p className="mt-2 text-sm">
+      {state.kind === "link" && tmdbLink(state.href, "Where to watch")}
+      {state.kind === "elsewhere" && (
+        <span className="text-muted">
+          Not available in the US right now. {tmdbLink(state.href, "See other countries on TMDB")}
+          {checked(state.checkedAt)}
+        </span>
+      )}
+      {state.kind === "nowhere" && (
+        <span className="text-muted">
+          Not available to stream, rent or buy right now.{checked(state.checkedAt)}
+        </span>
+      )}
+    </p>
+  );
+}
+
+function SourceOrigin({ link }: { link: SourceLink | null }) {
+  if (!link) return null;
+  return (
+    <>
+      {" · "}
+      <a href={link.href} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+        {link.label}
+        <span aria-hidden="true"> ↗</span>
+        <span className="sr-only"> (opens in a new tab)</span>
+      </a>
+    </>
   );
 }

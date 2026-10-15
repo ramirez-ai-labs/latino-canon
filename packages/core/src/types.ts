@@ -112,6 +112,23 @@ export interface Title {
   genres: string[];
   /** null = not yet classified - unknown, not "general". See taxonomy.ts. */
   contentAdvisory: ContentAdvisory | null;
+  /** null = not checked against TMDB yet - unknown, not "nowhere". */
+  watch: WatchAvailability | null;
+}
+
+/**
+ * Whether TMDB's watch/providers data (from JustWatch) lists any offer - stream, free,
+ * ads, rent or buy - for a title. The site shows a link to TMDB's watch page rather than
+ * the offers themselves (docs/design/WHERE_TO_WATCH.md); these flags only decide whether
+ * that link leads anywhere.
+ */
+export interface WatchAvailability {
+  /** At least one US offer. */
+  us: boolean;
+  /** Offers in at least one country. */
+  anywhere: boolean;
+  /** When the flags were last set from TMDB (ISO 8601). */
+  checkedAt: string;
 }
 
 export interface TagWithConfidence {

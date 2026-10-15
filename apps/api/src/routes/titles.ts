@@ -117,6 +117,9 @@ interface TitleRow {
   oscar_win: string | null;
   genres: string;
   content_advisory: ContentAdvisory | null;
+  watch_us: number | null;
+  watch_anywhere: number | null;
+  watch_checked_at: string | null;
 }
 interface CreditRow {
   person_id: string;
@@ -250,6 +253,12 @@ titlesRoute.get("/:id", async (c) => {
     oscarWin: title.oscar_win,
     genres: JSON.parse(title.genres) as string[],
     contentAdvisory: title.content_advisory,
+    // null until ingest or the popularity refresh first checks TMDB - the web page links
+    // to TMDB's watch page in that case, since TMDB answers either way.
+    watch:
+      !title.watch_checked_at
+        ? null
+        : { us: title.watch_us === 1, anywhere: title.watch_anywhere === 1, checkedAt: title.watch_checked_at },
     contextNotes: contextNotes.results.map(
       (n): ContextNote => ({
         category: n.category,

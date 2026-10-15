@@ -11,3 +11,4 @@ export * from "./blurb-sources.js";
 export * from "./facets.js";
 export * from "./groundedness.js";
 export * from "./tools.js";
+export * from "./watch.js";

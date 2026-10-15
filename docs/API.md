@@ -123,6 +123,12 @@ failing. Degraded responses are never cached.
 
 Each blurb source carries the `id` the blurb cites inline (`[s1]` = synopsis, `[d0]` = first director credit) and the `text` the blurb model was given, so every claim can be traced to its evidence.
 
+`watch` says whether TMDB's watch-provider data (from JustWatch) lists any offer (stream, free, ads, rent or buy) in the US and in any country, and when that was checked. It's `null` until the title is first checked, which means unknown, not "nowhere". The site uses it to decide whether to link to TMDB's watch page (`https://www.themoviedb.org/{movie|tv}/{tmdbId}/watch?locale=US`); see `docs/design/WHERE_TO_WATCH.md`.
+
+```json
+"watch": { "us": false, "anywhere": true, "checkedAt": "2026-10-15T08:00:00.000Z" }
+```
+
 ```bash
 curl "https://latino-canon-api.ai-builders-studio-latinx.workers.dev/titles/coco-2017"
 ```

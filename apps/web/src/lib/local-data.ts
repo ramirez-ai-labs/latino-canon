@@ -63,7 +63,7 @@ function title(id: string, name: string, year: number, kind: Title["kind"], dire
     tags: themes.map((theme) => ({ kind: "theme", slug: theme as never, label: theme.replaceAll("_", " "), confidence: 1, source: "seed" })),
     blurb: { text: blurb, sources: [{ kind: "synopsis", ref: id, quote: blurb }], model: "local-seed", approved: true },
     representationHandling: null, contextNotes: [], oscarWin: null,
-    genres: [], contentAdvisory: null,
+    genres: [], contentAdvisory: null, watch: null,
   };
 }
 

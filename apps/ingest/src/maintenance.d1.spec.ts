@@ -28,6 +28,7 @@ function makeTitleRow(id: string, tmdbId: number) {
     oscarWin: null,
     genres: [],
     contentAdvisory: null,
+    watch: null,
   });
 }
 
@@ -151,6 +152,59 @@ describe("refreshPopularity", () => {
       .bind("stale-title-2000")
       .first<{ popularity: number }>();
     expect(row?.popularity).toBe(42.5);
+  });
+
+  it("sets the where-to-watch flags from the same response, at no extra request", async () => {
+    await makeTitleRow("watch-refresh-1993", 9702);
+    await testEnv.DB.prepare("UPDATE titles SET updated_at = datetime('now', '-40 days') WHERE id = ?")
+      .bind("watch-refresh-1993")
+      .run();
+    // Bound by Honor's shape: no US entry, offers in another country.
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          id: 9702,
+          release_date: "1993-04-30",
+          popularity: 3,
+          credits: {},
+          "watch/providers": { results: { MX: { link: "https://x", rent: [{ provider_id: 2 }] } } },
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    expect(await refreshPopularity({ ...testEnv, TMDB_API_KEY: "test-key" })).toBe(1);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const row = await testEnv.DB.prepare("SELECT watch_us, watch_anywhere, watch_checked_at FROM titles WHERE id = ?")
+      .bind("watch-refresh-1993")
+      .first<{ watch_us: number; watch_anywhere: number; watch_checked_at: string | null }>();
+    expect(row?.watch_us).toBe(0);
+    expect(row?.watch_anywhere).toBe(1);
+    expect(row?.watch_checked_at).not.toBeNull();
+  });
+
+  it("keeps the last where-to-watch answer when a refresh response lacks the block", async () => {
+    await makeTitleRow("watch-keep-2000", 559);
+    await testEnv.DB.prepare(
+      "UPDATE titles SET watch_us = 1, watch_anywhere = 1, watch_checked_at = '2026-09-01T00:00:00.000Z', updated_at = datetime('now', '-40 days') WHERE id = ?",
+    )
+      .bind("watch-keep-2000")
+      .run();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ id: 559, release_date: "2000-01-01", popularity: 7, credits: {} }), { status: 200 }),
+      ),
+    );
+
+    await refreshPopularity({ ...testEnv, TMDB_API_KEY: "test-key" });
+
+    const row = await testEnv.DB.prepare("SELECT popularity, watch_us, watch_checked_at FROM titles WHERE id = ?")
+      .bind("watch-keep-2000")
+      .first();
+    expect(row).toEqual({ popularity: 7, watch_us: 1, watch_checked_at: "2026-09-01T00:00:00.000Z" });
   });
 
   it("does not touch a title updated recently", async () => {
