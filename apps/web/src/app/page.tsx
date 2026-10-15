@@ -66,6 +66,15 @@ export default async function HomePage() {
       <section className="relative px-6 py-20 text-center sm:px-12 sm:py-28">
 
         <div className="relative mx-auto max-w-3xl">
+          {/* The project's spirit, not its inclusion rule: some titles qualify by subject,
+              star or producer rather than a Latino director (Che, Quinceañera), so the
+              credit-verified line below stays the precise claim. */}
+          <p className="mb-6 text-sm font-semibold uppercase tracking-[0.2em] text-accent">
+            By us, about us, for us
+            <span className="mt-1 block font-normal normal-case tracking-normal italic text-muted" lang="es">
+              Por nosotros, sobre nosotros, para nosotros
+            </span>
+          </p>
           <h1 className="text-balance text-5xl sm:text-6xl font-800 tracking-tight leading-tight">
             The Latino film canon,
             <br />
