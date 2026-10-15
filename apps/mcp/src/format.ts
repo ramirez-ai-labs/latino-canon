@@ -1,5 +1,6 @@
 import {
   INCLUSION_TYPE_LABELS,
+  isShortFilm,
   THEME_LABELS,
   stripCitations,
   type InclusionType,
@@ -25,6 +26,7 @@ export const cardSchema = z.object({
   title: z.string(),
   year: z.string().describe('Release year, or a span like "2017–2021" for a series'),
   kind: z.enum(["film", "series", "special"]),
+  short: z.boolean().optional().describe("true for a film of 40 minutes or less; absent for features, series and specials"),
   director: z.string().nullable(),
   leadActor: z.string().nullable(),
   whyInCanon: z.array(z.string()).describe('Why it qualifies, e.g. "Latino-directed", "About the community"'),
@@ -45,6 +47,7 @@ export const detailSchema = z.object({
   originalTitle: z.string().optional(),
   year: z.string(),
   kind: z.enum(["film", "series", "special"]),
+  short: z.boolean().optional().describe("true for a film of 40 minutes or less; absent for features, series and specials"),
   countries: z.array(z.string()),
   runtimeMinutes: z.number().optional(),
   synopsis: z.string().nullable(),
@@ -90,6 +93,7 @@ export function cardSummary(card: TitleCard, webUrl: string): CardSummary {
     title: card.title,
     year: years(card.yearStart, card.yearEnd),
     kind: card.kind,
+    short: isShortFilm(card) || undefined,
     director: card.director,
     leadActor: card.leadActor,
     // Why it's in the canon, in the site's own words ("Latino-directed", "About the community").
@@ -120,6 +124,7 @@ export function titleDetail(t: Title, webUrl: string): TitleDetail {
     originalTitle: t.originalTitle && t.originalTitle !== t.title ? t.originalTitle : undefined,
     year: years(t.yearStart, t.yearEnd),
     kind: t.kind,
+    short: isShortFilm(t) || undefined,
     countries: t.country,
     runtimeMinutes: t.runtime ?? undefined,
     synopsis: t.synopsis,

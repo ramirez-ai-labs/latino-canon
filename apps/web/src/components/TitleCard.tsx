@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   INCLUSION_TYPE_LABELS,
+  isShortFilm,
   ledByLabel,
   REPRESENTATION_HANDLING_LABELS,
   THEME_LABELS,
@@ -47,6 +48,13 @@ export function TitleCard({ title, className }: { title: TitleCardData; classNam
         <div className="mt-0.5 text-xs text-muted">
           {years} · {title.director ?? "—"}
         </div>
+        {/* A label, not just the runtime: in a results grid a 14-minute short otherwise
+            reads as a feature (the canon's first shorts, #337). */}
+        {isShortFilm(title) && (
+          <Badge className="mt-1.5" title={`${title.runtime} minutes`}>
+            Short film · {title.runtime} min
+          </Badge>
+        )}
         {title.blurbTeaser && (
           <p className="mt-2 line-clamp-2 text-[0.82rem] leading-snug text-text/80">{title.blurbTeaser}</p>
         )}
