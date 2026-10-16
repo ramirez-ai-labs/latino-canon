@@ -6,6 +6,7 @@ import type { Theme } from "@latino-canon/core";
 import {
   CONTEXT_NOTE_CATEGORY_LABELS,
   INCLUSION_TYPE_LABELS,
+  isShortFilm,
   ledByLabel,
   primaryCreativeLead,
   REPRESENTATION_HANDLING_DEFINITIONS,
@@ -103,10 +104,11 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{title.title}</h1>
           {title.yearStart >= 2026 && <Badge variant="solid">✨ New to Canon</Badge>}
           {title.oscarWin && <Badge variant="oscar" title={title.oscarWin}>🏆 {title.oscarWin}</Badge>}
+          {isShortFilm(title) && <Badge title={`${title.runtime} minutes`}>Short film</Badge>}
         </div>
         <p className="mt-1 text-muted">
           {title.yearStart}
-          {title.yearEnd ? `–${title.yearEnd}` : ""} · {title.kind}
+          {title.yearEnd ? `–${title.yearEnd}` : ""} · {isShortFilm(title) ? "short film" : title.kind}
           {countries.primary && ` · ${countries.primary}`}
         </p>
         <WhereToWatch state={watchState(title)} />
