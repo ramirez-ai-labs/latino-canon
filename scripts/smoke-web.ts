@@ -47,8 +47,19 @@ const CHECKS: Check[] = [
   // Browsing, not a query: renders the search page and result cards with no AI call.
   { name: "search (browse series)", run: expectPage("/search?kind=series", 200, [/href="\/title\/[a-z0-9-]+"/]) },
   // Filter options come from GET /titles/facets: a country and a decade the old hard-coded
-  // lists left out (added in the Latin American expansion) must be offered.
-  { name: "search filters from the catalog", run: expectPage("/search", 200, [/<option value="BO">Bolivia<\/option>/, /<option value="1930">1930s<\/option>/]) },
+  // lists left out (added in the Latin American expansion) must be offered. Since #342 the
+  // "Released" filter's values are year ranges, and a year with 25+ titles gets its own
+  // option (releaseOptions) - this check still expected the old `value="1930"` and failed
+  // the first deploy after #342, though the page was fine.
+  {
+    name: "search filters from the catalog",
+    run: expectPage("/search", 200, [
+      /<option value="BO">Bolivia<\/option>/,
+      /<option value="1930-1939">1930s<\/option>/,
+      /<option value="(\d{4})-\1">\1<\/option>/,
+      'aria-label="Sort"',
+    ]),
+  },
   // Only the canon's countries (US, Spain, Latin America): co-producers TMDB lists, like
   // France, must not be offered (CANON_COUNTRIES in packages/core facets.ts).
   {
