@@ -50,6 +50,8 @@ jobs:
         run: pnpm --filter @latino-canon/web run typecheck
 
       - name: Deploy web Worker
+        # The deploy script builds with --dangerouslyUseUnsupportedNextVersion until the
+        # Next 16 upgrade - see the "Validate web OpenNext build" step in validate-pr.yml.
         run: pnpm --filter @latino-canon/web run deploy
 
       # apps/web has no unit tests, and the OpenNext build can pass while a page throws at
