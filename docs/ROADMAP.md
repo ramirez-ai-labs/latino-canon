@@ -558,6 +558,55 @@ once this was confirmed working end-to-end.
    flags from TMDB's watch-provider data, on the TMDB call ingest already makes: no extra
    request, no neurons. Design and decisions: `docs/design/WHERE_TO_WATCH.md`.
 
+## Near-term: a Spanish-language site
+
+18. **Localize `apps/web` to Spanish.** Search already takes Spanish queries, but every
+    page is English (`<html lang="en">` is hard-coded in `layout.tsx`, and there's no i18n
+    library). For a catalog of Latino and Latin American film, a Spanish-speaking
+    reader shouldn't have to read English to use it.
+
+    **Decided up front:**
+    - **Language in the URL**: `/es/title/coco-2017` next to `/title/coco-2017`, with
+      [next-intl](https://next-intl.dev) for routing and message files. One URL per
+      language means pages can be shared, cached and indexed; switching languages by
+      cookie alone would serve different content at the same URL.
+    - **A text switcher ("English · Español"), not flags.** A flag stands for a country,
+      and Spanish is spoken in 20+ of them; any one flag would misrepresent a catalog
+      that spans the Americas and Spain. Each option is written in its own language.
+    - **`Accept-Language` picks the first visit's default only.** After that, the
+      reader's choice lives in a cookie, and the site never redirects against it.
+    - `<html lang>` follows the locale, and each page links its other language with
+      `hreflang`.
+
+    **Phase 1: site text and synopses (no neurons).**
+    - Move the site text (nav, filters, empty states, About, the Eval page) into
+      `messages/en.json` and `messages/es.json`, a few hundred strings. Translations are
+      reviewed by a fluent editor before merge, not shipped unread.
+    - Ingest fetches TMDB's Spanish overview (`language=es-MX`) on the call it already
+      makes, stored next to the English synopsis; a backfill fills the live catalog.
+      Titles with no Spanish overview fall back to English, labeled as such.
+    - The api takes a `lang` parameter, and the search cache key includes it, so a
+      Spanish page never gets an English response from the cache.
+    - `scripts/smoke-web.ts` checks that `/es` renders and that the switcher round-trips.
+
+    **Phase 2: Spanish "why it matters" blurbs (the costly part).**
+    - Each blurb is translated once by the 70B model and then judged for groundedness
+      on its own, against the same sources. A translation can drift from what the
+      sources support, and the grounded-note claim has to hold in both languages.
+    - That's the same budget slot as blurb regeneration (~100 neurons per blurb with
+      its judge call, ~20 a day): about three weeks for the current catalog. Translate
+      only *after* the pre-gate blurb rewrite (`/regenerate-blurbs`, 254 in the
+      backlog) clears, so each blurb is translated once, in its final form.
+    - New ingests then write both languages, and the ingest budget-table rows grow
+      to match. Measure the added cost before turning it on.
+
+    **Done when:** a reader can use the whole site in Spanish (search, title pages,
+    collections, About), every Spanish blurb carries its own judge score, and the
+    Eval page reports groundedness for each language.
+
+    **Why phase 1 first:** it costs no neurons and covers most of what a reader sees.
+    Phase 2 competes with the blurb rewrite for the daily 70B slot.
+
 ## Representation honesty: contextual/critical-archive schema
 
 A title can earn a clean `inclusion_type` tag and still deserve scrutiny of *how* it
