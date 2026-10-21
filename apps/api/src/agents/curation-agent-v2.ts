@@ -112,6 +112,9 @@ export function cardLine(a: AgentCard): string {
 const FILTER_LABEL: Record<keyof SearchFilters, (v: unknown) => string> = {
   kind: (v) => `type: ${String(v)}`,
   decade: (v) => `decade: ${String(v)}s`,
+  // Not in the agent's tool schema (explicit UI facets only), but the map covers every filter.
+  yearFrom: (v) => `from: ${String(v)}`,
+  yearTo: (v) => `to: ${String(v)}`,
   country: (v) => `country: ${String(v)}`,
   theme: (v) => `theme: ${String(v)}`,
   genre: (v) => `genre: ${String(v)}`,

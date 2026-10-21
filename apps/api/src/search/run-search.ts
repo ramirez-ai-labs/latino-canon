@@ -1,6 +1,6 @@
-import { MODEL_TAG_DISPLAY_THRESHOLD, type RankedHit, type SearchFilters, type SearchMode } from "@latino-canon/core";
+import { MODEL_TAG_DISPLAY_THRESHOLD, type BrowseSort, type RankedHit, type SearchFilters, type SearchMode } from "@latino-canon/core";
 import type { Env } from "../bindings.js";
-import { browseByPopularity } from "../db/browse.js";
+import { browseTitles } from "../db/browse.js";
 import { retrieve } from "./hybrid.js";
 import {
   countFacetMatches,
@@ -56,6 +56,8 @@ export async function runSearch(
     inferred: SearchFilters;
     limit: number;
     offset: number;
+    /** Order for an empty-query browse. A filter-only query lists by popularity. */
+    sort?: BrowseSort;
   },
 ): Promise<SearchPlanResult> {
   const { query, mode, explicit, limit, offset } = opts;
@@ -69,10 +71,11 @@ export async function runSearch(
   const inferred: SearchFilters = Object.fromEntries(Object.entries(definedInferred).filter(([k]) => !(k in explicit)));
 
   if (!query || (Object.keys(all).length > 0 && isFillerQuery(opts.cleanedQuery ?? query))) {
-    let hits = await browseByPopularity(env, all, limit, offset);
+    const sort = query ? "popular" : (opts.sort ?? "popular");
+    let hits = await browseTitles(env, all, limit, offset, sort);
     if (hits.length > 0) return { hits, applied: all, dropped: [], filterMode: "strict", degraded };
     for (const relaxed of relaxedFilterSets(all, explicit)) {
-      hits = await browseByPopularity(env, relaxed, limit, offset);
+      hits = await browseTitles(env, relaxed, limit, offset, sort);
       if (hits.length > 0) {
         return {
           hits,

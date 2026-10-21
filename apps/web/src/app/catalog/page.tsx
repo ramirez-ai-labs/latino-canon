@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { TitleCard } from "@/components/TitleCard";
 import { SearchFilters } from "@/components/SearchFilters";
 import { buttonVariants } from "@/components/ui/button";
-import { getFilterOptions, search } from "@/lib/api";
+import { getFilterOptions, search, searchParamsFromUrl } from "@/lib/api";
 import Link from "next/link";
 
 export const metadata = { title: "Catalog" };
@@ -24,11 +24,7 @@ export default async function CatalogPage({
       limit: PER_PAGE + 1, // fetch one extra to detect if there's a next page
       offset,
       mode: "hybrid",
-      theme: sp.theme,
-      kind: sp.kind,
-      country: sp.country,
-      decade: sp.decade ? Number(sp.decade) : undefined,
-      inclusionType: sp.inclusionType,
+      ...searchParamsFromUrl(sp),
     }),
     getFilterOptions(),
   ]);
@@ -43,7 +39,7 @@ export default async function CatalogPage({
       <p className="mb-6 text-sm text-muted">All titles in the canon · Page {page}</p>
 
       <Suspense>
-        <SearchFilters countries={filterOptions.countries} decades={filterOptions.decades} />
+        <SearchFilters countries={filterOptions.countries} released={filterOptions.released} />
       </Suspense>
 
       <div className="columns-2 gap-5 sm:columns-3 md:columns-4 lg:columns-5">

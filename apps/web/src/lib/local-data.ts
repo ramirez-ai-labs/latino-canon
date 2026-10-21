@@ -22,6 +22,8 @@ export function localSearch(params: {
   kind?: string;
   theme?: string;
   decade?: number;
+  yearFrom?: number;
+  yearTo?: number;
   limit?: number;
   offset?: number;
 }): SearchResponse {
@@ -34,7 +36,9 @@ export function localSearch(params: {
       return (!query || text.includes(query))
         && (!params.kind || item.kind === params.kind)
         && (!params.theme || item.tags.some((tag) => tag.slug === params.theme))
-        && (!params.decade || item.yearStart >= params.decade && item.yearStart < params.decade + 10);
+        && (!params.decade || item.yearStart >= params.decade && item.yearStart < params.decade + 10)
+        && (!params.yearFrom || item.yearStart >= params.yearFrom)
+        && (!params.yearTo || item.yearStart <= params.yearTo);
     })
     .slice(offset, offset + (params.limit ?? 36))
     .map(toCard);

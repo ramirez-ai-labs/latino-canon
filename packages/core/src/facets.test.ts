@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CANON_COUNTRIES, countryOptions, decadeOptions } from "./facets.js";
+import { CANON_COUNTRIES, countryOptions, decadeOptions, parseReleaseRange, releaseOptions } from "./facets.js";
 
 describe("countryOptions", () => {
   it("names countries in English and sorts them A-Z by name, not by code or count", () => {
@@ -64,5 +64,58 @@ describe("decadeOptions", () => {
     ]);
     expect(opts.map((o) => o.label)).toEqual(["1930s", "1950s", "1990s", "2010s"]);
     expect(opts[0]).toEqual({ value: "1930", label: "1930s", count: 1 });
+  });
+});
+
+describe("releaseOptions", () => {
+  // The live catalog on 2026-10-20, 2015 onward plus a few older decades.
+  const years = [
+    { year: 1931, count: 1 },
+    { year: 1959, count: 2 },
+    { year: 1950, count: 3 },
+    { year: 2017, count: 20 },
+    { year: 2019, count: 17 },
+    { year: 2022, count: 10 },
+    { year: 2024, count: 10 },
+    { year: 2025, count: 39 },
+    { year: 2026, count: 56 },
+  ];
+
+  it("splits the busy newest years off their decade and keeps the rest as one range, newest first", () => {
+    expect(releaseOptions(years)).toEqual([
+      { value: "2026-2026", label: "2026", count: 56 },
+      { value: "2025-2025", label: "2025", count: 39 },
+      { value: "2020-2024", label: "2020\u20132024", count: 20 },
+      { value: "2010-2019", label: "2010s", count: 37 },
+      { value: "1950-1959", label: "1950s", count: 5 },
+      { value: "1930-1939", label: "1930s", count: 1 },
+    ]);
+  });
+
+  it("never splits a busy year that isn't at the decade's newest end", () => {
+    // 2018 is busy but 2019 isn't: splitting 2018 alone would leave a non-contiguous rest.
+    const opts = releaseOptions([
+      { year: 2018, count: 40 },
+      { year: 2019, count: 3 },
+    ]);
+    expect(opts).toEqual([{ value: "2010-2019", label: "2010s", count: 43 }]);
+  });
+
+  it("drops a decade's range option when every year in it was split off", () => {
+    const opts = releaseOptions([{ year: 2026, count: 30 }]);
+    expect(opts).toEqual([{ value: "2026-2026", label: "2026", count: 30 }]);
+  });
+});
+
+describe("parseReleaseRange", () => {
+  it("parses an option value into the api's yearFrom/yearTo", () => {
+    expect(parseReleaseRange("2020-2024")).toEqual({ yearFrom: 2020, yearTo: 2024 });
+    expect(parseReleaseRange("2026-2026")).toEqual({ yearFrom: 2026, yearTo: 2026 });
+  });
+
+  it("rejects anything else, including a reversed range", () => {
+    expect(parseReleaseRange("2024-2020")).toBeNull();
+    expect(parseReleaseRange("1990")).toBeNull();
+    expect(parseReleaseRange(null)).toBeNull();
   });
 });

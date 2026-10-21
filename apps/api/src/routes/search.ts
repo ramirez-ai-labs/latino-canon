@@ -27,6 +27,8 @@ searchRoute.get("/", async (c) => {
   const explicitFilters: SearchFilters = stripUndefined({
     kind: input.kind,
     decade: input.decade,
+    yearFrom: input.yearFrom,
+    yearTo: input.yearTo,
     country: input.country,
     theme: input.theme,
     inclusionType: input.inclusionType,
@@ -46,7 +48,9 @@ searchRoute.get("/", async (c) => {
   // POST /rebuild-search-cache after each deploy (index rebuilds still need that one).
   const version = c.env.CF_VERSION_METADATA?.id ?? "local";
   const normalizedQuery = (input.q ?? "").trim().toLowerCase().replace(/\s+/g, " ");
-  const cacheKey = `search:${version}:${input.mode}:${normalizedQuery}:${JSON.stringify(explicitFilters)}:${input.limit}:${input.offset}`;
+  // sort only orders an empty-query browse, so only that splits the cache.
+  const sortKey = input.q ? "" : `:${input.sort}`;
+  const cacheKey = `search:${version}:${input.mode}:${normalizedQuery}:${JSON.stringify(explicitFilters)}:${input.limit}:${input.offset}${sortKey}`;
   const cached = await c.env.CACHE.get<SearchResponse>(cacheKey, "json");
   if (cached) return c.json({ ...cached, query: input.q, tookMs: Date.now() - started });
 
@@ -90,6 +94,7 @@ searchRoute.get("/", async (c) => {
     inferred: interpretation?.filters ?? {},
     limit: input.limit,
     offset: input.offset,
+    sort: input.sort,
   });
   // Exact matches lead page one; later pages drop them so a title never shows twice.
   const rest = plan.hits.filter((h) => !exact.includes(h.titleId));

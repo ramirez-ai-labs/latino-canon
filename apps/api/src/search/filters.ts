@@ -33,6 +33,16 @@ export function filterToSql(
     params.push(filters.decade + 9);
     clauses.push(`${titleAlias}.year_start BETWEEN ${lo} AND ${hi}`);
   }
+  if (filters.yearFrom) {
+    const ph = p();
+    params.push(filters.yearFrom);
+    clauses.push(`${titleAlias}.year_start >= ${ph}`);
+  }
+  if (filters.yearTo) {
+    const ph = p();
+    params.push(filters.yearTo);
+    clauses.push(`${titleAlias}.year_start <= ${ph}`);
+  }
   if (filters.country) {
     const ph = p();
     params.push(filters.country);
@@ -113,10 +123,27 @@ export function filterToVectorize(filters: SearchFilters): VectorizeVectorMetada
   const f: VectorizeVectorMetadataFilter = {};
   if (filters.kind) f.kind = filters.kind;
   if (filters.decade) f.decade = filters.decade;
+  // Vectorize metadata carries the decade, not the year, so a year range narrows to the
+  // decades it touches (range ops work on the `decade` number index) and
+  // needsD1PostFilter trims to the exact years. No vector rebuild needed.
+  else if (filters.yearFrom || filters.yearTo) {
+    f.decade = {
+      ...(filters.yearFrom ? { $gte: Math.floor(filters.yearFrom / 10) * 10 } : {}),
+      ...(filters.yearTo ? { $lte: Math.floor(filters.yearTo / 10) * 10 } : {}),
+    };
+  }
   return f;
 }
 
 /** True when `filters` has a constraint `filterToVectorize` can't push down to Vectorize. */
 export function needsD1PostFilter(filters: SearchFilters): boolean {
-  return Boolean(filters.country || filters.theme || filters.inclusionType || filters.genre || filters.contentAdvisory);
+  return Boolean(
+    filters.country ||
+      filters.theme ||
+      filters.inclusionType ||
+      filters.genre ||
+      filters.contentAdvisory ||
+      filters.yearFrom ||
+      filters.yearTo,
+  );
 }

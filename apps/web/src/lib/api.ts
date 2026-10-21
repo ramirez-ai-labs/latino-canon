@@ -1,7 +1,7 @@
 import "server-only";
 import {
   countryOptions,
-  decadeOptions,
+  releaseOptions,
   type BlurbGateDay,
   type CatalogFacets,
   type Collection,
@@ -72,7 +72,7 @@ function localFetch<T>(path: string): T {
   if (url.pathname.startsWith("/collections/")) return localCollection(url.pathname.slice("/collections/".length)) as T;
   // Mock data has no vectors - the title page falls back to its theme-based list.
   if (url.pathname.endsWith("/similar")) return { titleId: "", results: [] } as T;
-  if (url.pathname === "/titles/facets") return { countries: [], decades: [] } as T;
+  if (url.pathname === "/titles/facets") return { countries: [], decades: [], years: [] } as T;
   if (url.pathname.startsWith("/titles/")) return localTitle(url.pathname.slice("/titles/".length)) as T;
   // eval_runs is CI-written only (see apps/api/src/routes/eval-runs.ts) - nothing
   // to show against local mock data, so LOCAL_DEV just renders an empty history.
@@ -83,6 +83,8 @@ function localFetch<T>(path: string): T {
     kind: url.searchParams.get("kind") ?? undefined,
     theme: url.searchParams.get("theme") ?? undefined,
     decade: url.searchParams.get("decade") ? Number(url.searchParams.get("decade")) : undefined,
+    yearFrom: url.searchParams.get("yearFrom") ? Number(url.searchParams.get("yearFrom")) : undefined,
+    yearTo: url.searchParams.get("yearTo") ? Number(url.searchParams.get("yearTo")) : undefined,
     limit: url.searchParams.get("limit") ? Number(url.searchParams.get("limit")) : undefined,
   }) as T;
 }
@@ -92,17 +94,41 @@ export function search(params: {
   mode?: string;
   theme?: string;
   decade?: number;
+  yearFrom?: number;
+  yearTo?: number;
   kind?: string;
   country?: string;
   inclusionType?: string;
   genre?: string;
   contentAdvisory?: string;
+  sort?: string;
   limit?: number;
   offset?: number;
 }): Promise<SearchResponse> {
   const qs = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) if (v != null && v !== "") qs.set(k, String(v));
   return apiFetch<SearchResponse>(`/search?${qs}`);
+}
+
+/** The site's browse order: newest to the canon first, stable between visits (see BrowseSort). */
+export const DEFAULT_SORT = "added";
+
+/**
+ * The filters and browse order a /search or /catalog URL carries, as search() params.
+ * sort is sent only for a browse (no q) - a query ranks by relevance.
+ */
+export function searchParamsFromUrl(sp: Record<string, string | undefined>) {
+  const num = (v: string | undefined) => (v ? Number(v) : undefined);
+  return {
+    theme: sp.theme,
+    kind: sp.kind,
+    country: sp.country,
+    decade: num(sp.decade),
+    yearFrom: num(sp.yearFrom),
+    yearTo: num(sp.yearTo),
+    inclusionType: sp.inclusionType,
+    sort: sp.q ? undefined : (sp.sort ?? DEFAULT_SORT),
+  };
 }
 
 export function curateSearch(params: { q: string; limit?: number }): Promise<CurationResponse> {
@@ -115,17 +141,18 @@ export function curateSearch(params: { q: string; limit?: number }): Promise<Cur
 export const getTitle = (id: string) => apiFetch<Title>(`/titles/${id}`);
 
 /**
- * Country and decade options for the search filters, from what the catalog holds. A
+ * Country and release-year options for the search filters, from what the catalog holds. A
  * failed call degrades to empty lists - the filters still work from the URL, and a page
  * never fails because its dropdowns couldn't load.
  */
-export async function getFilterOptions(): Promise<{ countries: FacetOption[]; decades: FacetOption[] }> {
+export async function getFilterOptions(): Promise<{ countries: FacetOption[]; released: FacetOption[] }> {
   try {
     const facets = await apiFetch<CatalogFacets>(`/titles/facets`);
-    return { countries: countryOptions(facets.countries), decades: decadeOptions(facets.decades) };
+    // `years` is new in this release - an api that predates it degrades to no options.
+    return { countries: countryOptions(facets.countries), released: releaseOptions(facets.years ?? []) };
   } catch (err) {
     console.warn(JSON.stringify({ event: "web.facets_failed", error: err instanceof Error ? err.message : String(err) }));
-    return { countries: [], decades: [] };
+    return { countries: [], released: [] };
   }
 }
 export const getSimilarTitles = (id: string, limit = 8) =>

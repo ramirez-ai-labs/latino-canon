@@ -6,7 +6,9 @@ import {
   INCLUSION_TYPES,
   INCLUSION_TYPE_LABELS,
   THEMES,
+  type BrowseSort,
   type FacetOption,
+  parseReleaseRange,
   THEME_LABELS,
   type InclusionType,
   type SearchMode,
@@ -18,6 +20,14 @@ const MODES: { value: SearchMode; label: string }[] = [
   { value: "hybrid", label: "Hybrid (BM25 + semantic)" },
   { value: "lexical", label: "Lexical (keyword)" },
   { value: "semantic", label: "Semantic (meaning)" },
+];
+
+// "added" first: the site's default (DEFAULT_SORT in lib/api.ts, which is server-only).
+const SORTS: { value: BrowseSort; label: string }[] = [
+  { value: "added", label: "Newest in the canon" },
+  { value: "year", label: "Release year" },
+  { value: "popular", label: "Popular now" },
+  { value: "title", label: "Title A\u2013Z" },
 ];
 
 const KINDS: { value: TitleKind; label: string }[] = [
@@ -39,25 +49,61 @@ const selectClass =
   "glass-light rounded-full px-3.5 py-1.5 text-[0.85rem] text-text transition-all duration-200 hover:border-muted focus:outline-none focus:ring-2 focus:ring-accent/60 focus:shadow-[var(--shadow-glow)]";
 
 /**
- * Exposes the same mode/kind/theme/decade/inclusionType filters the search API has
- * supported all along - previously only reachable by hand-editing the URL.
- *
- * Country and decade options come from the catalog itself (GET /titles/facets, built into
- * options by packages/core facets.ts): the in-scope production countries (the US, Spain and
- * Latin America, not every co-producer TMDB lists), sorted A-Z by name, and every decade
- * that has a canon title. They used to be hard-coded and fell behind the catalog.
+ * The release-year range a URL selects, as a "from-to" option value: yearFrom/yearTo, or
+ * an older link's `decade` (still honored by the api) as its ten years.
  */
-export function SearchFilters({ countries, decades }: { countries: FacetOption[]; decades: FacetOption[] }) {
+function selectedRelease(params: URLSearchParams): string {
+  const from = params.get("yearFrom");
+  const to = params.get("yearTo");
+  if (from || to) return `${from ?? ""}-${to ?? ""}`;
+  const decade = Number(params.get("decade"));
+  return decade ? `${decade}-${decade + 9}` : "";
+}
+
+/**
+ * Exposes the same mode/kind/theme/release/inclusionType filters the search API has
+ * supported all along - previously only reachable by hand-editing the URL - and, for a
+ * browse, the order.
+ *
+ * Country and release options come from the catalog itself (GET /titles/facets, built into
+ * options by packages/core facets.ts): the in-scope production countries (the US, Spain and
+ * Latin America, not every co-producer TMDB lists), sorted A-Z by name, and release ranges
+ * newest first - a decade, or a single year once a year holds enough titles to deserve one
+ * (releaseOptions). Decades alone stopped narrowing much at 460 titles: "2020s" was a third
+ * of the catalog.
+ */
+export function SearchFilters({ countries, released }: { countries: FacetOption[]; released: FacetOption[] }) {
   const router = useRouter();
   const params = useSearchParams();
   const countryList = withSelected(countries, params.get("country"));
-  const decadeList = withSelected(decades, params.get("decade"), "s");
+  const release = selectedRelease(params);
+  const releaseList = withSelected(released, release);
+  const isBrowse = !params.get("q");
+
+  // Any change starts again at page 1 - page 3 of the old filters may not exist under the new ones.
+  function push(next: URLSearchParams) {
+    next.delete("page");
+    router.push(`/search?${next.toString()}`);
+  }
 
   function setParam(key: string, value: string) {
     const next = new URLSearchParams(params.toString());
     if (value) next.set(key, value);
     else next.delete(key);
-    router.push(`/search?${next.toString()}`);
+    push(next);
+  }
+
+  function setRelease(value: string) {
+    const next = new URLSearchParams(params.toString());
+    next.delete("decade");
+    next.delete("yearFrom");
+    next.delete("yearTo");
+    const range = parseReleaseRange(value);
+    if (range) {
+      next.set("yearFrom", String(range.yearFrom));
+      next.set("yearTo", String(range.yearTo));
+    }
+    push(next);
   }
 
   // A glow ring on any select whose value isn't the "no filter" default - a quick
@@ -66,6 +112,21 @@ export function SearchFilters({ countries, decades }: { countries: FacetOption[]
 
   return (
     <div className="mb-6 flex flex-wrap gap-2.5">
+      {/* A query ranks by relevance - the order only applies to browsing. */}
+      {isBrowse && (
+        <select
+          aria-label="Sort"
+          value={params.get("sort") ?? "added"}
+          onChange={(e) => setParam("sort", e.target.value === "added" ? "" : e.target.value)}
+          className={cn(selectClass, params.get("sort") && params.get("sort") !== "added" && glowClass)}
+        >
+          {SORTS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      )}
       <select
         aria-label="Search mode"
         value={params.get("mode") ?? "hybrid"}
@@ -94,15 +155,15 @@ export function SearchFilters({ countries, decades }: { countries: FacetOption[]
       </select>
 
       <select
-        aria-label="Decade"
-        value={params.get("decade") ?? ""}
-        onChange={(e) => setParam("decade", e.target.value)}
-        className={cn(selectClass, params.get("decade") && glowClass)}
+        aria-label="Released"
+        value={release}
+        onChange={(e) => setRelease(e.target.value)}
+        className={cn(selectClass, release && glowClass)}
       >
-        <option value="">Any decade</option>
-        {decadeList.map((d) => (
-          <option key={d.value} value={d.value}>
-            {d.label}
+        <option value="">Any year</option>
+        {releaseList.map((r) => (
+          <option key={r.value} value={r.value}>
+            {r.label}
           </option>
         ))}
       </select>
