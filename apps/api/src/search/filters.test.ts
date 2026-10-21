@@ -30,6 +30,15 @@ describe("filterToSql", () => {
     expect(params).toEqual([1990, 1999]);
   });
 
+  it("bounds a year range inclusively, either end open", () => {
+    expect(filterToSql({ yearFrom: 2020, yearTo: 2024 })).toEqual({
+      where: "t.year_start >= ?1 AND t.year_start <= ?2",
+      params: [2020, 2024],
+    });
+    expect(filterToSql({ yearFrom: 2025 })).toEqual({ where: "t.year_start >= ?1", params: [2025] });
+    expect(filterToSql({ yearTo: 1979 })).toEqual({ where: "t.year_start <= ?1", params: [1979] });
+  });
+
   it("assigns each filter its own placeholder in combination, in order", () => {
     const { where, params } = filterToSql({ kind: "film", decade: 1990, country: "MX" }, "t", 1);
     expect(where).toContain("?2"); // kind
@@ -74,6 +83,18 @@ describe("filterToVectorize", () => {
     expect(f).toEqual({ kind: "film", decade: 1990 });
   });
 
+  // Vectorize metadata has no year, only the decade: a year range narrows to the decades
+  // it touches, and the D1 post-filter (needsD1PostFilter) trims to the exact years.
+  it("pushes a year range down as a decade range", () => {
+    expect(filterToVectorize({ yearFrom: 2020, yearTo: 2024 })).toEqual({ decade: { $gte: 2020, $lte: 2020 } });
+    expect(filterToVectorize({ yearFrom: 2015, yearTo: 2026 })).toEqual({ decade: { $gte: 2010, $lte: 2020 } });
+    expect(filterToVectorize({ yearFrom: 2025 })).toEqual({ decade: { $gte: 2020 } });
+  });
+
+  it("keeps an explicit decade over a year range's decade bounds", () => {
+    expect(filterToVectorize({ decade: 1990, yearFrom: 1995 })).toEqual({ decade: 1990 });
+  });
+
   it("omits keys entirely for unset filters", () => {
     expect(filterToVectorize({})).toEqual({});
   });
@@ -86,6 +107,11 @@ describe("needsD1PostFilter", () => {
     expect(needsD1PostFilter({ inclusionType: "led_by" })).toBe(true);
     expect(needsD1PostFilter({ genre: "Animation" })).toBe(true);
     expect(needsD1PostFilter({ contentAdvisory: "general" })).toBe(true);
+  });
+
+  it("is true for a year range, which Vectorize can only narrow to decades", () => {
+    expect(needsD1PostFilter({ yearFrom: 2025 })).toBe(true);
+    expect(needsD1PostFilter({ yearTo: 1979 })).toBe(true);
   });
 
   it("is false when only kind/decade (or nothing) is set", () => {

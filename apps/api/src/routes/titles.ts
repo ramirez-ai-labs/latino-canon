@@ -54,13 +54,13 @@ titlesRoute.get("/", async (c) => {
 });
 
 /**
- * Production countries and decades the canon holds, with title counts, for the site's
+ * Production countries, decades and release years the canon holds, with title counts, for the site's
  * filter dropdowns (see packages/core facets.ts for why they're derived, not hard-coded).
  * Behind the same visibility gate as search, so every option leads to at least one result.
  */
 export async function catalogFacets(env: Env): Promise<CatalogFacets> {
   const gate = visibilityGateSql("t");
-  const [countries, decades] = await Promise.all([
+  const [countries, years] = await Promise.all([
     env.DB.prepare(
       `SELECT c.value AS code, COUNT(*) AS count
        FROM titles t, json_each(t.countries) c
@@ -70,15 +70,25 @@ export async function catalogFacets(env: Env): Promise<CatalogFacets> {
       .bind(...gate.params)
       .all<{ code: string; count: number }>(),
     env.DB.prepare(
-      `SELECT (t.year_start / 10) * 10 AS decade, COUNT(*) AS count
+      `SELECT t.year_start AS year, COUNT(*) AS count
        FROM titles t
        WHERE t.year_start IS NOT NULL AND ${gate.clause}
        GROUP BY 1`,
     )
       .bind(...gate.params)
-      .all<{ decade: number; count: number }>(),
+      .all<{ year: number; count: number }>(),
   ]);
-  return { countries: countries.results, decades: decades.results };
+  // Decades are the years rolled up - one query, not two.
+  const decades = new Map<number, number>();
+  for (const { year, count } of years.results) {
+    const decade = Math.floor(year / 10) * 10;
+    decades.set(decade, (decades.get(decade) ?? 0) + count);
+  }
+  return {
+    countries: countries.results,
+    decades: [...decades].map(([decade, count]) => ({ decade, count })),
+    years: years.results,
+  };
 }
 
 // One D1 read per isolate every few minutes, not per page view, and no KV write: the free

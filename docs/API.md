@@ -54,11 +54,12 @@ npx @openapitools/openapi-generator-cli generate \
 **Hybrid search: BM25 keyword retrieval + `bge-m3` semantic retrieval, fused with Reciprocal Rank Fusion.**
 
 **Parameters:**
-- `q` (optional): free-text query, up to 200 characters, English or Spanish. Empty `q` lists titles by popularity (browse).
+- `q` (optional): free-text query, up to 200 characters, English or Spanish. Empty `q` lists titles in `sort` order (browse).
 - `mode` (optional): `hybrid` (default), `lexical`, or `semantic`
 - `limit` (optional): 1–51, default 50
 - `offset` (optional): pagination offset
-- Filters (optional): `kind` (`film` | `series` | `special`), `decade` (e.g. `1990`), `country` (ISO 3166-1 alpha-2), `theme`, `inclusionType`, `genre` (e.g. `Animation`, `Documentary`), `contentAdvisory` (`general`)
+- `sort` (optional, browse only): `popular` (default; TMDB popularity, refreshed daily, so the order shifts), `added` (newest to the canon), `year` (release year, newest first), or `title` (A-Z). Ignored when `q` is set. Every order breaks ties by id, so pages never overlap. The site defaults to `added`.
+- Filters (optional): `kind` (`film` | `series` | `special`), `decade` (e.g. `1990`), `yearFrom` / `yearTo` (release years, inclusive, either end open), `country` (ISO 3166-1 alpha-2), `theme`, `inclusionType`, `genre` (e.g. `Animation`, `Documentary`), `contentAdvisory` (`general`)
 
 **How filters apply:**
 - **Filters you pass as parameters always exclude** titles that don't match.
@@ -137,10 +138,12 @@ curl "https://latino-canon-api.ai-builders-studio-latinx.workers.dev/titles/coco
 
 ### `GET /titles/facets`
 
-Every production country and decade that at least one canon title has, with how many titles list each.
+Every production country, decade and release year that at least one canon title has, with how many titles list each.
 This returns every country TMDB lists, co-producers included; the site's country filter offers only the
 canon's scope, the US, Spain and Latin America (`CANON_COUNTRIES` in `packages/core/src/facets.ts`).
-The site builds its country filter (English names, A-Z) and decade filter (oldest first) from this, so
+The site builds its country filter (English names, A-Z) and "Released" filter from this: release ranges
+newest first, a decade per option unless its newest years each hold 25+ titles, which get their own option
+("2026", "2025", "2020–2024"; `releaseOptions` in `facets.ts`). That way
 new titles from the ingest queue appear in the filters without a code change. It uses the same visibility
 gate as search, so every option returns results. No Workers AI call; each isolate reuses the result for
 5 minutes.
@@ -148,7 +151,8 @@ gate as search, so every option returns results. No Workers AI call; each isolat
 ```json
 {
   "countries": [{ "code": "BO", "count": 5 }, { "code": "MX", "count": 58 }],
-  "decades": [{ "decade": 1930, "count": 1 }, { "decade": 2010, "count": 96 }]
+  "decades": [{ "decade": 1930, "count": 1 }, { "decade": 2010, "count": 96 }],
+  "years": [{ "year": 1931, "count": 1 }, { "year": 2026, "count": 56 }]
 }
 ```
 

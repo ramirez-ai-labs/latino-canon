@@ -38,7 +38,7 @@ export const OPENAPI_SPEC = {
           "Filters passed as parameters always exclude. A natural-language `q` may also yield LLM-inferred " +
           "filters: for a filter-only query (\"animation films\") they exclude, relaxed one at a time if " +
           "nothing matches; for a query with real content they only boost matching titles. " +
-          "`interpretation.filterMode` says which. Empty `q` lists titles by popularity.",
+          "`interpretation.filterMode` says which. Empty `q` lists titles in `sort` order.",
         tags: ["Search"],
         parameters: [
           {
@@ -54,6 +54,14 @@ export const OPENAPI_SPEC = {
           filterParam("offset", "Pagination offset", { type: "integer", minimum: 0, default: 0 }),
           filterParam("kind", "Media type", { type: "string", enum: ["film", "series", "special"] }),
           filterParam("decade", "Release decade (start year, e.g. 1990)", { type: "integer" }),
+          filterParam("yearFrom", "Earliest release year, inclusive", { type: "integer", minimum: 1900, maximum: 2100 }),
+          filterParam("yearTo", "Latest release year, inclusive", { type: "integer", minimum: 1900, maximum: 2100 }),
+          filterParam(
+            "sort",
+            "Order for an empty-`q` browse: TMDB popularity (refreshed daily, so it shifts), newest added to the " +
+              "canon, release year (newest first), or title A-Z. Ignored when `q` is set - results rank by relevance.",
+            { type: "string", enum: ["popular", "added", "year", "title"], default: "popular" },
+          ),
           filterParam("country", "Production country, ISO 3166-1 alpha-2 (e.g. 'MX')", { type: "string", minLength: 2, maxLength: 2 }),
           filterParam("theme", "Theme slug (e.g. 'family', 'immigration')", { type: "string" }),
           filterParam("inclusionType", "Inclusion type (e.g. 'led_by', 'created_by', 'about_community')", { type: "string" }),
@@ -135,10 +143,10 @@ export const OPENAPI_SPEC = {
     "/titles/facets": {
       get: {
         operationId: "getCatalogFacets",
-        summary: "Countries and decades in the canon",
+        summary: "Countries, decades and years in the canon",
         description:
-          "Every production country (ISO 3166-1 alpha-2) and decade that at least one canon title has, with a title " +
-          "count - the options for the country and decade search filters. Behind the same visibility gate as search, " +
+          "Every production country (ISO 3166-1 alpha-2), decade and release year that at least one canon title has, " +
+          "with a title count - the options for the country, decade and release-year search filters. Behind the same visibility gate as search, " +
           "so each option returns results. No Workers AI call.",
         tags: ["Catalog"],
         responses: {
@@ -149,6 +157,7 @@ export const OPENAPI_SPEC = {
                 example: {
                   countries: [{ code: "BO", count: 5 }, { code: "MX", count: 58 }],
                   decades: [{ decade: 1930, count: 1 }, { decade: 2010, count: 96 }],
+                  years: [{ year: 1931, count: 1 }, { year: 2026, count: 56 }],
                 },
               },
             },

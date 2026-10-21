@@ -9,6 +9,7 @@ export const genreSchema = z.enum(GENRES);
 export const contentAdvisorySchema = z.enum(CONTENT_ADVISORIES);
 export const representationHandlingSchema = z.enum(REPRESENTATION_HANDLINGS);
 export const contextNoteCategorySchema = z.enum(CONTEXT_NOTE_CATEGORIES);
+export const browseSortSchema = z.enum(["popular", "added", "year", "title"]);
 
 /** Editor-authored, not model output — no ingest pipeline writes this yet. */
 export const contextNoteSchema = z.object({
@@ -46,11 +47,15 @@ export const searchQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).default(0),
   kind: titleKindSchema.optional(),
   decade: z.coerce.number().int().optional(),
+  yearFrom: z.coerce.number().int().min(1900).max(2100).optional(),
+  yearTo: z.coerce.number().int().min(1900).max(2100).optional(),
   country: z.string().length(2).optional(),
   theme: themeSchema.optional(),
   inclusionType: inclusionTypeSchema.optional(),
   genre: genreSchema.optional(),
   contentAdvisory: contentAdvisorySchema.optional(),
+  // Empty-query browse only; a query is ranked by relevance (see BrowseSort).
+  sort: browseSortSchema.default("popular"),
 });
 
 /** Structured output contract for the query-rewriting LLM call. */

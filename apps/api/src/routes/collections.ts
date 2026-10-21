@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import type { SearchFilters } from "@latino-canon/core";
 import type { Env } from "../bindings.js";
-import { browseByPopularity } from "../db/browse.js";
+import { browseTitles } from "../db/browse.js";
 import { hydrateCards } from "../db/cards.js";
 
 export const collectionsRoute = new Hono<{ Bindings: Env }>();
@@ -29,7 +29,7 @@ collectionsRoute.get("/:slug", async (c) => {
 
   let hits;
   if (col.kind === "smart" && col.smart_query) {
-    hits = await browseByPopularity(c.env, JSON.parse(col.smart_query) as SearchFilters, 48);
+    hits = await browseTitles(c.env, JSON.parse(col.smart_query) as SearchFilters, 48);
   } else {
     const { results } = await c.env.DB.prepare(
       "SELECT title_id AS titleId, (100 - ord) AS score FROM collection_items WHERE collection_id = ? ORDER BY ord",

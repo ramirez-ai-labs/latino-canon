@@ -45,6 +45,9 @@ describe("catalog facets", () => {
     expect(countries).toEqual({ BO: 2, BR: 1, UY: 1, AR: 1, CR: 1 });
     const decades = Object.fromEntries(f.decades.map((d) => [d.decade, d.count]));
     expect(decades).toEqual({ 1930: 1, 1960: 1, 2000: 1, 2010: 1, 2020: 1 });
+    // The "Released" filter's options are built from these (core releaseOptions).
+    const years = Object.fromEntries(f.years.map((y) => [y.year, y.count]));
+    expect(years).toEqual({ 1931: 1, 1969: 1, 2004: 1, 2010: 1, 2021: 1 });
   });
 
   it("serves them at GET /titles/facets, not as a title id", async () => {

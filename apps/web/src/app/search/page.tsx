@@ -7,7 +7,7 @@ import { SearchFilters } from "@/components/SearchFilters";
 import { TitleCard } from "@/components/TitleCard";
 import { AgentSearchReasoning } from "@/components/AgentSearchReasoning";
 import { buttonVariants } from "@/components/ui/button";
-import { ApiError, curateSearch, getFilterOptions, search } from "@/lib/api";
+import { ApiError, curateSearch, getFilterOptions, search, searchParamsFromUrl } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Explore" };
@@ -46,11 +46,7 @@ export default async function SearchPage({
         res = await search({
           q: sp.q,
           mode: sp.mode ?? "hybrid",
-          theme: sp.theme,
-          kind: sp.kind,
-          country: sp.country,
-          decade: sp.decade ? Number(sp.decade) : undefined,
-          inclusionType: sp.inclusionType,
+          ...searchParamsFromUrl(sp),
           limit: PER_PAGE + 1,
           offset: isBrowse ? offset : undefined,
         });
@@ -59,11 +55,7 @@ export default async function SearchPage({
       res = await search({
         q: sp.q,
         mode: sp.mode ?? "hybrid",
-        theme: sp.theme,
-        kind: sp.kind,
-        country: sp.country,
-        decade: sp.decade ? Number(sp.decade) : undefined,
-        inclusionType: sp.inclusionType,
+        ...searchParamsFromUrl(sp),
         limit: PER_PAGE + 1,
         offset: isBrowse ? offset : undefined,
       });
@@ -93,7 +85,7 @@ export default async function SearchPage({
       <Suspense>
         <SearchBar autoFocus />
         <div className="mt-6">
-          <SearchFilters countries={filterOptions.countries} decades={filterOptions.decades} />
+          <SearchFilters countries={filterOptions.countries} released={filterOptions.released} />
         </div>
       </Suspense>
 
@@ -129,7 +121,7 @@ export default async function SearchPage({
         <div className="mt-12 flex flex-col items-center justify-center rounded-2xl border border-border bg-surface-raised py-12 px-6 text-center">
           <p className="text-lg font-semibold text-text">No titles match these filters</p>
           <p className="mt-2 text-sm text-muted max-w-md">
-            Try adjusting your search or removing filters like decade, country, or theme to see more results.
+            Try adjusting your search or removing filters like release year, country, or theme to see more results.
           </p>
           <div className="mt-6 flex flex-col gap-2 text-sm">
             {sp.q && (
@@ -137,10 +129,10 @@ export default async function SearchPage({
                 Searching for: <code className="rounded bg-surface px-2 py-1 text-text">{sp.q}</code>
               </p>
             )}
-            {Object.entries(sp).filter(([k, v]) => k !== "q" && v != null && k !== "page" && k !== "mode").length > 0 && (
+            {Object.entries(sp).filter(([k, v]) => k !== "q" && v != null && k !== "page" && k !== "mode" && k !== "sort").length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2 justify-center">
                 {Object.entries(sp)
-                  .filter(([k, v]) => k !== "q" && v != null && k !== "page" && k !== "mode")
+                  .filter(([k, v]) => k !== "q" && v != null && k !== "page" && k !== "mode" && k !== "sort")
                   .map(([k, v]) => (
                     <span key={k} className="rounded bg-surface px-2 py-1 text-muted text-xs">
                       {k}: {v}

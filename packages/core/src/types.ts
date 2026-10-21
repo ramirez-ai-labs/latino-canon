@@ -166,12 +166,29 @@ export interface TitleCard {
 export interface SearchFilters {
   kind?: TitleKind;
   decade?: number; // e.g. 1990
+  /**
+   * Release-year range, inclusive; either end may be open. Explicit only (a UI facet or
+   * query param) - the query rewrite never infers it. Added once the catalog passed 450
+   * titles and "2020s" alone matched a third of it (2025-26 festival titles: 95).
+   */
+  yearFrom?: number;
+  yearTo?: number;
   country?: string; // ISO 3166-1 alpha-2
   theme?: Theme;
   inclusionType?: InclusionType;
   genre?: Genre;
   contentAdvisory?: ContentAdvisory;
 }
+
+/**
+ * Order for an empty-query browse (a query is ranked by relevance instead).
+ * - popular: TMDB popularity. It moves daily (the ingest cron refreshes 25 titles a day),
+ *   so a page's order shifts between visits - the api default, for existing callers.
+ * - added: newest to the canon first - the site default.
+ * - year: release year, newest first.
+ * - title: A-Z.
+ */
+export type BrowseSort = "popular" | "added" | "year" | "title";
 
 export interface SearchRequest {
   q: string;
