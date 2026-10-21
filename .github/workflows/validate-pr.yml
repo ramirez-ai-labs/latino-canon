@@ -96,4 +96,9 @@ jobs:
         run: pnpm --filter @latino-canon/mcp run test
 
       - name: Validate web OpenNext build
-        run: pnpm --filter @latino-canon/web exec opennextjs-cloudflare build
+      # Temporary: OpenNext refuses a Next.js major 2 years after its release
+      # (@opennextjs/aws NEXT_RELEASE_DATES), and Next 15 (2024-10-21) crossed that at
+      # 00:00 UTC 2026-10-21 - every web build failed from then on, whatever the 15.x
+      # patch. The flag opts in knowingly; it comes out with the Next 16 upgrade. The
+      # same flag is in apps/web's deploy/preview scripts, which deploy-web.yml runs.
+        run: pnpm --filter @latino-canon/web exec opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion
