@@ -7,8 +7,8 @@
         "dev": "next dev --port 3000",
         "dev:local": "LOCAL_DEV=1 next dev --port 3000",
         "build": "next build",
-        "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-        "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+        "preview": "opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion && opennextjs-cloudflare preview",
+        "deploy": "opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion && opennextjs-cloudflare deploy",
         "typecheck": "tsc -p tsconfig.json",
         "lint": "eslint src --ext .ts,.tsx --max-warnings 0",
         "cf-typegen": "wrangler types"
@@ -18,7 +18,7 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "lucide-react": "^1.55.0",
-        "next": "15.5.27",
+        "next": "^15.5.27",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "tailwind-merge": "^3.7.0"
