@@ -4,7 +4,7 @@
 
 A search and curation product for Latino-led films and series: "type anything and find it"
 retrieval (including Spanish and half-remembered plots) over a small, editorially curated
-catalog with context on why each title matters. Live, with ~340 titles in production.
+catalog with context on why each title matters. Live, with ~470 titles in production.
 
 Four Cloudflare Workers plus shared packages, all on the **free tier**:
 
@@ -196,6 +196,19 @@ Append the query to `packages/eval/src/datasets/queries.jsonl`, after verifying 
 answer against the live catalog. Changing the set changes its hash, so the next run
 becomes the new gate baseline.
 
+### Approving a held blurb
+
+There's no approve endpoint or review screen. `GET /titles/:id` on the public api returns
+an unapproved blurb with its sources (the site hides it), and the `regenerate-blurbs.yml`
+logs say what the judge flagged. To approve one, write a migration that sets `text`,
+`approved = 1, approved_by = 'editor'` (template: `0033_editor_blurbs_remaining_held.sql`).
+Cite every claim inline against that title's stored sources, and credit every director
+source: blurbs that named one of two co-directors read as single-director films. Run
+the new text through `blurbTextProblems` (core) and dry-run the SQL in sqlite against
+the live rows first. Leave the judge columns alone,
+since they record what the judge said. Only `approved_by = 'judge'` counts on the Eval
+page's blurb-gate chart.
+
 ### Adding a Workers AI call
 
 Route it through `LlmClient` (`apps/api/src/llm/`), which goes through AI Gateway. Put a
@@ -212,10 +225,18 @@ README and `monitoring.md`.
    translated queries whose English originals also miss, and Spanish words that
    keyword-match the wrong title ("casa mágica" → *Casa Grande*); lexical is weighted
    2:1 in RRF (ROADMAP 5b).
-3. **Blurb groundedness is 0.685** (2026-09-27 v3 run). Most failures are one
-   unsupported "It matters…" sentence from the old prompt. New blurbs are gated at
-   ingest; the old ones are rewritten through `/regenerate-blurbs` - 254 in the backlog,
-   about 20 a day, not started as of 2026-09-30 (ROADMAP item 6).
+3. **The v3 judge holds blurbs whose sources support them.** Groundedness was 0.685 on
+   the last full run (2026-09-27), before the pre-gate backlog was rewritten through
+   `/regenerate-blurbs` (cleared by 2026-10-21). No full run has measured the rewritten
+   catalog yet. Every live blurb is approved as of 2026-10-25, but the last 24 took
+   editor migrations (#345, #346), because the judge kept failing claims that copy or
+   paraphrase their sources: director lines word for word from `[d0]`, synopsis
+   paraphrases, award counts that restate OMDb. With the gate at 1.0, one wrong flag
+   holds the whole blurb. Loosening the judge is a v4 bump (scores stop comparing), so
+   it needs a labeled set from those cases first. Separately, a blurb is written only
+   from the synopsis, director credits and the OMDb awards line (`blurbSources` in
+   `apps/ingest/src/ai.ts`). Context notes never reach the model, so a title whose
+   significance lives elsewhere can't get a grounded "why it matters".
 4. **The live curation agent is still the fixed 4-step pipeline (v1).** v2, a model choosing
    tools, is built behind `CURATE_AGENT` (default `v1`) and ships only when the curation eval's
    gate passes: precision@5 >= 0.80 and +0.20 over v1's 0.52 (`docs/design/AGENTIC_CURATION_V2.md`).
@@ -229,7 +250,8 @@ README and `monitoring.md`.
    on each new blurb and approves it at score 1.0 with clean citations - inline `[s1]`
    markers, no source ids or names in the prose (`blurbTextProblems`, #262/#263)
    (`approved_by = 'judge'`). Anything lower, blurbs from before the gate that no rewrite
-   has replaced yet, and any blurb whose judge call failed wait for an editor. The Eval
+   has replaced yet, and any blurb whose judge call failed wait for an editor (see
+   "Approving a held blurb"). The Eval
    page's "New blurbs, checked daily" chart (`GET /eval-runs/blurb-gate`) is the gate's
    record.
 8. **The retrieval gate compares against the last passing run.** A big catalog change
@@ -240,9 +262,10 @@ README and `monitoring.md`.
 
 See `docs/ROADMAP.md` for the authoritative list. Current order:
 
-1. Rewrite the pre-gate blurbs: ~20 a day through `/regenerate-blurbs` (item 6). The
-   ingest queue drained on 2026-09-29 and the gate passed 14 of 14 that day, so nothing
-   blocks the first batch.
+1. Blurbs (item 6): the rewrite backlog is done and nothing waits for review. Next, a
+   full v3 groundedness run (~2.8k neurons) to replace the 0.685 baseline, since the
+   ingest queue is empty except one held entry (*Suárez*, 2026, check `GET /queue`).
+   Then decide whether a v4 judge is worth the version break (Known Limitation 3).
 2. Facet and Spanish ranking: search on the user's original words and let the LLM
    extract filters only (item 5); Spanish keyword collisions (5b). Facet (0.639 on
    2026-09-30) is the weakest query type; with 8-10 queries per category, one query moves
@@ -283,9 +306,10 @@ pnpm --filter @latino-canon/mcp test          # tools via the SDK's own Client, 
   `packages/core/**` redeploys all four. The MCP deploy smoke-tests the live server
   (`initialize` + `tools/list`) after deploying.
 - The api deploy applies D1 migrations first, then triggers the retrieval eval.
-- Groundedness runs are manual (`eval-groundedness.yml`). Blurb regeneration runs daily at
-  10:00 UTC (`regenerate-blurbs.yml`) and takes the day's 70B slot while the backlog lasts,
-  so run another 70B eval before 10:00 UTC or with an override.
+- Groundedness runs are manual (`eval-groundedness.yml`). Blurb regeneration is scheduled
+  daily at 10:00 UTC (`regenerate-blurbs.yml`), but GitHub's cron delay puts it near
+  14:00 UTC in practice. It claims the day's 70B slot when it has work, so run another
+  70B eval before it starts or with an override.
 - Releases are cut from **Actions → Release** (semver; current `1.7.0`).
 - CI secrets are `CLOUDFLARE_API_TOKEN` (needs D1:Edit) and `CLOUDFLARE_ACCOUNT_ID`.
   Worker secrets are `TMDB_API_KEY`, `OMDB_API_KEY` and `INGEST_ADMIN_TOKEN`, all on
