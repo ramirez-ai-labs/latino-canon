@@ -11,16 +11,16 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@cfworker/json-schema": "^4.1.1",
+    "@cfworker/json-schema": "^4.1.6",
     "@latino-canon/core": "workspace:*",
-    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20261016.1",
+    "@cloudflare/workers-types": "^5.20261107.1",
     "typescript": "^5.9.3",
     "vitest": "^4.1.12",
     "vite": "^7.3.7",
-    "wrangler": "^4.151.0"
+    "wrangler": "^4.158.0"
   }
 }
